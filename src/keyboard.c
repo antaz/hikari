@@ -1,0 +1,118 @@
+#include <hikari/keyboard.h>
+
+#include <wlr/types/wlr_input_device.h>
+#include <wlr/types/wlr_keyboard.h>
+#include <wlr/types/wlr_seat.h>
+
+#include <hikari/command.h>
+#include <hikari/completion.h>
+#include <hikari/indicator.h>
+#include <hikari/input_buffer.h>
+#include <hikari/mark.h>
+#include <hikari/mode.h>
+#include <hikari/server.h>
+#include <hikari/sheet.h>
+#include <hikari/unlocker.h>
+#include <hikari/view.h>
+#include <hikari/workspace.h>
+
+static void
+update_mod_state(struct hikari_keyboard *keyboard)
+{
+  uint32_t modifier_keys =
+      wlr_keyboard_get_modifiers(keyboard->device->keyboard);
+
+  bool was_pressed = hikari_server.keyboard_state.mod_pressed;
+  bool is_pressed = modifier_keys & WLR_MODIFIER_LOGO;
+
+  hikari_server.keyboard_state.modifiers = modifier_keys;
+  hikari_server.keyboard_state.mod_released = was_pressed && !is_pressed;
+  hikari_server.keyboard_state.mod_changed = was_pressed != is_pressed;
+  hikari_server.keyboard_state.mod_pressed = is_pressed;
+}
+
+static void
+key_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
+
+  if (hikari_server.locked) {
+    hikari_unlocker_key_handler(listener, data);
+    return;
+  }
+
+  hikari_server.mode->key_handler(listener, data);
+}
+
+static void
+modifiers_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_keyboard *keyboard =
+      wl_container_of(listener, keyboard, modifiers);
+
+  update_mod_state(keyboard);
+
+  if (hikari_server.locked) {
+    return;
+  }
+
+  hikari_server.mode->modifier_handler(listener, data);
+}
+
+static void
+destroy_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_keyboard *keyboard =
+      wl_container_of(listener, keyboard, destroy);
+
+  hikari_keyboard_fini(keyboard);
+  hikari_free(keyboard);
+
+  /* uint32_t caps = WL_SEAT_CAPABILITY_POINTER; */
+  /* wlr_seat_set_capabilities(hikari_server.seat, caps); */
+}
+
+void
+hikari_keyboard_init(
+    struct hikari_keyboard *keyboard, struct wlr_input_device *device)
+{
+  keyboard->device = device;
+
+  struct xkb_rule_names rules = { 0 };
+  rules.rules = getenv("XKB_DEFAULT_RULES");
+  rules.model = getenv("XKB_DEFAULT_MODEL");
+  rules.layout = getenv("XKB_DEFAULT_LAYOUT");
+  rules.variant = getenv("XKB_DEFAULT_VARIANT");
+  rules.options = getenv("XKB_DEFAULT_OPTIONS");
+
+  struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
+  struct xkb_keymap *keymap =
+      xkb_map_new_from_names(context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
+
+  wlr_keyboard_set_keymap(device->keyboard, keymap);
+  xkb_keymap_unref(keymap);
+  xkb_context_unref(context);
+  wlr_keyboard_set_repeat_info(device->keyboard, 25, 600);
+
+  keyboard->modifiers.notify = modifiers_handler;
+  wl_signal_add(&device->keyboard->events.modifiers, &keyboard->modifiers);
+
+  keyboard->key.notify = key_handler;
+  wl_signal_add(&device->keyboard->events.key, &keyboard->key);
+
+  keyboard->destroy.notify = destroy_handler;
+  wl_signal_add(&device->keyboard->events.destroy, &keyboard->destroy);
+
+  wlr_seat_set_keyboard(hikari_server.seat, device);
+
+  wl_list_insert(&hikari_server.keyboards, &keyboard->link);
+}
+
+void
+hikari_keyboard_fini(struct hikari_keyboard *keyboard)
+{
+  wl_list_remove(&keyboard->modifiers.link);
+  wl_list_remove(&keyboard->key.link);
+  wl_list_remove(&keyboard->destroy.link);
+  wl_list_remove(&keyboard->link);
+}
