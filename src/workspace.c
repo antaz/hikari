@@ -7,7 +7,9 @@
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/render/wlr_texture.h>
 #include <wlr/types/wlr_matrix.h>
+#ifdef HAVE_XWAYLAND
 #include <wlr/xwayland.h>
+#endif
 
 #include <hikari/color.h>
 #include <hikari/configuration.h>
@@ -23,7 +25,9 @@
 #include <hikari/server.h>
 #include <hikari/sheet.h>
 #include <hikari/xdg_view.h>
+#ifdef HAVE_XWAYLAND
 #include <hikari/xwayland_view.h>
+#endif
 
 #define FOCUS_GUARD(workspace, view)                                           \
   struct hikari_view *view = workspace->focus_view;                            \
