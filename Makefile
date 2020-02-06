@@ -48,7 +48,7 @@ WAYLAND_PROTOCOLS = /usr/local/share/wayland-protocols
 .PATH: src
 
 .ifmake debug
-CFLAGS = -g -O0 -fsanitize=address
+CFLAGS += -g -O0 -fsanitize=address
 .else
 CFLAGS += -DNDEBUG
 .endif
@@ -126,4 +126,4 @@ clean:
 	rm hikari-unlocker ||:
 	rm xdg-shell-protocol.h ||:
 
-debug: hikari
+debug: hikari hikari-unlocker
