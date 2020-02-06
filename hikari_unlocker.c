@@ -61,7 +61,7 @@ check_password(void)
 
   read(0, input_buffer, INPUT_BUFFER_SIZE - 1);
   int pam_status = pam_authenticate(auth_handle, 0);
-  bzero(input_buffer, INPUT_BUFFER_SIZE);
+  memset(input_buffer, 0, INPUT_BUFFER_SIZE);
   success = pam_status == PAM_SUCCESS;
   write(1, &success, sizeof(bool));
 

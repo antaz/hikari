@@ -26,14 +26,14 @@ void
 hikari_unlocker_init(void)
 {
   mlock(input_buffer, BUFFER_SIZE);
-  bzero(input_buffer, BUFFER_SIZE);
+  memset(input_buffer, 0, BUFFER_SIZE);
 }
 
 void
 hikari_unlocker_start(void)
 {
   cursor = 0;
-  bzero(input_buffer, BUFFER_SIZE);
+  memset(input_buffer, 0, BUFFER_SIZE);
 
   pipe(locker_pipe[0]);
   pipe(locker_pipe[1]);
@@ -83,7 +83,7 @@ submit_password(void)
   bool success = false;
 
   write(locker_pipe[0][1], input_buffer, password_length);
-  bzero(input_buffer, BUFFER_SIZE);
+  memset(input_buffer, 0, BUFFER_SIZE);
   cursor = 0;
   read(locker_pipe[1][0], &success, sizeof(bool));
 

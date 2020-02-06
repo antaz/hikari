@@ -93,13 +93,31 @@ XKB_DEFAULT_LAYOUT "de(nodeadkeys),de"
 
 ### Compiling and Installing
 
-To build all executables required to run `hikari` simply run `make`, this will
-produce two binaries `hikari` and `hikari-unlocker`. The latter one is used to
-check credentials for unlocking the screen. Both need to be installed with
-root setuid in your `PATH`.
+The build process will produce two binaries `hikari` and `hikari-unlocker`. The
+latter one is used to check credentials for unlocking the screen. Both need to
+be installed with root setuid in your `PATH`.
 
 `hikari` can be configured via `$HOME/.config/hikari/hikari.conf`, an example
 can be found under `doc/example_hikari.conf`.
+
+#### FreeBSD
+
+Simply run `make`.
+
+#### Linux
+
+On Linux `bmake` is required which needs to be run like so:
+
+```
+bmake \
+  WITH_POSIX_C_SOURCE=YES \
+  WITHOUT_EPOLLSHIM=YES \
+  WAYLAND_PROTOCOLS=/usr/share/wayland-protocols
+```
+
+The example above assumes that the Wayland protocol XML files are located under
+`/usr/share/wayland-protocols`, if this is not the case set `WAYLAND_PROTOCOLS`
+appropriately.
 
 ## TODO before 1.0
 

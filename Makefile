@@ -42,7 +42,7 @@ OBJS = \
 	xwayland_unmanaged_view.o \
 	xwayland_view.o
 
-WAYLAND_PROTOCOLS = /usr/local/share/wayland-protocols
+WAYLAND_PROTOCOLS ?= /usr/local/share/wayland-protocols
 
 .PHONY: clean debug
 .PATH: src
@@ -53,14 +53,16 @@ CFLAGS += -g -O0 -fsanitize=address
 CFLAGS += -DNDEBUG
 .endif
 
+.ifdef WITH_POSIX_C_SOURCE
+CFLAGS += -D_POSIX_C_SOURCE=200809L
+.endif
+
 CFLAGS += -Wall -I. -Iinclude
 
 WLROOTS_CFLAGS ?= `pkg-config --cflags wlroots`
 WLROOTS_LIBS ?= `pkg-config --libs wlroots`
 
 WLROOTS_CFLAGS += -DWLR_USE_UNSTABLE=1
-
-EPOLLSHIM_LIBS ?= `pkg-config --libs epoll-shim`
 
 PANGO_CFLAGS ?= `pkg-config --cflags pangocairo`
 PANGO_LIBS ?= `pkg-config --libs pangocairo`
@@ -99,7 +101,6 @@ CFLAGS += \
 
 LIBS = \
 	${WLROOTS_LIBS} \
-	${EPOLLSHIM_LIBS} \
 	${PANGO_LIBS} \
 	${CAIRO_LIBS} \
 	${GLIB_LIBS} \
@@ -108,6 +109,12 @@ LIBS = \
 	${WAYLAND_LIBS} \
 	${LIBINPUT_LIBS} \
 	${UCL_LIBS}
+
+.ifndef WITHOUT_EPOLLSHIM
+EPOLLSHIM_LIBS ?= `pkg-config --libs epoll-shim`
+
+LIBS += ${EPOLLSHIM_LIBS}
+.endif
 
 all: hikari hikari-unlocker
 
