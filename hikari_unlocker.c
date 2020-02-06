@@ -9,7 +9,8 @@
 #include <unistd.h>
 
 static char *input_buffer = NULL;
-const int INPUT_BUFFER_SIZE = 1024;
+
+#define INPUT_BUFFER_SIZE 1024
 
 static int
 conversation_handler(int num_msg,

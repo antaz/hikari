@@ -16,7 +16,7 @@
 #include <hikari/server.h>
 #include <hikari/utf8.h>
 
-static const size_t BUFFER_SIZE = 1024;
+#define BUFFER_SIZE 1024
 
 static char input_buffer[BUFFER_SIZE];
 static int cursor = 0;

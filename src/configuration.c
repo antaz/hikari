@@ -107,7 +107,7 @@ parse_horizontal(const ucl_object_t *vertical_obj);
 static struct hikari_split *
 parse_split(const ucl_object_t *split)
 {
-  struct hikari_split *ret;
+  struct hikari_split *ret = NULL;
   ucl_object_iter_t it = ucl_object_iterate_new(split);
 
   const ucl_object_t *cur;
