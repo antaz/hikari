@@ -245,7 +245,8 @@ hikari_configuration_resolve_view_autoconf(
       *sheet = hikari_server.workspace->sheet;
     }
 
-    if (strlen(view_autoconf->group_name) > 0) {
+    if (view_autoconf->group_name != NULL &&
+        strlen(view_autoconf->group_name) > 0) {
       *group = hikari_server_find_or_create_group(view_autoconf->group_name);
     } else {
       *group = (*sheet)->group;
