@@ -70,6 +70,7 @@ struct hikari_view {
 
   uint32_t (*resize)(struct hikari_view *, int, int);
   void (*move)(struct hikari_view *, int, int);
+  void (*move_resize)(struct hikari_view *, int, int, int, int);
   void (*activate)(struct hikari_view *, bool);
   void (*quit)(struct hikari_view *);
   void (*hide)(struct hikari_view *);

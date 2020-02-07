@@ -525,6 +525,7 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
   xdg_view->view.view_interface.for_each_surface = for_each_surface;
   xdg_view->view.activate = activate;
   xdg_view->view.resize = resize;
+  xdg_view->view.move_resize = NULL;
   xdg_view->view.quit = quit;
   xdg_view->view.hide = hide;
   xdg_view->view.constraints = constraints;

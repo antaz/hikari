@@ -179,7 +179,7 @@ render_output(struct hikari_output *output,
       &output->unmanaged_xwayland_views,
       unmanaged_server_views) {
 
-    render_data.geometry = xwayland_unmanaged_view->geometry;
+    render_data.geometry = &xwayland_unmanaged_view->geometry;
 
     wlr_surface_for_each_surface(xwayland_unmanaged_view->surface->surface,
         render_surface,

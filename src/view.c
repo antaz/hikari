@@ -767,7 +767,16 @@ tile_view(struct hikari_view *view,
 
   if (current_geometry->width != op->geometry.width ||
       current_geometry->height != op->geometry.height) {
-    op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+    if (view->move_resize != NULL) {
+      op->serial = 0;
+      view->move_resize(view,
+          op->geometry.x,
+          op->geometry.y,
+          op->geometry.width,
+          op->geometry.height);
+    } else {
+      op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+    }
   } else {
     hikari_view_commit_pending_operation(view);
   }
@@ -799,14 +808,22 @@ queue_full_maximize(struct hikari_view *view)
   int width, height;
   wlr_output_effective_resolution(view->output->output, &width, &height);
 
-  uint32_t serial = view->resize(view, width, height);
-
   op->type = HIKARI_OPERATION_TYPE_FULL_MAXIMIZE;
-  op->serial = serial;
   op->geometry.x = 0;
   op->geometry.y = 0;
   op->geometry.width = width;
   op->geometry.height = height;
+
+  if (view->move_resize != NULL) {
+    op->serial = 0;
+    view->move_resize(view,
+        op->geometry.x,
+        op->geometry.y,
+        op->geometry.width,
+        op->geometry.height);
+  } else {
+    op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+  }
 }
 
 static void
@@ -824,9 +841,16 @@ queue_unmaximize(struct hikari_view *view)
     op->geometry = view->geometry;
   }
 
-  uint32_t serial = view->resize(view, op->geometry.width, op->geometry.height);
-
-  op->serial = serial;
+  if (view->move_resize != NULL) {
+    op->serial = 0;
+    view->move_resize(view,
+        op->geometry.x,
+        op->geometry.y,
+        op->geometry.width,
+        op->geometry.height);
+  } else {
+    op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+  }
 }
 
 void
@@ -861,14 +885,22 @@ queue_horizontal_maximize(struct hikari_view *view)
 
   struct wlr_box *geometry = view->current_unmaximized_geometry;
 
-  uint32_t serial = view->resize(view, width, geometry->height);
-
   op->type = HIKARI_OPERATION_TYPE_HORIZONTAL_MAXIMIZE;
-  op->serial = serial;
   op->geometry.x = 0;
   op->geometry.y = geometry->y;
   op->geometry.height = geometry->height;
   op->geometry.width = width;
+
+  if (view->move_resize != NULL) {
+    op->serial = 0;
+    view->move_resize(view,
+        op->geometry.x,
+        op->geometry.y,
+        op->geometry.width,
+        op->geometry.height);
+  } else {
+    op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+  }
 }
 
 static void
@@ -884,14 +916,22 @@ queue_vertical_maximize(struct hikari_view *view)
 
   struct wlr_box *geometry = view->current_unmaximized_geometry;
 
-  uint32_t serial = view->resize(view, geometry->width, height);
-
   op->type = HIKARI_OPERATION_TYPE_VERTICAL_MAXIMIZE;
-  op->serial = serial;
   op->geometry.x = geometry->x;
   op->geometry.y = 0;
   op->geometry.height = height;
   op->geometry.width = geometry->width;
+
+  if (view->move_resize != NULL) {
+    op->serial = 0;
+    view->move_resize(view,
+        op->geometry.x,
+        op->geometry.y,
+        op->geometry.width,
+        op->geometry.height);
+  } else {
+    op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+  }
 }
 
 void
@@ -976,6 +1016,14 @@ hikari_view_reset_geometry(struct hikari_view *view)
   op->type = HIKARI_OPERATION_TYPE_RESET;
   op->serial = serial;
   op->geometry = view->geometry;
+
+  if (view->move_resize != NULL) {
+    view->move_resize(view,
+        op->geometry.x,
+        op->geometry.y,
+        op->geometry.width,
+        op->geometry.height);
+  }
 
   hikari_view_set_dirty(view);
 }

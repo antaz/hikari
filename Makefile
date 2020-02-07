@@ -57,6 +57,10 @@ CFLAGS += -DNDEBUG
 CFLAGS += -D_POSIX_C_SOURCE=200809L
 .endif
 
+.ifdef WITH_XWAYLAND
+CFLAGS += -DHAVE_XWAYLAND=1
+.endif
+
 CFLAGS += -Wall -I. -Iinclude
 
 WLROOTS_CFLAGS ?= `pkg-config --cflags wlroots`

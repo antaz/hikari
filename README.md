@@ -101,16 +101,27 @@ be installed with root setuid in your `PATH`.
 `hikari` can be configured via `$HOME/.config/hikari/hikari.conf`, an example
 can be found under `doc/example_hikari.conf`.
 
-#### FreeBSD
+#### Building on FreeBSD
 
 Simply run `make`.
 
-#### Linux
+#### Building on Linux
 
 On Linux `bmake` is required which needs to be run like so:
 
 ```
 bmake WITH_POSIX_C_SOURCE=YES WITHOUT_EPOLLSHIM=YES
+```
+
+#### Building with XWayland support
+
+`hikari` offers optional XWayland support which is enabled via setting
+`WITH_XWAYLAND`.
+
+Example:
+
+```
+make WITH_XWAYLAND=YES
 ```
 
 ## TODO before 1.0

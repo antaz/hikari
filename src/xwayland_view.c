@@ -36,6 +36,21 @@ resize(struct hikari_view *view, int width, int height)
 }
 
 static void
+move_resize(struct hikari_view *view, int x, int y, int width, int height)
+{
+  struct hikari_xwayland_view *xwayland_view =
+      (struct hikari_xwayland_view *)view;
+
+  struct hikari_output *output = view->output;
+
+  wlr_xwayland_surface_configure(xwayland_view->surface,
+      output->geometry.x + x,
+      output->geometry.y + y,
+      width,
+      height);
+}
+
+static void
 move(struct hikari_view *view, int x, int y)
 {
   struct hikari_xwayland_view *xwayland_view =
@@ -51,28 +66,6 @@ move(struct hikari_view *view, int x, int y)
       geometry->height);
 }
 
-static bool
-was_updated(struct hikari_xwayland_view *xwayland_view)
-{
-  struct hikari_view *view = (struct hikari_view *)xwayland_view;
-
-  struct wlr_xwayland_surface *surface = xwayland_view->surface;
-  struct wlr_box *pending_geometry = &view->pending_operation.geometry;
-
-  return hikari_view_is_dirty(view) &&
-         (surface->width == pending_geometry->width ||
-             surface->height == pending_geometry->height);
-}
-
-static bool
-was_moved(struct wlr_xwayland_surface *surface,
-    struct wlr_box *geometry,
-    struct hikari_output *output)
-{
-  return !((output->geometry.x + surface->x == geometry->x) &&
-           (output->geometry.y + surface->y == geometry->y));
-}
-
 static void
 commit_handler(struct wl_listener *listener, void *data)
 {
@@ -81,35 +74,35 @@ commit_handler(struct wl_listener *listener, void *data)
 
   struct hikari_view *view = (struct hikari_view *)xwayland_view;
   struct wlr_box *geometry = hikari_view_geometry(view);
-  struct hikari_output *output = view->output;
-  struct wlr_xwayland_surface *surface = xwayland_view->surface;
 
-  if (was_updated(xwayland_view)) {
-    hikari_view_commit_pending_operation(view, geometry);
-
-    geometry = hikari_view_geometry(view);
-
-    wlr_xwayland_surface_configure(surface,
-        output->geometry.x + geometry->x,
-        output->geometry.y + geometry->y,
-        geometry->width,
-        geometry->height);
-  } else if (was_moved(surface, geometry, output)) {
-    hikari_view_damage_whole(view);
-    hikari_indicator_damage(&hikari_server.indicator, view);
-
-    geometry->x = surface->x - output->geometry.x;
-    geometry->y = surface->y - output->geometry.y;
-
-    hikari_view_damage_whole(view);
+  if (hikari_view_is_dirty(view)) {
+    hikari_view_commit_pending_operation(view);
   } else {
-    pixman_region32_t damage;
-    pixman_region32_init(&damage);
-    wlr_surface_get_effective_damage(surface->surface, &damage);
-    pixman_region32_translate(&damage, geometry->x, geometry->y);
-    wlr_output_damage_add(output->damage, &damage);
-    pixman_region32_fini(&damage);
-    wlr_output_schedule_frame(output->output);
+    struct wlr_xwayland_surface *surface = xwayland_view->surface;
+    struct hikari_output *output = view->output;
+
+    if (surface->width != geometry->width ||
+        surface->height != geometry->height || surface->x != geometry->x ||
+        surface->y != geometry->y) {
+      hikari_indicator_damage(&hikari_server.indicator, view);
+      hikari_view_damage_whole(view);
+
+      geometry->x = surface->x;
+      geometry->y = surface->y;
+      geometry->width = surface->width;
+      geometry->height = surface->height;
+
+      hikari_view_refresh_geometry(view, geometry);
+
+      hikari_view_damage_whole(view);
+    } else {
+      pixman_region32_t damage;
+      pixman_region32_init(&damage);
+      wlr_surface_get_effective_damage(surface->surface, &damage);
+      pixman_region32_translate(&damage, geometry->x, geometry->y);
+      wlr_output_damage_add(output->damage, &damage);
+      pixman_region32_fini(&damage);
+    }
   }
 }
 
@@ -125,18 +118,18 @@ set_title_handler(struct wl_listener *listener, void *data)
 }
 
 static void
-first_map(struct hikari_xwayland_view *xwayland_view)
+first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
 {
   struct hikari_view *view = (struct hikari_view *)xwayland_view;
   struct hikari_output *output = hikari_server.workspace->output;
+  struct wlr_box *geometry = &view->geometry;
 
-  view->border = HIKARI_BORDER_INACTIVE;
+  view->border.state = HIKARI_BORDER_INACTIVE;
 
   struct hikari_sheet *sheet;
   struct hikari_group *group;
   int x;
   int y;
-  bool focus;
 
   hikari_configuration_resolve_view_autoconf(&hikari_configuration,
       xwayland_view->surface->class,
@@ -145,7 +138,7 @@ first_map(struct hikari_xwayland_view *xwayland_view)
       &group,
       &x,
       &y,
-      &focus);
+      focus);
 
   if (x == -1) {
     x = hikari_server.cursor->x - output->geometry.x;
@@ -155,8 +148,8 @@ first_map(struct hikari_xwayland_view *xwayland_view)
     y = hikari_server.cursor->y - output->geometry.y;
   }
 
-  view->geometry.width = xwayland_view->surface->width;
-  view->geometry.height = xwayland_view->surface->height;
+  geometry->width = xwayland_view->surface->width;
+  geometry->height = xwayland_view->surface->height;
 
   xwayland_view->commit.notify = commit_handler;
   wl_signal_add(
@@ -170,17 +163,19 @@ first_map(struct hikari_xwayland_view *xwayland_view)
       output->output, &screen_width, &screen_height);
 
   hikari_geometry_constrain_position(
-      &view->geometry, screen_width, screen_height, x, y);
+      geometry, screen_width, screen_height, x, y);
 
   wlr_xwayland_surface_configure(xwayland_view->surface,
       output->geometry.x + view->geometry.x,
       output->geometry.y + view->geometry.y,
-      view->geometry.width,
-      view->geometry.height);
+      geometry->width,
+      geometry->height);
+
+  hikari_view_refresh_geometry(view, geometry);
 }
 
 static void
-map(struct hikari_view *view)
+map(struct hikari_view *view, bool focus)
 {
 #if !defined(NDEBUG)
   printf("XWAYLAND MAP %p\n", view);
@@ -192,11 +187,13 @@ map(struct hikari_view *view)
   view->surface = xwayland_view->surface->surface;
   view->surface->data = (struct hikari_view_interface *)view;
 
-  /* if (view->sheet == view->sheet->workspace->sheet || */
-  /*     view->sheet == &view->sheet->workspace->sheets[0]) { */
   hikari_view_show(view);
+
+  if (focus) {
+    hikari_view_center_cursor(view);
+  }
+
   hikari_server_cursor_focus();
-  /* } */
 }
 
 static void
@@ -206,12 +203,13 @@ map_handler(struct wl_listener *listener, void *data)
       wl_container_of(listener, xwayland_view, map);
 
   struct hikari_view *view = (struct hikari_view *)xwayland_view;
+  bool focus = false;
 
   if (view->sheet == NULL) {
-    first_map(xwayland_view);
+    first_map(xwayland_view, &focus);
   }
 
-  map(view);
+  map(view, focus);
 }
 
 static void
@@ -372,16 +370,48 @@ static void
 show(struct hikari_view *view)
 {}
 
+static void
+constraints(struct hikari_view *view,
+    int *min_width,
+    int *min_height,
+    int *max_width,
+    int *max_height)
+{
+  struct hikari_xwayland_view *xwayland_view =
+      (struct hikari_xwayland_view *)view;
+  struct hikari_output *output = view->output;
+  struct wlr_xwayland_surface *surface = xwayland_view->surface;
+
+  struct wlr_xwayland_surface_size_hints *size_hints = surface->size_hints;
+
+  if (size_hints != NULL) {
+    *min_width = size_hints->min_width > 0 ? size_hints->min_width : 0;
+    *max_width = size_hints->max_width > 0 ? size_hints->max_width
+                                           : output->geometry.width;
+    *min_height = size_hints->min_height > 0 ? size_hints->min_height : 0;
+    *max_height = size_hints->max_height > 0 ? size_hints->max_height
+                                             : output->geometry.height;
+  } else {
+    *min_width = 0;
+    *max_width = output->geometry.width;
+
+    *min_height = 0;
+    *max_height = output->geometry.height;
+  }
+}
+
 void
 hikari_xwayland_view_init(struct hikari_xwayland_view *xwayland_view,
     struct wlr_xwayland_surface *xwayland_surface,
     struct hikari_workspace *workspace)
 {
-  hikari_view_init(&xwayland_view->view, HIKARI_XWAYLAND_VIEW, workspace);
+  struct hikari_view *view = &xwayland_view->view;
 
-  xwayland_view->view.view_interface.surface_at = surface_at;
-  xwayland_view->view.view_interface.focus = focus;
-  xwayland_view->view.view_interface.for_each_surface = for_each_surface;
+  hikari_view_init(view, HIKARI_XWAYLAND_VIEW, workspace);
+
+  view->view_interface.surface_at = surface_at;
+  view->view_interface.focus = focus;
+  view->view_interface.for_each_surface = for_each_surface;
 
   wlr_xwayland_surface_ping(xwayland_surface);
 
@@ -407,11 +437,13 @@ hikari_xwayland_view_init(struct hikari_xwayland_view *xwayland_view,
   xwayland_view->set_title.notify = set_title_handler;
   wl_signal_add(&xwayland_surface->events.set_title, &xwayland_view->set_title);
 
-  xwayland_view->view.activate = activate;
-  xwayland_view->view.resize = resize;
-  xwayland_view->view.move = move;
-  xwayland_view->view.quit = quit;
-  xwayland_view->view.hide = hide;
-  xwayland_view->view.show = show;
+  view->activate = activate;
+  view->resize = resize;
+  view->move = move;
+  view->move_resize = move_resize;
+  view->quit = quit;
+  view->hide = hide;
+  view->show = show;
+  view->constraints = constraints;
 }
 #endif
