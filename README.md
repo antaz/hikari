@@ -144,5 +144,5 @@ to `hikari+subscribe@acmelabs.space`.
 
 ## Contributing
 
-Please make sure you use `clang-format` with the accompanying `.clag-format`
+Please make sure you use `clang-format` with the accompanying `.clang-format`
 configuration before submitting any patches.
