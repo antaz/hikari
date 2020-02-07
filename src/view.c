@@ -1320,7 +1320,9 @@ commit_reset(struct hikari_view *view,
   }
 
   raise_view(view);
+  hikari_indicator_damage(&hikari_server.indicator, view);
   commit_pending_geometry(view, &operation->geometry, geometry_before);
+  hikari_indicator_damage(&hikari_server.indicator, view);
 
   hikari_view_center_cursor(view);
 }
@@ -1338,7 +1340,9 @@ commit_unmaximize(struct hikari_view *view,
   }
 
   raise_view(view);
+  hikari_indicator_damage(&hikari_server.indicator, view);
   commit_pending_geometry(view, &operation->geometry, geometry_before);
+  hikari_indicator_damage(&hikari_server.indicator, view);
 
   hikari_view_center_cursor(view);
 }
@@ -1361,7 +1365,9 @@ commit_full_maximize(struct hikari_view *view,
   }
 
   raise_view(view);
+  hikari_indicator_damage(&hikari_server.indicator, view);
   commit_pending_geometry(view, &operation->geometry, geometry_before);
+  hikari_indicator_damage(&hikari_server.indicator, view);
 
   hikari_view_center_cursor(view);
 }
@@ -1397,7 +1403,9 @@ commit_vertical_maximize(struct hikari_view *view,
   view->maximized_state->geometry = operation->geometry;
 
   raise_view(view);
+  hikari_indicator_damage(&hikari_server.indicator, view);
   commit_pending_geometry(view, &operation->geometry, geometry_before);
+  hikari_indicator_damage(&hikari_server.indicator, view);
 
   hikari_view_center_cursor(view);
 }
@@ -1433,7 +1441,9 @@ commit_horizontal_maximize(struct hikari_view *view,
   view->maximized_state->geometry = operation->geometry;
 
   raise_view(view);
+  hikari_indicator_damage(&hikari_server.indicator, view);
   commit_pending_geometry(view, &operation->geometry, geometry_before);
+  hikari_indicator_damage(&hikari_server.indicator, view);
 
   hikari_view_center_cursor(view);
 }
@@ -1463,7 +1473,9 @@ commit_tile(struct hikari_view *view,
   view->tile = operation->tile;
   operation->tile = NULL;
 
+  hikari_indicator_damage(&hikari_server.indicator, view);
   commit_pending_geometry(view, &operation->geometry, geometry_before);
+  hikari_indicator_damage(&hikari_server.indicator, view);
 }
 
 static void
