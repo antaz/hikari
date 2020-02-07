@@ -42,7 +42,7 @@ OBJS = \
 	xwayland_unmanaged_view.o \
 	xwayland_view.o
 
-WAYLAND_PROTOCOLS ?= /usr/local/share/wayland-protocols
+WAYLAND_PROTOCOLS ?= `pkg-config --variable pkgdatadir wayland-protocols`
 
 .PHONY: clean debug
 .PATH: src

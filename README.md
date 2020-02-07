@@ -110,15 +110,8 @@ Simply run `make`.
 On Linux `bmake` is required which needs to be run like so:
 
 ```
-bmake \
-  WITH_POSIX_C_SOURCE=YES \
-  WITHOUT_EPOLLSHIM=YES \
-  WAYLAND_PROTOCOLS=/usr/share/wayland-protocols
+bmake WITH_POSIX_C_SOURCE=YES WITHOUT_EPOLLSHIM=YES
 ```
-
-The example above assumes that the Wayland protocol XML files are located under
-`/usr/share/wayland-protocols`, if this is not the case set `WAYLAND_PROTOCOLS`
-appropriately.
 
 ## TODO before 1.0
 
