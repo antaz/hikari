@@ -1,7 +1,10 @@
 #include <hikari/configuration.h>
 
+#include <errno.h>
+
 #include <ucl.h>
 
+#include <linux/input-event-codes.h>
 #include <wlr/types/wlr_cursor.h>
 
 #include <hikari/background.h>
@@ -9,6 +12,7 @@
 #include <hikari/command.h>
 #include <hikari/exec.h>
 #include <hikari/keybinding.h>
+#include <hikari/keyboard.h>
 #include <hikari/layout.h>
 #include <hikari/mark.h>
 #include <hikari/memory.h>
@@ -25,7 +29,7 @@
 struct hikari_configuration hikari_configuration;
 
 static bool
-parse_modifier_mask(const char *str, uint8_t *result)
+parse_modifier_mask(const char *str, uint8_t *result, const char **remaining)
 {
   size_t len = strlen(str);
   uint8_t mask = 0;
@@ -33,7 +37,7 @@ parse_modifier_mask(const char *str, uint8_t *result)
 
   for (pos = 0; pos < len; pos++) {
     char c = str[pos];
-    if (c == '-') {
+    if (c == '-' || c == '+') {
       break;
     } else if (c == 'L') {
       mask |= WLR_MODIFIER_LOGO;
@@ -48,12 +52,15 @@ parse_modifier_mask(const char *str, uint8_t *result)
     } else if (c == '0') {
       // do nothing
     } else {
-      fprintf(stderr, "config error: unkown modifier %c in %s\n", c, str);
+      fprintf(stderr, "config error: unknown modifier %c in %s\n", c, str);
       return false;
     }
   }
 
   *result = mask;
+  if (remaining != NULL) {
+    *remaining = str + pos;
+  }
   return true;
 }
 
@@ -492,42 +499,107 @@ parse_autoconf(
   return true;
 }
 
-static bool
-parse_keycode(const char *str, uint32_t *keycode, uint32_t *modifiers)
+struct keycode_matcher_state {
+  xkb_keysym_t keysym;
+  uint32_t *keycode;
+  struct xkb_state *state;
+};
+
+static void
+match_keycode(struct xkb_keymap *keymap, xkb_keycode_t key, void *data)
 {
-  uint32_t mods = 0;
-  uint32_t code = 0;
+  struct keycode_matcher_state *matcher_state = data;
+  xkb_keysym_t keysym = xkb_state_key_get_one_sym(matcher_state->state, key);
 
-  size_t len = strlen(str);
-  int pos;
+  if (keysym != XKB_KEY_NoSymbol && keysym == matcher_state->keysym &&
+      *(matcher_state->keycode) == 0) {
+    *(matcher_state->keycode) = key - 8;
+  }
+}
 
-  for (pos = 0; pos < len; pos++) {
-    char c = str[pos];
-    if (c == '-') {
-      break;
-    } else if (c == 'L') {
-      mods |= WLR_MODIFIER_LOGO;
-    } else if (c == 'S') {
-      mods |= WLR_MODIFIER_SHIFT;
-    } else if (c == 'A') {
-      mods |= WLR_MODIFIER_ALT;
-    } else if (c == 'C') {
-      mods |= WLR_MODIFIER_CTRL;
-    } else if (c == '5') {
-      mods |= WLR_MODIFIER_MOD5;
-    } else if (c == '0') {
-      // do nothing
+static bool
+parse_key(struct xkb_state *state,
+    const char *str,
+    uint32_t *keycode,
+    uint32_t *modifiers)
+{
+  uint8_t mods = 0;
+  const char *remaining;
+  if (!parse_modifier_mask(str, &mods, &remaining)) {
+    return false;
+  }
+
+  if (*remaining == '-') {
+    errno = 0;
+    const long value = strtol(remaining + 1, NULL, 10);
+    if (errno != 0 || value < 0 || value > UINT32_MAX) {
+      fprintf(
+          stderr, "config error: could not parse keycode %s\n", remaining + 1);
+      return false;
+    }
+    *keycode = (uint32_t)value;
+  } else {
+    const xkb_keysym_t keysym =
+        xkb_keysym_from_name(remaining + 1, XKB_KEYSYM_CASE_INSENSITIVE);
+    if (keysym == XKB_KEY_NoSymbol) {
+      fprintf(stderr, "config error: unknown key symbol %s\n", remaining + 1);
+      return false;
+    }
+
+    *keycode = 0;
+    struct keycode_matcher_state matcher_state = { keysym, keycode, state };
+    xkb_keymap_key_for_each(
+        xkb_state_get_keymap(state), match_keycode, &matcher_state);
+  }
+
+  *modifiers = mods;
+  return true;
+}
+
+static bool
+parse_pointer(struct xkb_state *ignored,
+    const char *str,
+    uint32_t *keycode,
+    uint32_t *modifiers)
+{
+  uint8_t mods = 0;
+  const char *remaining;
+  if (!parse_modifier_mask(str, &mods, &remaining)) {
+    return false;
+  }
+
+  if (*remaining == '-') {
+    errno = 0;
+    const long value = strtol(remaining + 1, NULL, 10);
+    if (errno != 0 || value < 0 || value > UINT32_MAX) {
+      fprintf(stderr,
+          "config error: could not parse mouse binding %s\n",
+          remaining + 1);
+      return false;
+    }
+    *keycode = (uint32_t)value;
+  } else {
+    ++remaining;
+    if (!strcasecmp(remaining, "left")) {
+      *keycode = BTN_LEFT;
+    } else if (!strcasecmp(remaining, "right")) {
+      *keycode = BTN_RIGHT;
+    } else if (!strcasecmp(remaining, "middle")) {
+      *keycode = BTN_MIDDLE;
+    } else if (!strcasecmp(remaining, "side")) {
+      *keycode = BTN_SIDE;
+    } else if (!strcasecmp(remaining, "extra")) {
+      *keycode = BTN_EXTRA;
+    } else if (!strcasecmp(remaining, "forward")) {
+      *keycode = BTN_FORWARD;
+    } else if (!strcasecmp(remaining, "back")) {
+      *keycode = BTN_BACK;
+    } else if (!strcasecmp(remaining, "task")) {
+      *keycode = BTN_TASK;
     } else {
-      fprintf(stderr, "config error: could not parse keycode\n");
       return false;
     }
   }
-
-  pos++;
-
-  code = atoi(str + pos);
-
-  *keycode = code;
   *modifiers = mods;
   return true;
 }
@@ -975,23 +1047,29 @@ parse_binding(const ucl_object_t *obj,
 }
 
 static bool
-parse_keyboard_bindings(struct hikari_configuration *configuration,
+parse_input_bindings(bool (*binding_parser)(struct xkb_state *xkb_state,
+                         const char *str,
+                         uint32_t *keysym,
+                         uint32_t *modifiers),
+    struct xkb_state *xkb_state,
+
+    struct hikari_configuration *configuration,
     const ucl_object_t *actions,
     const ucl_object_t *layouts,
     uint8_t *nbindings,
     struct hikari_keybinding **bindings,
-    const ucl_object_t *bindings_keycode)
+    const ucl_object_t *bindings_keysym)
 {
   int n[256] = { 0 };
   uint8_t mask = 0;
   const ucl_object_t *cur;
   bool success = true;
 
-  ucl_object_iter_t it = ucl_object_iterate_new(bindings_keycode);
+  ucl_object_iter_t it = ucl_object_iterate_new(bindings_keysym);
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
-    if (!parse_modifier_mask(key, &mask)) {
+    if (!parse_modifier_mask(key, &mask, NULL)) {
       success = false;
       goto done;
     }
@@ -1011,15 +1089,19 @@ parse_keyboard_bindings(struct hikari_configuration *configuration,
     n[i] = 0;
   }
 
-  it = ucl_object_iterate_new(bindings_keycode);
+  it = ucl_object_iterate_new(bindings_keysym);
   while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
     const char *key = ucl_object_key(cur);
 
-    parse_modifier_mask(key, &mask);
+    if (!parse_modifier_mask(key, &mask, NULL)) {
+      success = false;
+      goto done;
+    }
 
     struct hikari_keybinding *binding = &bindings[mask][n[mask]];
 
-    if (!parse_keycode(key, &binding->keycode, &binding->modifiers) ||
+    if (!binding_parser(
+            xkb_state, key, &binding->keycode, &binding->modifiers) ||
         !parse_binding(cur,
             actions,
             layouts,
@@ -1045,22 +1127,29 @@ parse_bindings(struct hikari_configuration *configuration,
     const ucl_object_t *layouts,
     const ucl_object_t *bindings_obj)
 {
+  struct xkb_keymap *keymap = hikari_load_keymap();
+  struct xkb_state *state = xkb_state_new(keymap);
+  xkb_keymap_unref(keymap);
+
   const ucl_object_t *keyboard_obj =
       ucl_object_lookup(bindings_obj, "keyboard");
 
   if (keyboard_obj != NULL) {
-    parse_keyboard_bindings(configuration,
+    parse_input_bindings(&parse_key,
+        state,
+        configuration,
         actions,
         layouts,
         configuration->normal_mode.nkeybindings,
         configuration->normal_mode.keybindings,
         keyboard_obj);
   }
-
   const ucl_object_t *mouse_obj = ucl_object_lookup(bindings_obj, "mouse");
 
   if (mouse_obj != NULL) {
-    parse_keyboard_bindings(configuration,
+    parse_input_bindings(&parse_pointer,
+        state,
+        configuration,
         actions,
         layouts,
         configuration->normal_mode.nmousebindings,
@@ -1068,6 +1157,7 @@ parse_bindings(struct hikari_configuration *configuration,
         mouse_obj);
   }
 
+  xkb_state_unref(state);
   return true;
 }
 

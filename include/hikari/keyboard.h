@@ -22,4 +22,7 @@ hikari_keyboard_init(
 void
 hikari_keyboard_fini(struct hikari_keyboard *keyboard);
 
+struct xkb_keymap *
+hikari_load_keymap();
+
 #endif

@@ -126,7 +126,6 @@ make WITH_XWAYLAND=YES
 
 ## TODO before 1.0
 
-* Keybindings currently only work with `libinput` keycodes.
 * Popups are not positioned correctly on multi monitor setups.
 * Configuration processing is still buggy and can lead to issues when errors are
   encountered.
