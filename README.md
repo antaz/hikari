@@ -127,8 +127,6 @@ make WITH_XWAYLAND=YES
 ## TODO before 1.0
 
 * Popups are not positioned correctly on multi monitor setups.
-* Configuration processing is still buggy and can lead to issues when errors are
-  encountered.
 * Manpage is still missing.
 
 ## Community

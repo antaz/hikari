@@ -50,6 +50,9 @@ hikari_configuration_init(struct hikari_configuration *configuration);
 void
 hikari_configuration_fini(struct hikari_configuration *configuration);
 
+bool
+hikari_configuration_load(struct hikari_configuration *configuration);
+
 void
 hikari_configuration_resolve_view_autoconf(
     struct hikari_configuration *configuration,

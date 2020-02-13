@@ -570,6 +570,16 @@ server_init(struct hikari_server *server)
 
   hikari_configuration_init(&hikari_configuration);
 
+  if (!hikari_configuration_load(&hikari_configuration)) {
+    hikari_configuration_fini(&hikari_configuration);
+
+    for (int i = 0; i < HIKARI_NR_OF_MARKS; i++) {
+      hikari_free(execs[i].command);
+    }
+
+    exit(EXIT_FAILURE);
+  }
+
   server->keyboard_state.modifiers = 0;
   server->keyboard_state.mod_released = false;
   server->keyboard_state.mod_changed = false;
