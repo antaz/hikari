@@ -784,6 +784,33 @@ parse_key(struct xkb_state *state,
 }
 
 static bool
+parse_mouse_button(const char *str, uint32_t *keycode)
+{
+  if (!strcasecmp(str, "left")) {
+    *keycode = BTN_LEFT;
+  } else if (!strcasecmp(str, "right")) {
+    *keycode = BTN_RIGHT;
+  } else if (!strcasecmp(str, "middle")) {
+    *keycode = BTN_MIDDLE;
+  } else if (!strcasecmp(str, "side")) {
+    *keycode = BTN_SIDE;
+  } else if (!strcasecmp(str, "extra")) {
+    *keycode = BTN_EXTRA;
+  } else if (!strcasecmp(str, "forward")) {
+    *keycode = BTN_FORWARD;
+  } else if (!strcasecmp(str, "back")) {
+    *keycode = BTN_BACK;
+  } else if (!strcasecmp(str, "task")) {
+    *keycode = BTN_TASK;
+  } else {
+    fprintf(stderr, "configuration error: unknown mouse button \"%s\"\n", str);
+    return false;
+  }
+
+  return true;
+}
+
+static bool
 parse_pointer(struct xkb_state *ignored,
     const char *str,
     uint32_t *keycode,
@@ -807,26 +834,7 @@ parse_pointer(struct xkb_state *ignored,
     *keycode = (uint32_t)value;
   } else {
     ++remaining;
-    if (!strcasecmp(remaining, "left")) {
-      *keycode = BTN_LEFT;
-    } else if (!strcasecmp(remaining, "right")) {
-      *keycode = BTN_RIGHT;
-    } else if (!strcasecmp(remaining, "middle")) {
-      *keycode = BTN_MIDDLE;
-    } else if (!strcasecmp(remaining, "side")) {
-      *keycode = BTN_SIDE;
-    } else if (!strcasecmp(remaining, "extra")) {
-      *keycode = BTN_EXTRA;
-    } else if (!strcasecmp(remaining, "forward")) {
-      *keycode = BTN_FORWARD;
-    } else if (!strcasecmp(remaining, "back")) {
-      *keycode = BTN_BACK;
-    } else if (!strcasecmp(remaining, "task")) {
-      *keycode = BTN_TASK;
-    } else {
-      fprintf(stderr,
-          "configuration error: unknown mouse button \"%s\"\n",
-          remaining);
+    if (!parse_mouse_button(remaining, keycode)) {
       return false;
     }
   }
@@ -1493,16 +1501,21 @@ parse_pointer_config(struct hikari_configuration *configuration,
         goto done;
       }
     } else if (!strcmp(key, "scroll-button")) {
-      int64_t scroll_button;
-      if (!ucl_object_toint_safe(cur, &scroll_button)) {
+      const char *scroll_button;
+      uint32_t scroll_button_keycode;
+      if (!ucl_object_tostring_safe(cur, &scroll_button)) {
         fprintf(stderr,
-            "configuration error: expected integer for \"%s\" "
-            "\"scroll-button\"\n",
-            pointer_name);
+            "configuration error: expected string for \"scroll-button\"\n");
         goto done;
       }
 
-      pointer_config->scroll_button = scroll_button;
+      if (!parse_mouse_button(scroll_button, &scroll_button_keycode)) {
+        fprintf(
+            stderr, "configuration error: failed to parse \"scroll-button\"\n");
+        goto done;
+      }
+
+      pointer_config->scroll_button = scroll_button_keycode;
     } else {
       fprintf(stderr,
           "configuration error: unknown \"pointer\" configuration key \"%s\" "
