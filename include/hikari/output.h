@@ -15,8 +15,8 @@ struct hikari_output {
   struct hikari_workspace *workspace;
 
   struct wl_listener damage_frame;
-  /* struct wl_listener mode; */
   struct wl_listener destroy;
+  /* struct wl_listener mode; */
 
   struct wl_list views;
 #ifdef HAVE_XWAYLAND

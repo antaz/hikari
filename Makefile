@@ -27,6 +27,7 @@ OBJS = \
 	normal_mode.o \
 	output.o \
 	output_config.o \
+	pointer.o \
 	pointer_config.o \
 	resize_mode.o \
 	server.o \

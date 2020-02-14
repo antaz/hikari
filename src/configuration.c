@@ -17,6 +17,7 @@
 #include <hikari/memory.h>
 #include <hikari/output.h>
 #include <hikari/output_config.h>
+#include <hikari/pointer.h>
 #include <hikari/pointer_config.h>
 #include <hikari/server.h>
 #include <hikari/sheet.h>
@@ -1820,6 +1821,18 @@ hikari_configuration_reload(void)
           hikari_configuration, output->output->name);
       hikari_output_load_background(output, background);
     }
+
+    struct hikari_pointer *pointer;
+    wl_list_for_each (pointer, &hikari_server.pointers, server_pointers) {
+      struct hikari_pointer_config *pointer_config =
+          hikari_configuration_resolve_pointer_config(
+              hikari_configuration, pointer->device->name);
+
+      if (pointer_config != NULL) {
+        hikari_pointer_configure(pointer, pointer_config);
+      }
+    }
+
   } else {
     hikari_configuration_fini(configuration);
     hikari_free(configuration);

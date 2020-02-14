@@ -31,6 +31,7 @@
 #include <hikari/mark.h>
 #include <hikari/memory.h>
 #include <hikari/output.h>
+#include <hikari/pointer.h>
 #include <hikari/pointer_config.h>
 #include <hikari/sheet.h>
 #include <hikari/unlocker.h>
@@ -44,26 +45,15 @@
 static void
 add_pointer(struct hikari_server *server, struct wlr_input_device *device)
 {
+  struct hikari_pointer *pointer = hikari_malloc(sizeof(struct hikari_pointer));
+  hikari_pointer_init(pointer, device);
+
   struct hikari_pointer_config *pointer_config =
       hikari_configuration_resolve_pointer_config(
           hikari_configuration, device->name);
 
   if (pointer_config != NULL) {
-    struct libinput_device *libinput_device =
-        wlr_libinput_get_device_handle(device);
-
-    if (libinput_device != NULL) {
-      libinput_device_config_accel_set_speed(
-          libinput_device, pointer_config->accel);
-
-      if (pointer_config->scroll_button != 0) {
-        libinput_device_config_scroll_set_button(
-            libinput_device, pointer_config->scroll_button);
-      }
-
-      libinput_device_config_scroll_set_method(
-          libinput_device, pointer_config->scroll_method);
-    }
+    hikari_pointer_configure(pointer, pointer_config);
   }
 
   wlr_cursor_attach_input_device(server->cursor, device);
@@ -627,7 +617,6 @@ server_init(struct hikari_server *server)
 
   server->data_device_manager = wlr_data_device_manager_create(server->display);
 
-  wl_list_init(&server->keyboards);
   server->new_input.notify = new_input_handler;
   wl_signal_add(&server->backend->events.new_input, &server->new_input);
 
@@ -650,9 +639,11 @@ server_init(struct hikari_server *server)
   setup_selection(server);
   setup_xdg_shell(server);
 
+  wl_list_init(&server->keyboards);
   wl_list_init(&server->groups);
   wl_list_init(&server->visible_groups);
   wl_list_init(&server->workspaces);
+  wl_list_init(&server->pointers);
 
   hikari_normal_mode_init(&server->normal_mode);
   hikari_exec_select_mode_init(&server->exec_select_mode);

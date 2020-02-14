@@ -444,8 +444,10 @@ hikari_output_fini(struct hikari_output *output)
   wlr_texture_destroy(output->background);
 
   wl_list_remove(&output->damage_frame.link);
-  /* wl_list_remove(&output->mode.link); */
   wl_list_remove(&output->destroy.link);
+  /* wl_list_remove(&output->mode.link); */
+
+  wl_list_remove(&output->server_outputs);
 
   hikari_workspace_fini(output->workspace);
   hikari_free(output->workspace);
