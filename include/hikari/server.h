@@ -70,6 +70,7 @@ struct hikari_server {
   struct wlr_cursor *cursor;
   struct wlr_xcursor_manager *cursor_mgr;
 
+  struct wl_list pointers;
   struct wl_list keyboards;
   struct wl_list outputs;
 

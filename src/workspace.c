@@ -36,44 +36,12 @@
     return;                                                                    \
   }
 
-static void
-render_texture(struct wlr_output *output,
-    pixman_region32_t *damage,
-    struct wlr_texture *texture,
-    struct wlr_renderer *renderer,
-    const float matrix[static 9],
-    struct wlr_box *box)
-{
-  pixman_region32_t local_damage;
-  pixman_region32_init(&local_damage);
-  pixman_region32_union_rect(
-      &local_damage, &local_damage, box->x, box->y, box->width, box->height);
-
-  pixman_region32_intersect(&local_damage, &local_damage, damage);
-
-  bool damaged = pixman_region32_not_empty(&local_damage);
-  if (!damaged) {
-    goto damage_finish;
-  }
-
-  int nrects;
-  pixman_box32_t *rects = pixman_region32_rectangles(&local_damage, &nrects);
-  for (int i = 0; i < nrects; ++i) {
-    hikari_output_scissor_render(output, renderer, &rects[i]);
-    wlr_render_texture_with_matrix(renderer, texture, matrix, 1);
-  }
-
-damage_finish:
-  pixman_region32_fini(&local_damage);
-}
-
 void
 hikari_workspace_init(
     struct hikari_workspace *workspace, struct hikari_output *output)
 {
   wl_list_init(&workspace->views);
   wl_list_init(&hikari_server.visible_groups);
-  workspace->background = NULL;
   workspace->output = output;
   workspace->focus_view = NULL;
   workspace->sheets = calloc(HIKARI_NR_OF_SHEETS, sizeof(struct hikari_sheet));
@@ -95,34 +63,6 @@ hikari_workspace_fini(struct hikari_workspace *workspace)
     hikari_sheet_fini(&workspace->sheets[i]);
   }
 }
-
-void
-hikari_workspace_render_background(
-    struct hikari_workspace *workspace, struct hikari_render_data *render_data)
-{
-  if (workspace->background == NULL) {
-    return;
-  }
-
-  float matrix[9];
-  struct wlr_output *output = workspace->output->output; // render_data->output;
-
-  struct wlr_box geometry = { .x = 0, .y = 0 };
-  wlr_output_transformed_resolution(output, &geometry.width, &geometry.height);
-
-  wlr_matrix_project_box(matrix, &geometry, 0, 0, output->transform_matrix);
-
-  render_texture(output,
-      render_data->damage,
-      workspace->background,
-      render_data->renderer,
-      matrix,
-      &geometry);
-}
-
-/* static int64_t timespec_to_msec(const struct timespec *a) { */
-/*   return (int64_t)a->tv_sec * 1000 + a->tv_nsec / 1000000; */
-/* } */
 
 void
 hikari_workspace_quit_view(struct hikari_workspace *workspace)

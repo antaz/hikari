@@ -29,26 +29,41 @@
 #include <hikari/xwayland_view.h>
 #endif
 
-static void
-load_background(struct hikari_workspace *workspace, const char *path)
+void
+hikari_output_load_background(struct hikari_output *output, const char *path)
 {
-  cairo_surface_t *image;
+  if (output->background != NULL) {
+    wlr_texture_destroy(output->background);
+    output->background = NULL;
+  }
 
-  image = cairo_image_surface_create_from_png(path);
+  assert(output->background == NULL);
 
-  int width = workspace->output->geometry.width;
-  int height = workspace->output->geometry.height;
+  if (path == NULL) {
+    goto done;
+  }
+
+  cairo_surface_t *image = cairo_image_surface_create_from_png(path);
+  if (cairo_surface_status(image) != CAIRO_STATUS_SUCCESS) {
+    goto done;
+  }
+
+  int width = output->geometry.width;
+  int height = output->geometry.height;
 
   unsigned char *data = cairo_image_surface_get_data(image);
   int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
 
   struct wlr_renderer *renderer =
-      wlr_backend_get_renderer(workspace->output->output->backend);
+      wlr_backend_get_renderer(output->output->backend);
 
-  workspace->background = wlr_texture_from_pixels(
+  output->background = wlr_texture_from_pixels(
       renderer, WL_SHM_FORMAT_ARGB8888, stride, width, height, data);
 
   cairo_surface_destroy(image);
+
+done:
+  hikari_output_damage_whole(output);
 }
 
 static void
@@ -121,6 +136,31 @@ render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 }
 
 static void
+render_background(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+  if (output->background == NULL) {
+    return;
+  }
+
+  float matrix[9];
+  struct wlr_output *wlr_output = output->output; // render_data->output;
+
+  struct wlr_box geometry = { .x = 0, .y = 0 };
+  wlr_output_transformed_resolution(
+      wlr_output, &geometry.width, &geometry.height);
+
+  wlr_matrix_project_box(matrix, &geometry, 0, 0, wlr_output->transform_matrix);
+
+  render_texture(wlr_output,
+      render_data->damage,
+      output->background,
+      render_data->renderer,
+      matrix,
+      &geometry);
+}
+
+static void
 render_output(struct hikari_output *output,
     pixman_region32_t *damage,
     struct timespec *now)
@@ -157,7 +197,7 @@ render_output(struct hikari_output *output,
     .output = wlr_output, .renderer = renderer, .when = now, .damage = damage
   };
 
-  hikari_workspace_render_background(output->workspace, &render_data);
+  render_background(output, &render_data);
 
   struct hikari_view *view = NULL;
   wl_list_for_each_reverse (view, &output->workspace->views, workspace_views) {
@@ -361,6 +401,7 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 {
   output->output = wlr_output;
   output->damage = wlr_output_damage_create(wlr_output);
+  output->background = NULL;
 
 #ifdef HAVE_XWAYLAND
   wl_list_init(&output->unmanaged_xwayland_views);
@@ -394,15 +435,14 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
       hikari_configuration, wlr_output->name);
 
   hikari_output_enable(output);
-
-  if (background != NULL) {
-    load_background(output->workspace, background);
-  }
+  hikari_output_load_background(output, background);
 }
 
 void
 hikari_output_fini(struct hikari_output *output)
 {
+  wlr_texture_destroy(output->background);
+
   wl_list_remove(&output->damage_frame.link);
   /* wl_list_remove(&output->mode.link); */
   wl_list_remove(&output->destroy.link);

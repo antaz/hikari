@@ -10,7 +10,6 @@
 #include <wlr/types/wlr_surface.h>
 
 struct hikari_output {
-  struct wl_list link;
   struct wlr_output *output;
   struct wlr_output_damage *damage;
   struct hikari_workspace *workspace;
@@ -26,6 +25,8 @@ struct hikari_output {
   struct wl_list server_outputs;
 
   struct wlr_box geometry;
+
+  struct wlr_texture *background;
 };
 
 void
@@ -47,6 +48,9 @@ hikari_output_disable(struct hikari_output *output);
 
 void
 hikari_output_enable(struct hikari_output *output);
+
+void
+hikari_output_load_background(struct hikari_output *output, const char *path);
 
 static inline void
 hikari_output_add_damage(struct hikari_output *output, struct wlr_box *region)

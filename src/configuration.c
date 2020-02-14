@@ -1813,6 +1813,13 @@ hikari_configuration_reload(void)
     hikari_configuration_fini(hikari_configuration);
     hikari_free(hikari_configuration);
     hikari_configuration = configuration;
+
+    struct hikari_output *output;
+    wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
+      char *background = hikari_configuration_resolve_background(
+          hikari_configuration, output->output->name);
+      hikari_output_load_background(output, background);
+    }
   } else {
     hikari_configuration_fini(configuration);
     hikari_free(configuration);

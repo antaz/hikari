@@ -18,8 +18,6 @@ struct hikari_workspace {
   struct hikari_sheet *sheets;
   struct hikari_view *focus_view;
 
-  struct wlr_texture *background;
-
   struct wl_list views;
 
   struct wl_list server_workspaces;
@@ -31,10 +29,6 @@ hikari_workspace_init(
 
 void
 hikari_workspace_fini(struct hikari_workspace *workspace);
-
-void
-hikari_workspace_render_background(
-    struct hikari_workspace *workspace, struct hikari_render_data *render_data);
 
 void
 hikari_workspace_focus_view(
