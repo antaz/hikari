@@ -1,5 +1,4 @@
 OBJS = \
-	background.o \
 	border.o \
 	command.o \
 	completion.o \
@@ -27,6 +26,7 @@ OBJS = \
 	move_mode.o \
 	normal_mode.o \
 	output.o \
+	output_config.o \
 	pointer_config.o \
 	resize_mode.o \
 	server.o \

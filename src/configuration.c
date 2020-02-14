@@ -7,7 +7,6 @@
 #include <linux/input-event-codes.h>
 #include <wlr/types/wlr_cursor.h>
 
-#include <hikari/background.h>
 #include <hikari/color.h>
 #include <hikari/command.h>
 #include <hikari/exec.h>
@@ -17,6 +16,7 @@
 #include <hikari/mark.h>
 #include <hikari/memory.h>
 #include <hikari/output.h>
+#include <hikari/output_config.h>
 #include <hikari/pointer_config.h>
 #include <hikari/server.h>
 #include <hikari/sheet.h>
@@ -1576,36 +1576,59 @@ done:
 }
 
 static bool
-parse_background(struct hikari_configuration *configuration,
-    const ucl_object_t *background_obj)
-{
-  const char *key = ucl_object_key(background_obj);
-  char *background_path = copy_in_config_string(background_obj);
-  struct hikari_background *background =
-      hikari_malloc(sizeof(struct hikari_background));
-
-  wl_list_insert(&configuration->backgrounds, &background->link);
-
-  if (background_path != NULL) {
-    hikari_background_init(background, key, background_path);
-    return true;
-  } else {
-    fprintf(stderr,
-        "configuration error: expected string for background image path\n");
-    return false;
-  }
-}
-
-static bool
-parse_backgrounds(struct hikari_configuration *configuration,
-    const ucl_object_t *backgrounds_obj)
+parse_output_config(struct hikari_configuration *configuration,
+    const ucl_object_t *output_config_obj)
 {
   bool success = false;
-  ucl_object_iter_t it = ucl_object_iterate_new(backgrounds_obj);
+  ucl_object_iter_t it = ucl_object_iterate_new(output_config_obj);
+  const char *output_name = ucl_object_key(output_config_obj);
+  char *background = NULL;
 
   const ucl_object_t *cur;
   while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
-    if (!parse_background(configuration, cur)) {
+    const char *key = ucl_object_key(cur);
+
+    if (!strcmp(key, "background")) {
+      background = copy_in_config_string(cur);
+
+      if (background == NULL) {
+        fprintf(
+            stderr, "configuration error: failed to parse \"background\"\n");
+        goto done;
+      }
+    } else {
+      fprintf(stderr,
+          "configuration error: unknown \"outputs\" configuration key \"%s\"\n",
+          key);
+    }
+  }
+
+  struct hikari_output_config *output_config =
+      hikari_malloc(sizeof(struct hikari_output_config));
+  hikari_output_config_init(output_config, output_name, background);
+
+  wl_list_insert(&configuration->output_configs, &output_config->link);
+
+  success = true;
+
+done:
+  ucl_object_iterate_free(it);
+
+  return success;
+}
+
+static bool
+parse_outputs(
+    struct hikari_configuration *configuration, const ucl_object_t *outputs_obj)
+{
+  bool success = false;
+  ucl_object_iter_t it = ucl_object_iterate_new(outputs_obj);
+
+  const ucl_object_t *cur;
+  while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
+    if (!parse_output_config(configuration, cur)) {
+      fprintf(stderr,
+          "configuration error: failed to parse \"outputs\" configuration\n");
       goto done;
     }
   }
@@ -1719,8 +1742,8 @@ hikari_configuration_load(struct hikari_configuration *configuration)
       if (!parse_bindings(configuration, actions, layouts, cur)) {
         goto done;
       }
-    } else if (!strcmp(key, "backgrounds")) {
-      if (!parse_backgrounds(configuration, cur)) {
+    } else if (!strcmp(key, "outputs")) {
+      if (!parse_outputs(configuration, cur)) {
         goto done;
       }
     } else if (!strcmp(key, "inputs")) {
@@ -1764,7 +1787,7 @@ void
 hikari_configuration_init(struct hikari_configuration *configuration)
 {
   wl_list_init(&configuration->autoconfs);
-  wl_list_init(&configuration->backgrounds);
+  wl_list_init(&configuration->output_configs);
   wl_list_init(&configuration->pointer_configs);
 
   hikari_color_convert(configuration->clear, 0x282C34);
@@ -1818,13 +1841,13 @@ hikari_configuration_fini(struct hikari_configuration *configuration)
     hikari_free(autoconf);
   }
 
-  struct hikari_background *background, *background_temp;
+  struct hikari_output_config *output_config, *output_config_temp;
   wl_list_for_each_safe (
-      background, background_temp, &configuration->backgrounds, link) {
-    wl_list_remove(&background->link);
+      output_config, output_config_temp, &configuration->output_configs, link) {
+    wl_list_remove(&output_config->link);
 
-    hikari_background_fini(background);
-    hikari_free(background);
+    hikari_output_config_fini(output_config);
+    hikari_free(output_config);
   }
 
   struct hikari_pointer_config *pointer_config, *pointer_config_temp;
@@ -1843,10 +1866,10 @@ char *
 hikari_configuration_resolve_background(
     struct hikari_configuration *configuration, const char *output_name)
 {
-  struct hikari_background *background;
-  wl_list_for_each (background, &hikari_configuration.backgrounds, link) {
-    if (!strcmp(background->output_name, output_name)) {
-      return background->path;
+  struct hikari_output_config *output_config;
+  wl_list_for_each (output_config, &hikari_configuration.output_configs, link) {
+    if (!strcmp(output_config->output_name, output_name)) {
+      return output_config->background;
     }
   }
 

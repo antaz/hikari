@@ -38,7 +38,7 @@ struct hikari_configuration {
   } normal_mode;
 
   struct wl_list autoconfs;
-  struct wl_list backgrounds;
+  struct wl_list output_configs;
   struct wl_list pointer_configs;
 };
 
