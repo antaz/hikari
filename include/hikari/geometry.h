@@ -5,14 +5,14 @@
 
 void
 hikari_geometry_split_vertical(struct wlr_box *src,
-    float factor,
+    float scale,
     int gap,
     struct wlr_box *left,
     struct wlr_box *right);
 
 void
 hikari_geometry_split_horizontal(struct wlr_box *src,
-    float factor,
+    float scale,
     int gap,
     struct wlr_box *top,
     struct wlr_box *bottom);

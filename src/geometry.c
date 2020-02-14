@@ -4,12 +4,12 @@
 
 #define SPLIT(n, x, y, width, height)                                          \
   void hikari_geometry_split_##n(struct wlr_box *src,                          \
-      float factor,                                                            \
+      float scale,                                                             \
       int gap,                                                                 \
       struct wlr_box *dst1,                                                    \
       struct wlr_box *dst2)                                                    \
   {                                                                            \
-    int width = (src->width - gap) * factor;                                   \
+    int width = (src->width - gap) * (1.0 - scale);                            \
     int rest = src->width - gap - width * 2;                                   \
                                                                                \
     dst1->x = src->x;                                                          \

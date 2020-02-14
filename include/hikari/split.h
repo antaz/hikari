@@ -23,7 +23,7 @@ struct hikari_split {
 struct hikari_vertical_split {
   struct hikari_split split;
 
-  float factor;
+  float scale;
 
   struct hikari_split *left;
   struct hikari_split *right;
@@ -32,7 +32,7 @@ struct hikari_vertical_split {
 struct hikari_horizontal_split {
   struct hikari_split split;
 
-  float factor;
+  float scale;
 
   struct hikari_split *top;
   struct hikari_split *bottom;
@@ -61,13 +61,13 @@ hikari_split_fini(struct hikari_split *split);
 
 void
 hikari_vertical_split_init(struct hikari_vertical_split *vertical_split,
-    float factor,
+    float scale,
     struct hikari_split *left,
     struct hikari_split *right);
 
 void
 hikari_horizontal_split_init(struct hikari_horizontal_split *horizontal_split,
-    float factor,
+    float scale,
     struct hikari_split *left,
     struct hikari_split *right);
 

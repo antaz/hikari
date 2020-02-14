@@ -194,14 +194,22 @@ done:
 }
 
 static bool
-parse_ratio(const ucl_object_t *ratio_obj, double *ratio)
+parse_scale(const ucl_object_t *scale_obj, double *scale)
 {
   bool success = false;
   double ret = 0.5;
-  if (ratio_obj != NULL) {
-    if (!ucl_object_todouble_safe(ratio_obj, &ret)) {
-      fprintf(
-          stderr, "configuration error: expected float for split \"ratio\"\n");
+  if (scale_obj != NULL) {
+    if (!ucl_object_todouble_safe(scale_obj, &ret)) {
+      fprintf(stderr, "configuration error: expected float for \"scale\"\n");
+      goto done;
+    }
+
+    if (ret < 0.1 || ret > 0.9) {
+      fprintf(stderr,
+          "configuration error: \"scale\" of \"%.2f\" is not between \"0.1\" "
+          "and "
+          "\"0.9\"\n",
+          ret);
       goto done;
     }
   }
@@ -209,7 +217,7 @@ parse_ratio(const ucl_object_t *ratio_obj, double *ratio)
   success = true;
 
 done:
-  *ratio = ret;
+  *scale = ret;
 
   return success;
 }
@@ -223,15 +231,15 @@ done:
     const ucl_object_t *cur;                                                   \
     struct hikari_split *first = NULL;                                         \
     struct hikari_split *second = NULL;                                        \
-    double ratio = 0.5;                                                        \
+    double scale = 0.5;                                                        \
                                                                                \
     ucl_object_iter_t it = ucl_object_iterate_new(name##_obj);                 \
                                                                                \
     while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {               \
       const char *key = ucl_object_key(cur);                                   \
                                                                                \
-      if (!strcmp(key, "ratio")) {                                             \
-        if (!parse_ratio(cur, &ratio)) {                                       \
+      if (!strcmp(key, "scale")) {                                             \
+        if (!parse_scale(cur, &scale)) {                                       \
           goto done;                                                           \
         }                                                                      \
       } else if (!strcmp(key, #first)) {                                       \
@@ -275,7 +283,7 @@ done:
     }                                                                          \
                                                                                \
     ret = hikari_malloc(sizeof(struct hikari_##name##_split));                 \
-    hikari_##name##_split_init(ret, ratio, first, second);                     \
+    hikari_##name##_split_init(ret, scale, first, second);                     \
                                                                                \
     success = true;                                                            \
                                                                                \

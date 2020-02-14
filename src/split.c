@@ -26,7 +26,7 @@ apply_split(struct hikari_split *split,
           (struct hikari_vertical_split *)split;
 
       hikari_geometry_split_vertical(geometry,
-          vertical_split->factor,
+          vertical_split->scale,
           hikari_configuration.gap + hikari_configuration.border * 2,
           &left,
           &right);
@@ -41,7 +41,7 @@ apply_split(struct hikari_split *split,
           (struct hikari_horizontal_split *)split;
 
       hikari_geometry_split_horizontal(geometry,
-          horizontal_split->factor,
+          horizontal_split->scale,
           hikari_configuration.gap + hikari_configuration.border * 2,
           &top,
           &bottom);
@@ -87,24 +87,24 @@ hikari_container_init(
 
 void
 hikari_vertical_split_init(struct hikari_vertical_split *vertical_split,
-    float factor,
+    float scale,
     struct hikari_split *left,
     struct hikari_split *right)
 {
   vertical_split->split.type = HIKARI_SPLIT_TYPE_VERTICAL;
-  vertical_split->factor = factor;
+  vertical_split->scale = scale;
   vertical_split->left = left;
   vertical_split->right = right;
 }
 
 void
 hikari_horizontal_split_init(struct hikari_horizontal_split *horizontal_split,
-    float factor,
+    float scale,
     struct hikari_split *top,
     struct hikari_split *bottom)
 {
   horizontal_split->split.type = HIKARI_SPLIT_TYPE_HORIZONTAL;
-  horizontal_split->factor = factor;
+  horizontal_split->scale = scale;
   horizontal_split->top = top;
   horizontal_split->bottom = bottom;
 }
