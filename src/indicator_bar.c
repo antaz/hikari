@@ -75,7 +75,7 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
 
   int font_width, font_height;
   int width, height;
-  struct hikari_font *font = &hikari_configuration.font;
+  struct hikari_font *font = &hikari_configuration->font;
   struct wlr_box geometry = *view_geometry;
 
   damage(indicator_bar, &geometry, output);
@@ -97,11 +97,12 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
       cairo, background[0], background[1], background[2], background[3]);
   cairo_paint(cairo);
 
+  float *border_inactive = hikari_configuration->border_inactive;
   cairo_set_source_rgba(cairo,
-      hikari_configuration.border_inactive[0],
-      hikari_configuration.border_inactive[1],
-      hikari_configuration.border_inactive[2],
-      hikari_configuration.border_inactive[3]);
+      border_inactive[0],
+      border_inactive[1],
+      border_inactive[2],
+      border_inactive[3]);
   cairo_rectangle(cairo, 0, 0, width, height);
   cairo_set_line_width(cairo, 1);
   cairo_stroke(cairo);

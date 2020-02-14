@@ -136,7 +136,7 @@ render_output(struct hikari_output *output,
     goto render_end;
   }
 
-  float *clear_color = hikari_configuration.clear;
+  float *clear_color = hikari_configuration->clear;
 
 #ifndef NDEBUG
   if (hikari_server.track_damage) {
@@ -391,7 +391,7 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
   output_geometry(output);
 
   char *background = hikari_configuration_resolve_background(
-      &hikari_configuration, wlr_output->name);
+      hikari_configuration, wlr_output->name);
 
   hikari_output_enable(output);
 

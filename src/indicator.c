@@ -14,7 +14,7 @@ hikari_indicator_init(struct hikari_indicator *indicator, float color[static 4])
 {
   int width;
   hikari_font_metrics(
-      &hikari_configuration.font, "", &width, &indicator->bar_height);
+      &hikari_configuration->font, "", &width, &indicator->bar_height);
   indicator->bar_height += 8;
 
   int offset = 5;

@@ -461,8 +461,6 @@ void
 hikari_workspace_focus_view(
     struct hikari_workspace *workspace, struct hikari_view *view)
 {
-  /* assert(workspace->focus_view != view && hikari_server.workspace !=
-   * workspace); */
   struct wlr_seat *seat = hikari_server.seat;
 
   if (!hikari_server_in_normal_mode()) {
@@ -488,7 +486,7 @@ hikari_workspace_focus_view(
 
     hikari_indicator_update(&hikari_server.indicator,
         view,
-        hikari_configuration.indicator_selected);
+        hikari_configuration->indicator_selected);
 
     hikari_server_refresh_indication();
   } else {
@@ -623,8 +621,9 @@ hikari_workspace_snap_view_up(struct hikari_workspace *workspace)
 
   struct wlr_box *view_geometry = hikari_view_geometry(focus_view);
 
-  int lookahead =
-      view_geometry->y - hikari_configuration.border - hikari_configuration.gap;
+  int border = hikari_configuration->border;
+  int gap = hikari_configuration->gap;
+  int lookahead = view_geometry->y - border - gap;
   int view_right = view_geometry->x + view_geometry->width;
   int y;
 
@@ -640,19 +639,17 @@ hikari_workspace_snap_view_up(struct hikari_workspace *workspace)
 
     int right = geometry->x + geometry->width;
 
-    if (geometry->y + geometry->height + hikari_configuration.border <
-            lookahead &&
+    if (geometry->y + geometry->height + border < lookahead &&
         ((view_right >= geometry->x && geometry->x >= view_geometry->x) ||
             (right >= view_geometry->x && view_geometry->x >= geometry->x))) {
       found = true;
-      y = geometry->y + hikari_configuration.gap + geometry->height +
-          hikari_configuration.border;
+      y = geometry->y + gap + geometry->height + border;
       break;
     }
   }
 
   if (!found) {
-    y = hikari_configuration.border;
+    y = border;
   }
 
   hikari_view_move_absolute(focus_view, view_geometry->x, y);
@@ -668,8 +665,9 @@ hikari_workspace_snap_view_down(struct hikari_workspace *workspace)
   struct wlr_box *view_geometry = hikari_view_geometry(focus_view);
   struct wlr_output *output = workspace->output->output;
 
-  int lookahead = view_geometry->y + view_geometry->height +
-                  hikari_configuration.border + hikari_configuration.gap;
+  int border = hikari_configuration->border;
+  int gap = hikari_configuration->gap;
+  int lookahead = view_geometry->y + view_geometry->height + border + gap;
   int view_right = view_geometry->x + view_geometry->width;
   int y;
 
@@ -689,8 +687,7 @@ hikari_workspace_snap_view_down(struct hikari_workspace *workspace)
         ((view_right >= geometry->x && geometry->x >= view_geometry->x) ||
             (right >= view_geometry->x && view_geometry->x >= geometry->x))) {
       found = true;
-      y = geometry->y - hikari_configuration.gap - hikari_configuration.border -
-          view_geometry->height;
+      y = geometry->y - gap - border - view_geometry->height;
       break;
     }
   }
@@ -699,7 +696,7 @@ hikari_workspace_snap_view_down(struct hikari_workspace *workspace)
     int ow, oh;
 
     wlr_output_transformed_resolution(output, &ow, &oh);
-    y = oh - view_geometry->height - hikari_configuration.border;
+    y = oh - view_geometry->height - border;
   }
 
   hikari_view_move_absolute(focus_view, view_geometry->x, y);
@@ -714,8 +711,9 @@ hikari_workspace_snap_view_left(struct hikari_workspace *workspace)
 
   struct wlr_box *view_geometry = hikari_view_geometry(focus_view);
 
-  int lookahead =
-      view_geometry->x - hikari_configuration.gap - hikari_configuration.border;
+  int border = hikari_configuration->border;
+  int gap = hikari_configuration->gap;
+  int lookahead = view_geometry->x - gap - border;
   int view_bottom = view_geometry->y + view_geometry->height;
   int x;
 
@@ -731,19 +729,17 @@ hikari_workspace_snap_view_left(struct hikari_workspace *workspace)
 
     int bottom = geometry->y + geometry->height;
 
-    if (geometry->x + geometry->width + hikari_configuration.border <
-            lookahead &&
+    if (geometry->x + geometry->width + border < lookahead &&
         ((view_bottom >= geometry->y && geometry->y >= view_geometry->y) ||
             (bottom >= view_geometry->y && view_geometry->y >= geometry->y))) {
       found = true;
-      x = geometry->x + geometry->width + hikari_configuration.gap +
-          hikari_configuration.border;
+      x = geometry->x + geometry->width + gap + border;
       break;
     }
   }
 
   if (!found) {
-    x = hikari_configuration.border;
+    x = border;
   }
 
   hikari_view_move_absolute(focus_view, x, view_geometry->y);
@@ -759,8 +755,9 @@ hikari_workspace_snap_view_right(struct hikari_workspace *workspace)
   struct wlr_box *view_geometry = hikari_view_geometry(focus_view);
   struct wlr_output *output = workspace->output->output;
 
-  int lookahead = view_geometry->x + view_geometry->width +
-                  hikari_configuration.gap + hikari_configuration.border;
+  int border = hikari_configuration->border;
+  int gap = hikari_configuration->gap;
+  int lookahead = view_geometry->x + view_geometry->width + gap + border;
   int view_bottom = view_geometry->y + view_geometry->height;
   int x;
 
@@ -780,8 +777,7 @@ hikari_workspace_snap_view_right(struct hikari_workspace *workspace)
         ((view_bottom >= geometry->y && geometry->y >= view_geometry->y) ||
             (bottom >= view_geometry->y && view_geometry->y >= geometry->y))) {
       found = true;
-      x = geometry->x - hikari_configuration.gap - view_geometry->width -
-          hikari_configuration.border;
+      x = geometry->x - gap - view_geometry->width - border;
       break;
     }
   }
@@ -790,7 +786,7 @@ hikari_workspace_snap_view_right(struct hikari_workspace *workspace)
     int ow, oh;
 
     wlr_output_transformed_resolution(output, &ow, &oh);
-    x = ow - view_geometry->width - hikari_configuration.border;
+    x = ow - view_geometry->width - border;
   }
 
   hikari_view_move_absolute(focus_view, x, view_geometry->y);
@@ -811,7 +807,7 @@ pin_to_sheet(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
         geometry,
         output,
         focus_view->sheet,
-        hikari_configuration.indicator_selected,
+        hikari_configuration->indicator_selected,
         hikari_view_is_iconified(focus_view),
         hikari_view_is_floating(focus_view));
   }
@@ -868,7 +864,7 @@ hikari_workspace_toggle_view_iconified(struct hikari_workspace *workspace)
       geometry,
       output,
       focus_view->sheet,
-      hikari_configuration.indicator_selected,
+      hikari_configuration->indicator_selected,
       hikari_view_is_iconified(focus_view),
       hikari_view_is_floating(focus_view));
 }
@@ -887,7 +883,7 @@ hikari_workspace_toggle_view_floating(struct hikari_workspace *workspace)
       geometry,
       output,
       focus_view->sheet,
-      hikari_configuration.indicator_selected,
+      hikari_configuration->indicator_selected,
       hikari_view_is_iconified(focus_view),
       hikari_view_is_floating(focus_view));
 }

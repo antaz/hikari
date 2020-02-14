@@ -46,7 +46,7 @@ add_pointer(struct hikari_server *server, struct wlr_input_device *device)
 {
   struct hikari_pointer_config *pointer_config =
       hikari_configuration_resolve_pointer_config(
-          &hikari_configuration, device->name);
+          hikari_configuration, device->name);
 
   if (pointer_config != NULL) {
     struct libinput_device *libinput_device =
@@ -568,14 +568,13 @@ server_init(struct hikari_server *server)
   server->track_damage = false;
 #endif
 
-  hikari_configuration_init(&hikari_configuration);
+  hikari_configuration = hikari_malloc(sizeof(struct hikari_configuration));
 
-  if (!hikari_configuration_load(&hikari_configuration)) {
-    hikari_configuration_fini(&hikari_configuration);
+  hikari_configuration_init(hikari_configuration);
 
-    for (int i = 0; i < HIKARI_NR_OF_MARKS; i++) {
-      hikari_free(execs[i].command);
-    }
+  if (!hikari_configuration_load(hikari_configuration)) {
+    hikari_configuration_fini(hikari_configuration);
+    hikari_free(hikari_configuration);
 
     exit(EXIT_FAILURE);
   }
@@ -592,7 +591,7 @@ server_init(struct hikari_server *server)
   assert(server->display);
 
   hikari_indicator_init(
-      &server->indicator, hikari_configuration.indicator_selected);
+      &server->indicator, hikari_configuration->indicator_selected);
 
   wl_list_init(&server->outputs);
 
@@ -666,7 +665,6 @@ server_init(struct hikari_server *server)
   hikari_resize_mode_init(&server->resize_mode);
 
   hikari_marks_init();
-  hikari_execs_init();
 }
 
 static void
@@ -718,9 +716,9 @@ hikari_server_stop(void)
 
   wl_display_destroy(hikari_server.display);
 
-  hikari_configuration_fini(&hikari_configuration);
+  hikari_configuration_fini(hikari_configuration);
+  hikari_free(hikari_configuration);
   hikari_marks_fini();
-  hikari_execs_fini();
 }
 
 struct hikari_group *
@@ -769,6 +767,12 @@ hikari_server_lock(void *arg)
   wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
     hikari_output_disable(output);
   }
+}
+
+void
+hikari_server_reload(void *arg)
+{
+  hikari_configuration_reload();
 }
 
 void
@@ -835,7 +839,7 @@ hikari_server_enter_move_mode(void *arg)
 
   hikari_indicator_update(&hikari_server.indicator,
       focus_view,
-      hikari_configuration.indicator_insert);
+      hikari_configuration->indicator_insert);
 
   hikari_view_raise(focus_view);
   hikari_view_top_left_cursor(focus_view);
@@ -855,7 +859,7 @@ hikari_server_enter_resize_mode(void *arg)
 
   hikari_indicator_update(&hikari_server.indicator,
       focus_view,
-      hikari_configuration.indicator_insert);
+      hikari_configuration->indicator_insert);
 
   hikari_view_raise(focus_view);
   hikari_view_bottom_right_cursor(focus_view);
@@ -887,7 +891,7 @@ hikari_server_enter_group_assign_mode(void *arg)
         geometry,
         output,
         " ",
-        hikari_configuration.indicator_insert);
+        hikari_configuration->indicator_insert);
   } else {
     hikari_input_buffer_replace(&mode->input_buffer, focus_view->group->name);
 
@@ -895,7 +899,7 @@ hikari_server_enter_group_assign_mode(void *arg)
         geometry,
         output,
         focus_view->group->name,
-        hikari_configuration.indicator_insert);
+        hikari_configuration->indicator_insert);
   }
 }
 
@@ -991,13 +995,13 @@ hikari_server_enter_mark_assign_mode(void *arg)
         geometry,
         output,
         " ",
-        hikari_configuration.indicator_insert);
+        hikari_configuration->indicator_insert);
   } else {
     hikari_indicator_update_mark(&hikari_server.indicator,
         geometry,
         output,
         mark->name,
-        hikari_configuration.indicator_insert);
+        hikari_configuration->indicator_insert);
   }
 
   hikari_server_refresh_indication();

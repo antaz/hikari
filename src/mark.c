@@ -7,34 +7,34 @@
 #include <hikari/memory.h>
 #include <hikari/view.h>
 
-struct hikari_mark marks[HIKARI_NR_OF_MARKS];
+struct hikari_mark hikari_marks[HIKARI_NR_OF_MARKS];
 
-struct hikari_mark *HIKARI_MARK_a = &marks[0];
-struct hikari_mark *HIKARI_MARK_b = &marks[1];
-struct hikari_mark *HIKARI_MARK_c = &marks[2];
-struct hikari_mark *HIKARI_MARK_d = &marks[3];
-struct hikari_mark *HIKARI_MARK_e = &marks[4];
-struct hikari_mark *HIKARI_MARK_f = &marks[5];
-struct hikari_mark *HIKARI_MARK_g = &marks[6];
-struct hikari_mark *HIKARI_MARK_h = &marks[7];
-struct hikari_mark *HIKARI_MARK_i = &marks[8];
-struct hikari_mark *HIKARI_MARK_j = &marks[9];
-struct hikari_mark *HIKARI_MARK_k = &marks[10];
-struct hikari_mark *HIKARI_MARK_l = &marks[11];
-struct hikari_mark *HIKARI_MARK_m = &marks[12];
-struct hikari_mark *HIKARI_MARK_n = &marks[13];
-struct hikari_mark *HIKARI_MARK_o = &marks[14];
-struct hikari_mark *HIKARI_MARK_p = &marks[15];
-struct hikari_mark *HIKARI_MARK_q = &marks[16];
-struct hikari_mark *HIKARI_MARK_r = &marks[17];
-struct hikari_mark *HIKARI_MARK_s = &marks[18];
-struct hikari_mark *HIKARI_MARK_t = &marks[19];
-struct hikari_mark *HIKARI_MARK_u = &marks[20];
-struct hikari_mark *HIKARI_MARK_v = &marks[21];
-struct hikari_mark *HIKARI_MARK_w = &marks[22];
-struct hikari_mark *HIKARI_MARK_x = &marks[23];
-struct hikari_mark *HIKARI_MARK_y = &marks[24];
-struct hikari_mark *HIKARI_MARK_z = &marks[25];
+struct hikari_mark *HIKARI_MARK_a = &hikari_marks[0];
+struct hikari_mark *HIKARI_MARK_b = &hikari_marks[1];
+struct hikari_mark *HIKARI_MARK_c = &hikari_marks[2];
+struct hikari_mark *HIKARI_MARK_d = &hikari_marks[3];
+struct hikari_mark *HIKARI_MARK_e = &hikari_marks[4];
+struct hikari_mark *HIKARI_MARK_f = &hikari_marks[5];
+struct hikari_mark *HIKARI_MARK_g = &hikari_marks[6];
+struct hikari_mark *HIKARI_MARK_h = &hikari_marks[7];
+struct hikari_mark *HIKARI_MARK_i = &hikari_marks[8];
+struct hikari_mark *HIKARI_MARK_j = &hikari_marks[9];
+struct hikari_mark *HIKARI_MARK_k = &hikari_marks[10];
+struct hikari_mark *HIKARI_MARK_l = &hikari_marks[11];
+struct hikari_mark *HIKARI_MARK_m = &hikari_marks[12];
+struct hikari_mark *HIKARI_MARK_n = &hikari_marks[13];
+struct hikari_mark *HIKARI_MARK_o = &hikari_marks[14];
+struct hikari_mark *HIKARI_MARK_p = &hikari_marks[15];
+struct hikari_mark *HIKARI_MARK_q = &hikari_marks[16];
+struct hikari_mark *HIKARI_MARK_r = &hikari_marks[17];
+struct hikari_mark *HIKARI_MARK_s = &hikari_marks[18];
+struct hikari_mark *HIKARI_MARK_t = &hikari_marks[19];
+struct hikari_mark *HIKARI_MARK_u = &hikari_marks[20];
+struct hikari_mark *HIKARI_MARK_v = &hikari_marks[21];
+struct hikari_mark *HIKARI_MARK_w = &hikari_marks[22];
+struct hikari_mark *HIKARI_MARK_x = &hikari_marks[23];
+struct hikari_mark *HIKARI_MARK_y = &hikari_marks[24];
+struct hikari_mark *HIKARI_MARK_z = &hikari_marks[25];
 
 void
 hikari_marks_init(void)
@@ -43,8 +43,8 @@ hikari_marks_init(void)
   for (int i = 0; i < HIKARI_NR_OF_MARKS; i++) {
     name = hikari_malloc(2);
     snprintf(name, 2, "%c", 'a' + i);
-    marks[i].name = name;
-    marks[i].view = NULL;
+    hikari_marks[i].name = name;
+    hikari_marks[i].view = NULL;
   }
 }
 
@@ -52,7 +52,7 @@ void
 hikari_marks_fini(void)
 {
   for (int i = 0; i < HIKARI_NR_OF_MARKS; i++) {
-    hikari_free(marks[i].name);
+    hikari_free(hikari_marks[i].name);
   }
 }
 

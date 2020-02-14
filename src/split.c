@@ -27,7 +27,7 @@ apply_split(struct hikari_split *split,
 
       hikari_geometry_split_vertical(geometry,
           vertical_split->scale,
-          hikari_configuration.gap + hikari_configuration.border * 2,
+          hikari_configuration->gap + hikari_configuration->border * 2,
           &left,
           &right);
 
@@ -42,7 +42,7 @@ apply_split(struct hikari_split *split,
 
       hikari_geometry_split_horizontal(geometry,
           horizontal_split->scale,
-          hikari_configuration.gap + hikari_configuration.border * 2,
+          hikari_configuration->gap + hikari_configuration->border * 2,
           &top,
           &bottom);
 
@@ -70,7 +70,7 @@ hikari_split_apply(struct hikari_split *split,
   }
 
   hikari_geometry_shrink(
-      geometry, hikari_configuration.gap + hikari_configuration.border);
+      geometry, hikari_configuration->gap + hikari_configuration->border);
 
   apply_split(split, geometry, first);
 }

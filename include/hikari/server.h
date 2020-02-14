@@ -139,6 +139,9 @@ void
 hikari_server_lock(void *arg);
 
 void
+hikari_server_reload(void *arg);
+
+void
 hikari_server_execute_command(void *arg);
 
 void

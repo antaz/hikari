@@ -309,25 +309,23 @@ move_view(struct hikari_view *view, struct wlr_box *geometry, int x, int y)
   wlr_output_effective_resolution(
       view->output->output, &screen_width, &screen_height);
 
-  int constrained_x = x, constrained_y = y;
+  int constrained_x = x;
+  int constrained_y = y;
+  int border = hikari_configuration->border;
 
   if (constrained_x != 0) {
     if (constrained_x > screen_width - 10) {
       constrained_x = screen_width - 10;
-    } else if (constrained_x + geometry->width +
-                   hikari_configuration.border * 2 <
-               10) {
-      constrained_x = -geometry->width - 2 * hikari_configuration.border + 10;
+    } else if (constrained_x + geometry->width + border * 2 < 10) {
+      constrained_x = -geometry->width - 2 * border + 10;
     }
   }
 
   if (constrained_y != 0) {
     if (geometry->y > screen_height - 10) {
       constrained_y = screen_height - 10;
-    } else if (constrained_y + geometry->height +
-                   hikari_configuration.border * 2 <
-               10) {
-      constrained_y = -geometry->height - 2 * hikari_configuration.border + 10;
+    } else if (constrained_y + geometry->height + border * 2 < 10) {
+      constrained_y = -geometry->height - 2 * border + 10;
     }
   }
 
@@ -441,7 +439,7 @@ hikari_view_set_title(struct hikari_view *view, const char *title)
           geometry,
           output,
           title,
-          hikari_configuration.indicator_selected);
+          hikari_configuration->indicator_selected);
     }
   } else {
     view->title = NULL;

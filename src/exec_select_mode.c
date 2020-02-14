@@ -6,6 +6,7 @@
 #include <wlr/types/wlr_keyboard.h>
 
 #include <hikari/command.h>
+#include <hikari/configuration.h>
 #include <hikari/exec.h>
 #include <hikari/indicator.h>
 #include <hikari/indicator_frame.h>

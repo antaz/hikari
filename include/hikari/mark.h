@@ -10,7 +10,7 @@ struct hikari_mark {
 
 #define HIKARI_NR_OF_MARKS 26
 
-extern struct hikari_mark marks[HIKARI_NR_OF_MARKS];
+extern struct hikari_mark hikari_marks[HIKARI_NR_OF_MARKS];
 
 extern struct hikari_mark *HIKARI_MARK_a;
 extern struct hikari_mark *HIKARI_MARK_b;

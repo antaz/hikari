@@ -26,7 +26,7 @@
 #include <hikari/view_autoconf.h>
 #include <hikari/workspace.h>
 
-struct hikari_configuration hikari_configuration;
+struct hikari_configuration *hikari_configuration = NULL;
 
 static bool
 parse_modifier_mask(const char *str, uint8_t *result, const char **remaining)
@@ -304,7 +304,7 @@ resolve_autoconf(struct hikari_configuration *configuration, const char *app_id)
 {
   if (app_id != NULL) {
     struct hikari_view_autoconf *autoconf;
-    wl_list_for_each (autoconf, &hikari_configuration.autoconfs, link) {
+    wl_list_for_each (autoconf, &configuration->autoconfs, link) {
       if (!strcmp(autoconf->app_id, app_id)) {
         return autoconf;
       }
@@ -326,7 +326,7 @@ hikari_configuration_resolve_view_autoconf(
     bool *focus)
 {
   struct hikari_view_autoconf *view_autoconf =
-      resolve_autoconf(&hikari_configuration, app_id);
+      resolve_autoconf(configuration, app_id);
 
   if (view_autoconf != NULL) {
     *focus = view_autoconf->focus;
@@ -508,7 +508,7 @@ parse_execute(
       goto done;
     } else {
       int nr = key[0] - 'a';
-      execute = &execs[nr];
+      execute = &configuration->execs[nr];
     }
 
     assert(execute != NULL);
@@ -593,8 +593,9 @@ done:
 }
 
 static bool
-parse_autoconf(
-    const ucl_object_t *autoconf_obj, struct hikari_view_autoconf **autoconf)
+parse_autoconf(struct hikari_configuration *configuration,
+    const ucl_object_t *autoconf_obj,
+    struct hikari_view_autoconf **autoconf)
 {
   bool success = false;
   (*autoconf)->group_name = NULL;
@@ -653,7 +654,7 @@ parse_autoconf(
         goto done;
       }
 
-      (*autoconf)->mark = &marks[mark_name[0] - 'a'];
+      (*autoconf)->mark = &hikari_marks[mark_name[0] - 'a'];
     } else if (!strcmp(key, "position")) {
       if (!parse_position(
               cur, &(*autoconf)->position.x, &(*autoconf)->position.y)) {
@@ -699,7 +700,7 @@ parse_autoconfs(
     struct hikari_view_autoconf *autoconf =
         hikari_malloc(sizeof(struct hikari_view_autoconf));
 
-    wl_list_insert(&hikari_configuration.autoconfs, &autoconf->link);
+    wl_list_insert(&configuration->autoconfs, &autoconf->link);
 
     const char *key = ucl_object_key(cur);
     size_t keylen = strlen(key);
@@ -707,7 +708,7 @@ parse_autoconfs(
     autoconf->app_id = hikari_malloc(keylen + 1);
     strcpy(autoconf->app_id, key);
 
-    if (!parse_autoconf(cur, &autoconf)) {
+    if (!parse_autoconf(configuration, cur, &autoconf)) {
       fprintf(stderr,
           "configuration error: failed to parse \"autoconf\" \"%s\"\n",
           key);
@@ -937,6 +938,10 @@ parse_binding(const ucl_object_t *obj,
     *arg = NULL;
   } else if (!strcmp(str, "lock")) {
     *action = hikari_server_lock;
+    *cleanup = NULL;
+    *arg = NULL;
+  } else if (!strcmp(str, "reload")) {
+    *action = hikari_server_reload;
     *cleanup = NULL;
     *arg = NULL;
 #ifndef NDEBUG
@@ -1353,8 +1358,6 @@ parse_input_bindings(bool (*binding_parser)(struct xkb_state *xkb_state,
     if (n[i] > 0) {
       nbindings[i] = n[i];
       bindings[i] = hikari_calloc(n[i], sizeof(struct hikari_keybinding));
-    } else {
-      bindings[i] = NULL;
     }
 
     n[i] = 0;
@@ -1409,24 +1412,24 @@ parse_bindings(struct hikari_configuration *configuration,
     const char *key = ucl_object_key(cur);
 
     if (!strcmp(key, "keyboard")) {
-      if (!parse_input_bindings(&parse_key,
+      if (!parse_input_bindings(parse_key,
               state,
               configuration,
               actions,
               layouts,
-              configuration->normal_mode.nkeybindings,
-              configuration->normal_mode.keybindings,
+              configuration->bindings.nkeybindings,
+              configuration->bindings.keybindings,
               cur)) {
         goto done;
       }
     } else if (!strcmp(key, "mouse")) {
-      if (!parse_input_bindings(&parse_pointer,
+      if (!parse_input_bindings(parse_pointer,
               state,
               configuration,
               actions,
               layouts,
-              configuration->normal_mode.nmousebindings,
-              configuration->normal_mode.mousebindings,
+              configuration->bindings.nmousebindings,
+              configuration->bindings.mousebindings,
               cur)) {
         goto done;
       }
@@ -1796,6 +1799,28 @@ done:
   return success;
 }
 
+bool
+hikari_configuration_reload(void)
+{
+  struct hikari_configuration *configuration =
+      hikari_malloc(sizeof(struct hikari_configuration));
+
+  hikari_configuration_init(configuration);
+
+  bool success = hikari_configuration_load(configuration);
+
+  if (success) {
+    hikari_configuration_fini(hikari_configuration);
+    hikari_free(hikari_configuration);
+    hikari_configuration = configuration;
+  } else {
+    hikari_configuration_fini(configuration);
+    hikari_free(configuration);
+  }
+
+  return success;
+}
+
 void
 hikari_configuration_init(struct hikari_configuration *configuration)
 {
@@ -1815,8 +1840,19 @@ hikari_configuration_init(struct hikari_configuration *configuration)
 
   hikari_font_init(&configuration->font, "DejaVu Sans Mono 10");
 
+  for (int i = 0; i < 256; i++) {
+    configuration->bindings.nkeybindings[i] = 0;
+    configuration->bindings.keybindings[i] = NULL;
+    configuration->bindings.nmousebindings[i] = 0;
+    configuration->bindings.mousebindings[i] = NULL;
+  }
+
   configuration->border = 1;
   configuration->gap = 5;
+
+  for (int i = 0; i < HIKARI_NR_OF_EXECS; i++) {
+    hikari_exec_init(&configuration->execs[i]);
+  }
 }
 
 static void
@@ -1839,11 +1875,11 @@ cleanup_bindings(struct hikari_keybinding **bindings, uint8_t *n)
 void
 hikari_configuration_fini(struct hikari_configuration *configuration)
 {
-  cleanup_bindings(configuration->normal_mode.keybindings,
-      configuration->normal_mode.nkeybindings);
+  cleanup_bindings(configuration->bindings.keybindings,
+      configuration->bindings.nkeybindings);
 
-  cleanup_bindings(configuration->normal_mode.mousebindings,
-      configuration->normal_mode.nmousebindings);
+  cleanup_bindings(configuration->bindings.mousebindings,
+      configuration->bindings.nmousebindings);
 
   struct hikari_view_autoconf *autoconf, *autoconf_temp;
   wl_list_for_each_safe (
@@ -1873,6 +1909,10 @@ hikari_configuration_fini(struct hikari_configuration *configuration)
     hikari_pointer_config_fini(pointer_config);
     hikari_free(pointer_config);
   }
+
+  for (int i = 0; i < HIKARI_NR_OF_EXECS; i++) {
+    hikari_exec_fini(&configuration->execs[i]);
+  }
 }
 
 char *
@@ -1880,7 +1920,7 @@ hikari_configuration_resolve_background(
     struct hikari_configuration *configuration, const char *output_name)
 {
   struct hikari_output_config *output_config;
-  wl_list_for_each (output_config, &hikari_configuration.output_configs, link) {
+  wl_list_for_each (output_config, &configuration->output_configs, link) {
     if (!strcmp(output_config->output_name, output_name)) {
       return output_config->background;
     }
@@ -1894,8 +1934,7 @@ hikari_configuration_resolve_pointer_config(
     struct hikari_configuration *configuration, const char *pointer_name)
 {
   struct hikari_pointer_config *pointer_config;
-  wl_list_for_each (
-      pointer_config, &hikari_configuration.pointer_configs, link) {
+  wl_list_for_each (pointer_config, &configuration->pointer_configs, link) {
     if (!strcmp(pointer_config->name, pointer_name)) {
       return pointer_config;
     }

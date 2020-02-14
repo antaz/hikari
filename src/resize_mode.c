@@ -18,7 +18,7 @@ cancel(void)
   if (focus_view != NULL) {
     hikari_indicator_update(&hikari_server.indicator,
         focus_view,
-        hikari_configuration.indicator_selected);
+        hikari_configuration->indicator_selected);
 
     hikari_view_center_cursor(focus_view);
   }
@@ -49,7 +49,7 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
     render_data->geometry = hikari_view_border_geometry(focus_view);
 
     hikari_indicator_frame_render(&focus_view->indicator_frame,
-        hikari_configuration.indicator_insert,
+        hikari_configuration->indicator_insert,
         render_data);
 
     hikari_indicator_render(&hikari_server.indicator, render_data);
@@ -69,8 +69,9 @@ cursor_move(void)
   int cursor_x = hikari_server.cursor->x - output->geometry.x;
   int cursor_y = hikari_server.cursor->y - output->geometry.y;
 
-  int new_width = cursor_x - geometry->x - hikari_configuration.border;
-  int new_height = cursor_y - geometry->y - hikari_configuration.border;
+  int border = hikari_configuration->border;
+  int new_width = cursor_x - geometry->x - border;
+  int new_height = cursor_y - geometry->y - border;
 
   if (new_width > 0 && new_height > 0) {
     hikari_view_resize_absolute(focus_view, new_width, new_height);

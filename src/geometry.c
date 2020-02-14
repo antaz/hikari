@@ -40,15 +40,16 @@ void
 hikari_geometry_constrain_position(
     struct wlr_box *geometry, int screen_width, int screen_height, int x, int y)
 {
-  if (x + geometry->width + hikari_configuration.border > screen_width) {
-    geometry->x = screen_width - geometry->width - hikari_configuration.border;
+  int border = hikari_configuration->border;
+
+  if (x + geometry->width + border > screen_width) {
+    geometry->x = screen_width - geometry->width - border;
   } else {
     geometry->x = x;
   }
 
-  if (y + geometry->height + hikari_configuration.border > screen_height) {
-    geometry->y =
-        screen_height - geometry->height - hikari_configuration.border;
+  if (y + geometry->height + border > screen_height) {
+    geometry->y = screen_height - geometry->height - border;
   } else {
     geometry->y = y;
   }

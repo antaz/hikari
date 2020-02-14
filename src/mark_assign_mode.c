@@ -235,13 +235,13 @@ update_state(struct hikari_mark *mark,
         geometry,
         output,
         mark->name,
-        hikari_configuration.indicator_insert);
+        hikari_configuration->indicator_insert);
   } else {
     hikari_indicator_update_mark(&hikari_server.indicator,
         geometry,
         output,
         " ",
-        hikari_configuration.indicator_insert);
+        hikari_configuration->indicator_insert);
   }
 
   if (mode->pending_mark != mark) {
@@ -250,7 +250,7 @@ update_state(struct hikari_mark *mark,
     if (mark != NULL && mark->view != NULL) {
       hikari_indicator_update(&mode->indicator,
           mark->view,
-          hikari_configuration.indicator_conflict);
+          hikari_configuration->indicator_conflict);
 
       hikari_view_damage_whole(mark->view);
     }
@@ -277,7 +277,7 @@ confirm_mark_assign(struct wlr_box *geometry, struct hikari_output *output)
         geometry,
         output,
         mode->pending_mark->name,
-        hikari_configuration.indicator_selected);
+        hikari_configuration->indicator_selected);
 
     mode->pending_mark = NULL;
   } else {
@@ -289,7 +289,7 @@ confirm_mark_assign(struct wlr_box *geometry, struct hikari_output *output)
         geometry,
         output,
         "",
-        hikari_configuration.indicator_selected);
+        hikari_configuration->indicator_selected);
   }
 
   hikari_server_enter_normal_mode(NULL);
@@ -311,13 +311,13 @@ cancel_mark_assign(struct hikari_mark *mark,
         geometry,
         output,
         view->mark->name,
-        hikari_configuration.indicator_selected);
+        hikari_configuration->indicator_selected);
   } else {
     hikari_indicator_update_mark(&hikari_server.indicator,
         geometry,
         output,
         "",
-        hikari_configuration.indicator_selected);
+        hikari_configuration->indicator_selected);
   }
 
   hikari_server_enter_normal_mode(NULL);
@@ -380,7 +380,7 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
         hikari_view_border_geometry(mode->pending_mark->view);
 
     hikari_indicator_frame_render(&mode->pending_mark->view->indicator_frame,
-        hikari_configuration.indicator_conflict,
+        hikari_configuration->indicator_conflict,
         render_data);
     hikari_indicator_render(&mode->indicator, render_data);
   }
@@ -389,7 +389,7 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
     render_data->geometry = hikari_view_border_geometry(view);
 
     hikari_indicator_frame_render(&view->indicator_frame,
-        hikari_configuration.indicator_selected,
+        hikari_configuration->indicator_selected,
         render_data);
 
     hikari_indicator_render(&hikari_server.indicator, render_data);
@@ -422,7 +422,7 @@ hikari_mark_assign_mode_init(struct hikari_mark_assign_mode *mark_assign_mode)
   mark_assign_mode->mode.cursor_move = cursor_move;
 
   hikari_indicator_init(
-      &mark_assign_mode->indicator, hikari_configuration.indicator_conflict);
+      &mark_assign_mode->indicator, hikari_configuration->indicator_conflict);
 }
 
 void

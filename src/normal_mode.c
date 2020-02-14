@@ -27,11 +27,10 @@ normal_mode_keyboard_handler(struct hikari_workspace *workspace,
   if (event->state == WLR_KEY_PRESSED) {
     uint32_t modifiers = hikari_server.keyboard_state.modifiers;
 
-    for (int i = 0;
-         i < hikari_configuration.normal_mode.nkeybindings[modifiers];
+    for (int i = 0; i < hikari_configuration->bindings.nkeybindings[modifiers];
          i++) {
       struct hikari_keybinding *keybinding =
-          &hikari_configuration.normal_mode.keybindings[modifiers][i];
+          &hikari_configuration->bindings.keybindings[modifiers][i];
       if (keybinding->modifiers == modifiers &&
           keybinding->keycode == event->keycode) {
         keybinding->action(keybinding->arg);
@@ -54,10 +53,10 @@ normal_mode_button_handler(
     uint32_t modifiers = hikari_server.keyboard_state.modifiers;
 
     for (int i = 0;
-         i < hikari_configuration.normal_mode.nmousebindings[modifiers];
+         i < hikari_configuration->bindings.nmousebindings[modifiers];
          i++) {
       struct hikari_keybinding *mousebinding =
-          &hikari_configuration.normal_mode.mousebindings[modifiers][i];
+          &hikari_configuration->bindings.mousebindings[modifiers][i];
       if (mousebinding->modifiers == modifiers &&
           mousebinding->keycode == event->button) {
         mousebinding->action(mousebinding->arg);
@@ -191,6 +190,8 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
     struct hikari_workspace *workspace = hikari_server.workspace;
     struct hikari_group *group = focus_view->group;
 
+    float *indicator_first = hikari_configuration->indicator_first;
+    float *indicator_grouped = hikari_configuration->indicator_grouped;
     struct hikari_view *view;
     wl_list_for_each_reverse (
         view, &group->visible_views, visible_group_views) {
@@ -198,13 +199,11 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
         render_data->geometry = hikari_view_border_geometry(view);
 
         if (hikari_group_first_view(group, workspace) == view) {
-          hikari_indicator_frame_render(&view->indicator_frame,
-              hikari_configuration.indicator_first,
-              render_data);
+          hikari_indicator_frame_render(
+              &view->indicator_frame, indicator_first, render_data);
         } else {
-          hikari_indicator_frame_render(&view->indicator_frame,
-              hikari_configuration.indicator_grouped,
-              render_data);
+          hikari_indicator_frame_render(
+              &view->indicator_frame, indicator_grouped, render_data);
         }
       }
     }
@@ -213,7 +212,7 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
       render_data->geometry = hikari_view_border_geometry(focus_view);
 
       hikari_indicator_frame_render(&focus_view->indicator_frame,
-          hikari_configuration.indicator_selected,
+          hikari_configuration->indicator_selected,
           render_data);
 
       hikari_indicator_render(&hikari_server.indicator, render_data);

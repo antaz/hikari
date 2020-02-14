@@ -143,11 +143,13 @@ grid_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
   struct hikari_view *view = first;
   LAYOUT_VIEWS(nr_of_views, first, frame)
   {
-    int border = 2 * hikari_configuration.border;
+    int border_width = hikari_configuration->border;
+    int gap = hikari_configuration->gap;
+    int border = 2 * border_width;
     int row_gaps = nr_of_rows - 1;
     int col_gaps = nr_of_cols - 1;
-    int gaps_height = hikari_configuration.gap * row_gaps;
-    int gaps_width = hikari_configuration.gap * col_gaps;
+    int gaps_height = gap * row_gaps;
+    int gaps_width = gap * col_gaps;
     int views_height = frame->height - border * nr_of_rows - gaps_height;
     int views_width = frame->width - border * nr_of_cols - gaps_width;
 
@@ -179,10 +181,10 @@ grid_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
           return NULL;
         }
 
-        geometry.x += hikari_configuration.gap + border + geometry.width;
+        geometry.x += gap + border + geometry.width;
       }
       geometry.x = frame->x;
-      geometry.y += hikari_configuration.gap + border + geometry.height;
+      geometry.y += gap + border + geometry.height;
     }
   }
 
@@ -194,9 +196,11 @@ grid_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
       struct wlr_box *frame, struct hikari_view *first, int nr_of_views)       \
   {                                                                            \
     struct hikari_view *view = first;                                          \
-    int border = 2 * hikari_configuration.border;                              \
+    int border_width = hikari_configuration->border;                           \
+    int gap = hikari_configuration->gap;                                       \
+    int border = 2 * border_width;                                             \
     int gaps = nr_of_views - 1;                                                \
-    int gaps_##width = hikari_configuration.gap * gaps;                        \
+    int gaps_##width = gap * gaps;                                             \
                                                                                \
     LAYOUT_VIEWS(nr_of_views, first, frame)                                    \
     {                                                                          \
@@ -211,12 +215,12 @@ grid_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
                                                                                \
       hikari_view_tile(first, &geometry);                                      \
                                                                                \
-      geometry.x += hikari_configuration.gap + border + width + rest;          \
+      geometry.x += gap + border + width + rest;                               \
       geometry.width = width;                                                  \
       for (int n = 1; n < nr_of_views; n++) {                                  \
         view = scan_next_tileable_view(view);                                  \
         hikari_view_tile(view, &geometry);                                     \
-        geometry.x += hikari_configuration.gap + border + width;               \
+        geometry.x += gap + border + width;                                    \
       }                                                                        \
     }                                                                          \
                                                                                \

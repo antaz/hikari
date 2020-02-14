@@ -5,6 +5,7 @@
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_keyboard.h>
 
+#include <hikari/configuration.h>
 #include <hikari/indicator.h>
 #include <hikari/indicator_frame.h>
 #include <hikari/keyboard.h>

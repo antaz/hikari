@@ -120,7 +120,7 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   int x;
   int y;
   hikari_configuration_resolve_view_autoconf(
-      &hikari_configuration, app_id, view, &sheet, &group, &x, &y, focus);
+      hikari_configuration, app_id, view, &sheet, &group, &x, &y, focus);
 
   hikari_view_manage(view, sheet, group);
   hikari_view_set_title(view, xdg_view->surface->toplevel->title);

@@ -77,11 +77,11 @@ hikari_border_render(
   float *color;
   switch (border->state) {
     case HIKARI_BORDER_INACTIVE:
-      color = hikari_configuration.border_inactive;
+      color = hikari_configuration->border_inactive;
       break;
 
     case HIKARI_BORDER_ACTIVE:
-      color = hikari_configuration.border_active;
+      color = hikari_configuration->border_active;
       break;
 
     default:
@@ -119,33 +119,33 @@ hikari_border_refresh_geometry(
   if (border->state == HIKARI_BORDER_NONE) {
     border->geometry = *geometry;
     return;
-  } else {
-    border->geometry.x = geometry->x - hikari_configuration.border;
-    border->geometry.y = geometry->y - hikari_configuration.border;
-    border->geometry.width = geometry->width + hikari_configuration.border * 2;
-    border->geometry.height =
-        geometry->height + hikari_configuration.border * 2;
   }
+
+  int border_width = hikari_configuration->border;
+
+  border->geometry.x = geometry->x - border_width;
+  border->geometry.y = geometry->y - border_width;
+  border->geometry.width = geometry->width + border_width * 2;
+  border->geometry.height = geometry->height + border_width * 2;
 
   border->top.x = border->geometry.x;
   border->top.y = border->geometry.y;
   border->top.width = border->geometry.width;
-  border->top.height = hikari_configuration.border;
+  border->top.height = border_width;
 
   border->bottom.x = border->geometry.x;
-  border->bottom.y = border->geometry.y + border->geometry.height -
-                     hikari_configuration.border;
+  border->bottom.y =
+      border->geometry.y + border->geometry.height - border_width;
   border->bottom.width = border->geometry.width;
-  border->bottom.height = hikari_configuration.border;
+  border->bottom.height = border_width;
 
   border->left.x = border->geometry.x;
   border->left.y = border->geometry.y;
-  border->left.width = hikari_configuration.border;
+  border->left.width = border_width;
   border->left.height = border->geometry.height;
 
-  border->right.x =
-      border->geometry.x + border->geometry.width - hikari_configuration.border;
+  border->right.x = border->geometry.x + border->geometry.width - border_width;
   border->right.y = border->geometry.y;
-  border->right.width = hikari_configuration.border;
+  border->right.width = border_width;
   border->right.height = border->geometry.height;
 }

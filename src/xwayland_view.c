@@ -131,7 +131,7 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
   int x;
   int y;
 
-  hikari_configuration_resolve_view_autoconf(&hikari_configuration,
+  hikari_configuration_resolve_view_autoconf(hikari_configuration,
       xwayland_view->surface->class,
       view,
       &sheet,

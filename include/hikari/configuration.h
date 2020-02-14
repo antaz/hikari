@@ -5,7 +5,9 @@
 #include <stdint.h>
 #include <wayland-util.h>
 
+#include <hikari/exec.h>
 #include <hikari/font.h>
+#include <hikari/mark.h>
 
 struct hikari_group;
 struct hikari_keybinding;
@@ -35,14 +37,16 @@ struct hikari_configuration {
 
     uint8_t nmousebindings[256];
     struct hikari_keybinding *mousebindings[256];
-  } normal_mode;
+  } bindings;
+
+  struct hikari_exec execs[HIKARI_NR_OF_EXECS];
 
   struct wl_list autoconfs;
   struct wl_list output_configs;
   struct wl_list pointer_configs;
 };
 
-extern struct hikari_configuration hikari_configuration;
+extern struct hikari_configuration *hikari_configuration;
 
 void
 hikari_configuration_init(struct hikari_configuration *configuration);
@@ -52,6 +56,9 @@ hikari_configuration_fini(struct hikari_configuration *configuration);
 
 bool
 hikari_configuration_load(struct hikari_configuration *configuration);
+
+bool
+hikari_configuration_reload(void);
 
 void
 hikari_configuration_resolve_view_autoconf(

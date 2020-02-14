@@ -18,7 +18,7 @@ cancel(void)
   if (focus_view != NULL) {
     hikari_indicator_update(&hikari_server.indicator,
         focus_view,
-        hikari_configuration.indicator_selected);
+        hikari_configuration->indicator_selected);
 
     hikari_view_center_cursor(focus_view);
   }
@@ -49,7 +49,7 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
     render_data->geometry = hikari_view_border_geometry(focus_view);
 
     hikari_indicator_frame_render(&focus_view->indicator_frame,
-        hikari_configuration.indicator_insert,
+        hikari_configuration->indicator_insert,
         render_data);
 
     hikari_indicator_render(&hikari_server.indicator, render_data);

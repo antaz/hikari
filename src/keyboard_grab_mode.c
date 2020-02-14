@@ -58,7 +58,7 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
   if (view->output == output) {
     render_data->geometry = hikari_view_border_geometry(view);
     hikari_indicator_frame_render(&view->indicator_frame,
-        hikari_configuration.indicator_insert,
+        hikari_configuration->indicator_insert,
         render_data);
   }
 }

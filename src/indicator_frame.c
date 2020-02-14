@@ -89,25 +89,25 @@ hikari_indicator_frame_refresh_geometry(
     geometry = hikari_view_border_geometry(view);
   }
 
+  int border = hikari_configuration->border;
+
   indicator_frame->top.x = geometry->x;
   indicator_frame->top.y = geometry->y;
   indicator_frame->top.width = geometry->width;
-  indicator_frame->top.height = hikari_configuration.border;
+  indicator_frame->top.height = border;
 
   indicator_frame->bottom.x = geometry->x;
-  indicator_frame->bottom.y =
-      geometry->y + geometry->height - hikari_configuration.border;
+  indicator_frame->bottom.y = geometry->y + geometry->height - border;
   indicator_frame->bottom.width = geometry->width;
-  indicator_frame->bottom.height = hikari_configuration.border;
+  indicator_frame->bottom.height = border;
 
   indicator_frame->left.x = geometry->x;
   indicator_frame->left.y = geometry->y;
-  indicator_frame->left.width = hikari_configuration.border;
+  indicator_frame->left.width = border;
   indicator_frame->left.height = geometry->height;
 
-  indicator_frame->right.x =
-      geometry->x + geometry->width - hikari_configuration.border;
+  indicator_frame->right.x = geometry->x + geometry->width - border;
   indicator_frame->right.y = geometry->y;
-  indicator_frame->right.width = hikari_configuration.border;
+  indicator_frame->right.width = border;
   indicator_frame->right.height = geometry->height;
 }

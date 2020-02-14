@@ -233,7 +233,7 @@ confirm_group_assign(struct hikari_workspace *workspace)
         geometry,
         workspace->output,
         "",
-        hikari_configuration.indicator_selected);
+        hikari_configuration->indicator_selected);
   } else {
     group = hikari_server_find_or_create_group(mode->input_buffer.buffer);
     if (group->sheet == NULL) {
@@ -241,13 +241,13 @@ confirm_group_assign(struct hikari_workspace *workspace)
           geometry,
           workspace->output,
           group->name,
-          hikari_configuration.indicator_selected);
+          hikari_configuration->indicator_selected);
     } else {
       hikari_indicator_update_group(&hikari_server.indicator,
           geometry,
           workspace->output,
           "",
-          hikari_configuration.indicator_selected);
+          hikari_configuration->indicator_selected);
     }
   }
   hikari_view_group(hikari_server.workspace->focus_view, group);
@@ -263,7 +263,7 @@ cancel_group_assign(struct hikari_workspace *workspace)
       geometry,
       workspace->output,
       workspace->focus_view->group->name,
-      hikari_configuration.indicator_selected);
+      hikari_configuration->indicator_selected);
   hikari_server_enter_normal_mode(NULL);
 }
 
@@ -289,13 +289,13 @@ update_state(struct hikari_workspace *workspace,
         geometry,
         workspace->output,
         " ",
-        hikari_configuration.indicator_insert);
+        hikari_configuration->indicator_insert);
   } else {
     hikari_indicator_update_group(&hikari_server.indicator,
         geometry,
         workspace->output,
         mode->input_buffer.buffer,
-        hikari_configuration.indicator_insert);
+        hikari_configuration->indicator_insert);
   }
 
   if (group != mode->group) {
@@ -349,6 +349,8 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
   struct hikari_group *group = mode->group;
 
   if (group != NULL) {
+    float *indicator_first = hikari_configuration->indicator_first;
+    float *indicator_grouped = hikari_configuration->indicator_grouped;
     struct hikari_view *view;
     wl_list_for_each_reverse (
         view, &group->visible_views, visible_group_views) {
@@ -357,13 +359,11 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
 
         if (hikari_group_first_view(group, hikari_server.workspace) == view) {
 
-          hikari_indicator_frame_render(&view->indicator_frame,
-              hikari_configuration.indicator_first,
-              render_data);
+          hikari_indicator_frame_render(
+              &view->indicator_frame, indicator_first, render_data);
         } else {
-          hikari_indicator_frame_render(&view->indicator_frame,
-              hikari_configuration.indicator_grouped,
-              render_data);
+          hikari_indicator_frame_render(
+              &view->indicator_frame, indicator_grouped, render_data);
         }
       }
     }
@@ -373,7 +373,7 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
     render_data->geometry = hikari_view_border_geometry(focus_view);
 
     hikari_indicator_frame_render(&focus_view->indicator_frame,
-        hikari_configuration.indicator_selected,
+        hikari_configuration->indicator_selected,
         render_data);
 
     hikari_indicator_render(&hikari_server.indicator, render_data);
