@@ -1815,13 +1815,6 @@ hikari_configuration_reload(void)
     hikari_free(hikari_configuration);
     hikari_configuration = configuration;
 
-    struct hikari_output *output;
-    wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
-      char *background = hikari_configuration_resolve_background(
-          hikari_configuration, output->output->name);
-      hikari_output_load_background(output, background);
-    }
-
     struct hikari_pointer *pointer;
     wl_list_for_each (pointer, &hikari_server.pointers, server_pointers) {
       struct hikari_pointer_config *pointer_config =
@@ -1831,6 +1824,25 @@ hikari_configuration_reload(void)
       if (pointer_config != NULL) {
         hikari_pointer_configure(pointer, pointer_config);
       }
+    }
+
+    struct hikari_workspace *workspace;
+    wl_list_for_each (workspace, &hikari_server.workspaces, server_workspaces) {
+      struct hikari_sheet *sheet;
+      for (int i = 0; i < HIKARI_NR_OF_SHEETS; i++) {
+        sheet = workspace->sheets + i;
+        struct hikari_view *view;
+        wl_list_for_each (view, &sheet->views, sheet_views) {
+          hikari_view_refresh_geometry(view, view->current_geometry);
+        }
+      }
+    }
+
+    struct hikari_output *output;
+    wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
+      char *background = hikari_configuration_resolve_background(
+          hikari_configuration, output->output->name);
+      hikari_output_load_background(output, background);
     }
 
   } else {
