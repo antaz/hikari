@@ -115,12 +115,6 @@ LIBS = \
 	${LIBINPUT_LIBS} \
 	${UCL_LIBS}
 
-.ifndef WITHOUT_EPOLLSHIM
-EPOLLSHIM_LIBS ?= `pkg-config --libs epoll-shim`
-
-LIBS += ${EPOLLSHIM_LIBS}
-.endif
-
 all: hikari hikari-unlocker
 
 hikari: xdg-shell-protocol.h ${OBJS}

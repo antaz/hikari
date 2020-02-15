@@ -110,7 +110,7 @@ Simply run `make`.
 On Linux `bmake` is required which needs to be run like so:
 
 ```
-bmake WITH_POSIX_C_SOURCE=YES WITHOUT_EPOLLSHIM=YES
+bmake WITH_POSIX_C_SOURCE=YES
 ```
 
 #### Building with XWayland support
