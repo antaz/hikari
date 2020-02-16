@@ -375,8 +375,8 @@ popup_unconstrain(struct hikari_xdg_popup *popup)
   struct wlr_box *geometry = hikari_view_geometry(view);
 
   struct wlr_box output_toplevel_sx_box = {
-    .x = output->geometry.x - geometry->x,
-    .y = output->geometry.y - geometry->y,
+    .x = -geometry->x,
+    .y = -geometry->y,
     .width = output->geometry.width,
     .height = output->geometry.height,
   };
