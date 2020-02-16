@@ -784,6 +784,7 @@ void
 hikari_view_tile(struct hikari_view *view, struct wlr_box *geometry)
 {
   assert(!hikari_view_is_dirty(view));
+  assert(hikari_view_is_tileable(view));
 
   struct hikari_layout *layout = view->sheet->workspace->sheet->layout;
 
@@ -1107,6 +1108,9 @@ hikari_view_toggle_iconified(struct hikari_view *view)
   if (hikari_view_is_iconified(view)) {
     hikari_view_unset_iconified(view);
   } else {
+    if (hikari_view_is_tiled(view)) {
+      hikari_view_reset_geometry(view);
+    }
     hikari_view_set_iconified(view);
   }
 }

@@ -299,19 +299,16 @@ hikari_view_wants_border(struct hikari_view *view)
 }
 
 static inline bool
-hikari_view_is_tileable(struct hikari_view *view)
-{
-  assert(view != NULL);
-  return !(view->flags &
-             (hikari_view_hidden_flag | hikari_view_floating_flag)) &&
-         !hikari_view_is_dirty(view);
-}
-
-static inline bool
 hikari_view_is_tiled(struct hikari_view *view)
 {
   assert(view != NULL);
   return view->tile != NULL;
+}
+
+static inline bool
+hikari_view_is_tileable(struct hikari_view *view)
+{
+  return !hikari_view_is_floating(view) && !hikari_view_is_iconified(view);
 }
 
 static inline bool

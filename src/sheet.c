@@ -45,6 +45,9 @@ scan_next_tileable_view(struct hikari_view *view)
   while (next != &view->sheet->views) {
     view = wl_container_of(next, view, sheet_views);
     if (hikari_view_is_tileable(view)) {
+      if (hikari_view_is_hidden(view)) {
+        hikari_view_show(view);
+      }
       return view;
     }
     next = view->sheet_views.next;
@@ -64,6 +67,9 @@ hikari_sheet_first_tileable_view(struct hikari_sheet *sheet)
   while (next != &sheet->views) {
     view = wl_container_of(next, view, sheet_views);
     if (hikari_view_is_tileable(view)) {
+      if (hikari_view_is_hidden(view)) {
+        hikari_view_show(view);
+      }
       return view;
     }
     next = view->sheet_views.next;
@@ -108,6 +114,9 @@ full_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
   struct hikari_view *view = first;
   for (int i = 0; i < nr_of_views && view != NULL; i++) {
     if (hikari_view_is_tileable(view)) {
+      if (hikari_view_is_hidden(view)) {
+        hikari_view_show(view);
+      }
       hikari_view_tile(view, frame);
     }
     view = scan_next_tileable_view(view);
