@@ -1734,6 +1734,13 @@ hikari_configuration_load(struct hikari_configuration *configuration)
   ucl_parser_add_file(parser, config_path);
   ucl_object_t *configuration_obj = ucl_parser_get_object(parser);
 
+  if (configuration_obj == NULL) {
+    const char *error = ucl_parser_get_error(parser);
+    fprintf(stderr, "%s\n", error);
+    ucl_parser_free(parser);
+    return false;
+  }
+
   ucl_object_iter_t it = ucl_object_iterate_new(configuration_obj);
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
