@@ -286,6 +286,10 @@ refresh_border_geometry(struct hikari_view *view)
 static void
 move_view(struct hikari_view *view, struct wlr_box *geometry, int x, int y)
 {
+  if (hikari_view_is_tiled(view)) {
+    return;
+  }
+
   if (view->maximized_state != NULL) {
     switch (view->maximized_state->maximization) {
       case HIKARI_MAXIMIZATION_FULLY_MAXIMIZED:
