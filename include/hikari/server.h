@@ -295,4 +295,7 @@ hikari_server_reset_sheet_layout(void *arg);
 void
 hikari_server_layout_sheet(void *arg);
 
+void
+hikari_server_session_change_vt(void *arg);
+
 #endif

@@ -1294,6 +1294,43 @@ parse_binding(const ucl_object_t *obj,
     *cleanup = NULL;
     *arg = NULL;
 
+  } else if (!strcmp(str, "vt-switch-to-1")) {
+    *action = hikari_server_session_change_vt;
+    *cleanup = NULL;
+    *arg = (void *)(intptr_t)1;
+  } else if (!strcmp(str, "vt-switch-to-2")) {
+    *action = hikari_server_session_change_vt;
+    *cleanup = NULL;
+    *arg = (void *)(intptr_t)2;
+  } else if (!strcmp(str, "vt-switch-to-3")) {
+    *action = hikari_server_session_change_vt;
+    *cleanup = NULL;
+    *arg = (void *)(intptr_t)3;
+  } else if (!strcmp(str, "vt-switch-to-4")) {
+    *action = hikari_server_session_change_vt;
+    *cleanup = NULL;
+    *arg = (void *)(intptr_t)4;
+  } else if (!strcmp(str, "vt-switch-to-5")) {
+    *action = hikari_server_session_change_vt;
+    *cleanup = NULL;
+    *arg = (void *)(intptr_t)5;
+  } else if (!strcmp(str, "vt-switch-to-6")) {
+    *action = hikari_server_session_change_vt;
+    *cleanup = NULL;
+    *arg = (void *)(intptr_t)6;
+  } else if (!strcmp(str, "vt-switch-to-7")) {
+    *action = hikari_server_session_change_vt;
+    *cleanup = NULL;
+    *arg = (void *)(intptr_t)7;
+  } else if (!strcmp(str, "vt-switch-to-8")) {
+    *action = hikari_server_session_change_vt;
+    *cleanup = NULL;
+    *arg = (void *)(intptr_t)8;
+  } else if (!strcmp(str, "vt-switch-to-9")) {
+    *action = hikari_server_session_change_vt;
+    *cleanup = NULL;
+    *arg = (void *)(intptr_t)9;
+
   } else {
     if (!strncmp(str, "action-", 7)) {
       char *command = NULL;

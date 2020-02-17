@@ -5,6 +5,7 @@
 
 #include <wlr/backend.h>
 #include <wlr/backend/libinput.h>
+#include <wlr/backend/session.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_data_device.h>
@@ -1035,4 +1036,16 @@ hikari_server_layout_sheet(void *arg)
 {
   struct hikari_split *split = arg;
   hikari_sheet_apply_split(hikari_server.workspace->sheet, split);
+}
+
+void
+hikari_server_session_change_vt(void *arg)
+{
+  const intptr_t vt = (intptr_t)arg;
+  assert(vt >= 1 && vt <= 12);
+
+  struct wlr_session *session = wlr_backend_get_session(hikari_server.backend);
+  if (session != NULL) {
+    wlr_session_change_vt(session, vt);
+  }
 }
