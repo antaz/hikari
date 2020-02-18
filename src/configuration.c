@@ -257,16 +257,18 @@ done:
   return success;
 }
 
-#define PARSE_SPLIT(name, first, second)                                       \
+#define PARSE_SPLIT(name, NAME, first, FIRST, second, SECOND)                  \
   static bool parse_##name(                                                    \
       const ucl_object_t *name##_obj, struct hikari_split **name)              \
   {                                                                            \
     bool success = false;                                                      \
-    struct hikari_##name##_split *ret = NULL;                                  \
     const ucl_object_t *cur;                                                   \
+    struct hikari_##name##_split *ret = NULL;                                  \
+    double scale = 0.5;                                                        \
+    enum hikari_##name##_split_orientation orientation =                       \
+        HIKARI_##NAME##_SPLIT_ORIENTATION_##FIRST;                             \
     struct hikari_split *first = NULL;                                         \
     struct hikari_split *second = NULL;                                        \
-    double scale = 0.5;                                                        \
                                                                                \
     ucl_object_iter_t it = ucl_object_iterate_new(name##_obj);                 \
                                                                                \
@@ -294,6 +296,25 @@ done:
               "\" split\n");                                                   \
           goto done;                                                           \
         }                                                                      \
+      } else if (!strcmp(key, "orientation")) {                                \
+        const char *orientation_value;                                         \
+        if (!ucl_object_tostring_safe(cur, &orientation_value)) {              \
+          fprintf(stderr,                                                      \
+              "configration error: expected string for \"orientation\"\n");    \
+          goto done;                                                           \
+        }                                                                      \
+                                                                               \
+        if (!strcmp(orientation_value, #first)) {                              \
+          orientation = HIKARI_##NAME##_SPLIT_ORIENTATION_##FIRST;             \
+        } else if (!strcmp(orientation_value, #second)) {                      \
+          orientation = HIKARI_##NAME##_SPLIT_ORIENTATION_##SECOND;            \
+        } else {                                                               \
+          fprintf(stderr,                                                      \
+              "configuration error: unknown \"orientation\" value \"%s\" for " \
+              "\"" #name "\" split\n",                                         \
+              orientation_value);                                              \
+          goto done;                                                           \
+        }                                                                      \
       } else {                                                                 \
         fprintf(stderr,                                                        \
             "configuration error: unknown \"" #name "\" key \"%s\"\n",         \
@@ -318,7 +339,7 @@ done:
     }                                                                          \
                                                                                \
     ret = hikari_malloc(sizeof(struct hikari_##name##_split));                 \
-    hikari_##name##_split_init(ret, scale, first, second);                     \
+    hikari_##name##_split_init(ret, scale, orientation, first, second);        \
                                                                                \
     success = true;                                                            \
                                                                                \
@@ -330,8 +351,8 @@ done:
     return success;                                                            \
   }
 
-PARSE_SPLIT(vertical, left, right);
-PARSE_SPLIT(horizontal, top, bottom);
+PARSE_SPLIT(vertical, VERTICAL, left, LEFT, right, RIGHT);
+PARSE_SPLIT(horizontal, HORIZONTAL, top, TOP, bottom, BOTTOM);
 #undef PARSE_SPLIT
 
 static struct hikari_view_autoconf *

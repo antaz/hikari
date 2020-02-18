@@ -25,14 +25,32 @@ apply_split(struct hikari_split *split,
       struct hikari_vertical_split *vertical_split =
           (struct hikari_vertical_split *)split;
 
-      hikari_geometry_split_vertical(geometry,
-          vertical_split->scale,
-          hikari_configuration->gap + hikari_configuration->border * 2,
-          &left,
-          &right);
+      switch (vertical_split->orientation) {
+        case HIKARI_VERTICAL_SPLIT_ORIENTATION_LEFT:
+          hikari_geometry_split_vertical(geometry,
+              vertical_split->scale,
+              hikari_configuration->gap + hikari_configuration->border * 2,
+              &left,
+              &right);
 
-      view = apply_split(vertical_split->left, &left, view);
-      view = apply_split(vertical_split->right, &right, view);
+          view = apply_split(vertical_split->left, &left, view);
+          view = apply_split(vertical_split->right, &right, view);
+          break;
+
+        case HIKARI_VERTICAL_SPLIT_ORIENTATION_RIGHT:
+          hikari_geometry_split_vertical(geometry,
+              1.0 - vertical_split->scale,
+              hikari_configuration->gap + hikari_configuration->border * 2,
+              &left,
+              &right);
+
+          view = apply_split(vertical_split->right, &right, view);
+          view = apply_split(vertical_split->left, &left, view);
+          break;
+
+        default:
+          break;
+      }
     } break;
 
     case HIKARI_SPLIT_TYPE_HORIZONTAL: {
@@ -40,14 +58,32 @@ apply_split(struct hikari_split *split,
       struct hikari_horizontal_split *horizontal_split =
           (struct hikari_horizontal_split *)split;
 
-      hikari_geometry_split_horizontal(geometry,
-          horizontal_split->scale,
-          hikari_configuration->gap + hikari_configuration->border * 2,
-          &top,
-          &bottom);
+      switch (horizontal_split->orientation) {
+        case HIKARI_HORIZONTAL_SPLIT_ORIENTATION_TOP:
+          hikari_geometry_split_horizontal(geometry,
+              horizontal_split->scale,
+              hikari_configuration->gap + hikari_configuration->border * 2,
+              &top,
+              &bottom);
 
-      view = apply_split(horizontal_split->top, &top, view);
-      view = apply_split(horizontal_split->bottom, &bottom, view);
+          view = apply_split(horizontal_split->top, &top, view);
+          view = apply_split(horizontal_split->bottom, &bottom, view);
+          break;
+
+        case HIKARI_HORIZONTAL_SPLIT_ORIENTATION_BOTTOM:
+          hikari_geometry_split_horizontal(geometry,
+              1.0 - horizontal_split->scale,
+              hikari_configuration->gap + hikari_configuration->border * 2,
+              &top,
+              &bottom);
+
+          view = apply_split(horizontal_split->bottom, &bottom, view);
+          view = apply_split(horizontal_split->top, &top, view);
+          break;
+
+        default:
+          break;
+      }
     } break;
 
     case HIKARI_SPLIT_TYPE_CONTAINER: {
@@ -88,11 +124,13 @@ hikari_container_init(
 void
 hikari_vertical_split_init(struct hikari_vertical_split *vertical_split,
     float scale,
+    enum hikari_vertical_split_orientation orientation,
     struct hikari_split *left,
     struct hikari_split *right)
 {
   vertical_split->split.type = HIKARI_SPLIT_TYPE_VERTICAL;
   vertical_split->scale = scale;
+  vertical_split->orientation = orientation;
   vertical_split->left = left;
   vertical_split->right = right;
 }
@@ -100,11 +138,13 @@ hikari_vertical_split_init(struct hikari_vertical_split *vertical_split,
 void
 hikari_horizontal_split_init(struct hikari_horizontal_split *horizontal_split,
     float scale,
+    enum hikari_horizontal_split_orientation orientation,
     struct hikari_split *top,
     struct hikari_split *bottom)
 {
   horizontal_split->split.type = HIKARI_SPLIT_TYPE_HORIZONTAL;
   horizontal_split->scale = scale;
+  horizontal_split->orientation = orientation;
   horizontal_split->top = top;
   horizontal_split->bottom = bottom;
 }
