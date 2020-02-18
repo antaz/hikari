@@ -29,8 +29,47 @@
 #include <hikari/xwayland_view.h>
 #endif
 
+static void
+render_image_to_surface(cairo_surface_t *output,
+    cairo_surface_t *image,
+    enum hikari_background_fit fit)
+{
+  cairo_t *cairo = cairo_create(output);
+  if (cairo_surface_status(image) != CAIRO_STATUS_SUCCESS) {
+    return;
+  }
+
+  double output_width = cairo_image_surface_get_width(output);
+  double output_height = cairo_image_surface_get_height(output);
+  double width = cairo_image_surface_get_width(image);
+  double height = cairo_image_surface_get_height(image);
+
+  cairo_rectangle(cairo, 0, 0, output_width, output_height);
+  cairo_fill(cairo);
+
+  if (fit == HIKARI_BACKGROUND_STRETCH) {
+    cairo_scale(cairo, output_width / width, output_height / height);
+    cairo_set_source_surface(cairo, image, 0, 0);
+  } else if (fit == HIKARI_BACKGROUND_CENTER) {
+    cairo_set_source_surface(cairo,
+        image,
+        output_width / 2 - width / 2,
+        output_height / 2 - height / 2);
+  } else if (fit == HIKARI_BACKGROUND_TILE) {
+    cairo_pattern_t *pattern = cairo_pattern_create_for_surface(image);
+    cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
+    cairo_set_source(cairo, pattern);
+    cairo_pattern_destroy(pattern);
+  }
+
+  cairo_paint(cairo);
+  cairo_destroy(cairo);
+}
+
 void
-hikari_output_load_background(struct hikari_output *output, const char *path)
+hikari_output_load_background(struct hikari_output *output,
+    const char *path,
+    enum hikari_background_fit background_fit)
 {
   if (output->background != NULL) {
     wlr_texture_destroy(output->background);
@@ -48,19 +87,33 @@ hikari_output_load_background(struct hikari_output *output, const char *path)
     goto done;
   }
 
-  int width = output->geometry.width;
-  int height = output->geometry.height;
+  int output_width = output->geometry.width;
+  int output_height = output->geometry.height;
 
-  unsigned char *data = cairo_image_surface_get_data(image);
-  int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
+  cairo_surface_t *output_surface = cairo_image_surface_create(
+      CAIRO_FORMAT_ARGB32, output_width, output_height);
+  if (cairo_surface_status(image) != CAIRO_STATUS_SUCCESS) {
+    cairo_surface_destroy(image);
+    goto done;
+  }
+
+  render_image_to_surface(output_surface, image, background_fit);
+
+  unsigned char *data = cairo_image_surface_get_data(output_surface);
+  int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, output_width);
 
   struct wlr_renderer *renderer =
       wlr_backend_get_renderer(output->output->backend);
 
-  output->background = wlr_texture_from_pixels(
-      renderer, WL_SHM_FORMAT_ARGB8888, stride, width, height, data);
+  output->background = wlr_texture_from_pixels(renderer,
+      WL_SHM_FORMAT_ARGB8888,
+      stride,
+      output_width,
+      output_height,
+      data);
 
   cairo_surface_destroy(image);
+  cairo_surface_destroy(output_surface);
 
 done:
   hikari_output_damage_whole(output);
@@ -431,11 +484,15 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 
   output_geometry(output);
 
-  char *background = hikari_configuration_resolve_background(
-      hikari_configuration, wlr_output->name);
-
   hikari_output_enable(output);
-  hikari_output_load_background(output, background);
+
+  const struct hikari_output_config *output_config =
+      hikari_configuration_resolve_output(
+          hikari_configuration, wlr_output->name);
+  if (output_config != NULL) {
+    hikari_output_load_background(
+        output, output_config->background, output_config->background_fit);
+  }
 }
 
 void

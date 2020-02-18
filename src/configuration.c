@@ -1671,6 +1671,7 @@ parse_output_config(struct hikari_configuration *configuration,
   ucl_object_iter_t it = ucl_object_iterate_new(output_config_obj);
   const char *output_name = ucl_object_key(output_config_obj);
   char *background = NULL;
+  enum hikari_background_fit background_fit = HIKARI_BACKGROUND_STRETCH;
 
   const ucl_object_t *cur;
   while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
@@ -1684,6 +1685,25 @@ parse_output_config(struct hikari_configuration *configuration,
             stderr, "configuration error: failed to parse \"background\"\n");
         goto done;
       }
+    } else if (!strcmp(key, "background_fit")) {
+      const char *fit_value;
+      if (!ucl_object_tostring_safe(cur, &fit_value)) {
+        fprintf(stderr,
+            "configuration error: failed to parse \"background_fit\"\n");
+        goto done;
+      }
+
+      if (!strcmp(fit_value, "center")) {
+        background_fit = HIKARI_BACKGROUND_CENTER;
+      } else if (!strcmp(fit_value, "stretch")) {
+        background_fit = HIKARI_BACKGROUND_STRETCH;
+      } else if (!strcmp(fit_value, "tile")) {
+        background_fit = HIKARI_BACKGROUND_TILE;
+      } else {
+        fprintf(stderr,
+            "configuration error: failed to parse \"background_fit\"\n");
+        goto done;
+      }
     } else {
       fprintf(stderr,
           "configuration error: unknown \"outputs\" configuration key \"%s\"\n",
@@ -1693,7 +1713,8 @@ parse_output_config(struct hikari_configuration *configuration,
 
   struct hikari_output_config *output_config =
       hikari_malloc(sizeof(struct hikari_output_config));
-  hikari_output_config_init(output_config, output_name, background);
+  hikari_output_config_init(
+      output_config, output_name, background, background_fit);
 
   wl_list_insert(&configuration->output_configs, &output_config->link);
 
@@ -1918,9 +1939,14 @@ hikari_configuration_reload(void)
 
     struct hikari_output *output;
     wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
-      char *background = hikari_configuration_resolve_background(
-          hikari_configuration, output->output->name);
-      hikari_output_load_background(output, background);
+      const struct hikari_output_config *output_config =
+          hikari_configuration_resolve_output(
+              hikari_configuration, output->output->name);
+
+      if (output_config != NULL) {
+        hikari_output_load_background(
+            output, output_config->background, output_config->background_fit);
+      }
     }
 
   } else {
@@ -2025,14 +2051,14 @@ hikari_configuration_fini(struct hikari_configuration *configuration)
   }
 }
 
-char *
-hikari_configuration_resolve_background(
+struct hikari_output_config *
+hikari_configuration_resolve_output(
     struct hikari_configuration *configuration, const char *output_name)
 {
   struct hikari_output_config *output_config;
   wl_list_for_each (output_config, &configuration->output_configs, link) {
     if (!strcmp(output_config->output_name, output_name)) {
-      return output_config->background;
+      return output_config;
     }
   }
 

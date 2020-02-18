@@ -71,8 +71,8 @@ hikari_configuration_resolve_view_autoconf(
     int *y,
     bool *focus);
 
-char *
-hikari_configuration_resolve_background(
+struct hikari_output_config *
+hikari_configuration_resolve_output(
     struct hikari_configuration *configuration, const char *output_name);
 
 struct hikari_pointer_config *

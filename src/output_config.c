@@ -10,13 +10,15 @@
 void
 hikari_output_config_init(struct hikari_output_config *output_config,
     const char *output_name,
-    char *background)
+    char *background,
+    enum hikari_background_fit background_fit)
 {
   size_t output_name_len = strlen(output_name);
   output_config->output_name = hikari_malloc(output_name_len + 1);
 
   strcpy(output_config->output_name, output_name);
   output_config->background = background;
+  output_config->background_fit = background_fit;
 }
 
 void

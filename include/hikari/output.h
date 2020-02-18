@@ -9,6 +9,8 @@
 #include <wlr/types/wlr_output_damage.h>
 #include <wlr/types/wlr_surface.h>
 
+#include <hikari/output_config.h>
+
 struct hikari_output {
   struct wlr_output *output;
   struct wlr_output_damage *damage;
@@ -50,7 +52,9 @@ void
 hikari_output_enable(struct hikari_output *output);
 
 void
-hikari_output_load_background(struct hikari_output *output, const char *path);
+hikari_output_load_background(struct hikari_output *output,
+    const char *path,
+    enum hikari_background_fit background_fit);
 
 static inline void
 hikari_output_add_damage(struct hikari_output *output, struct wlr_box *region)
