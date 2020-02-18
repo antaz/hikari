@@ -76,7 +76,10 @@ parse_container(
   bool success = false;
   struct hikari_container *ret = NULL;
   layout_func_t layout_func = NULL;
-  int64_t views = 1000;
+  int64_t views = 256;
+  bool explicit_nr_of_views = false;
+  bool override_nr_of_views = false;
+  const char *container_type;
   const ucl_object_t *cur;
 
   ucl_object_iter_t it = ucl_object_iterate_new(container_obj);
@@ -84,7 +87,6 @@ parse_container(
     const char *key = ucl_object_key(cur);
 
     if (!strcmp(key, "type")) {
-      const char *container_type;
       if (!ucl_object_tostring_safe(cur, &container_type)) {
         fprintf(stderr,
             "configuration error: expected string for container \"type\"\n");
@@ -99,6 +101,14 @@ parse_container(
         layout_func = hikari_sheet_full_layout;
       } else if (!strcmp(container_type, "grid")) {
         layout_func = hikari_sheet_grid_layout;
+      } else if (!strcmp(container_type, "single")) {
+        views = 1;
+        explicit_nr_of_views = true;
+        layout_func = hikari_sheet_single_layout;
+      } else if (!strcmp(container_type, "empty")) {
+        views = 0;
+        explicit_nr_of_views = true;
+        layout_func = hikari_sheet_empty_layout;
       } else {
         fprintf(stderr,
             "configuration error: unexpected container \"type\" \"%s\"\n",
@@ -106,9 +116,25 @@ parse_container(
         goto done;
       }
     } else if (!strcmp(key, "views")) {
+      override_nr_of_views = true;
+      if (explicit_nr_of_views) {
+        fprintf(stderr,
+            "configuration error: cannot set \"views\" for \"type\" \"%s\" "
+            "container\n",
+            container_type);
+        goto done;
+      }
+
       if (!ucl_object_toint_safe(cur, &views)) {
         fprintf(stderr,
             "configuration error: expected integer for container \"views\"\n");
+        goto done;
+      }
+
+      if (views < 2 || views > 256) {
+        fprintf(stderr,
+            "configuration error: expected integer between 2 and 256 for "
+            "container \"views\"\n");
         goto done;
       }
     } else {
@@ -120,6 +146,14 @@ parse_container(
 
   if (layout_func == NULL) {
     fprintf(stderr, "configuration error: container expects \"type\"\n");
+    goto done;
+  }
+
+  if (override_nr_of_views && explicit_nr_of_views) {
+    fprintf(stderr,
+        "configuration error: cannot set \"views\" for \"type\" \"%s\" "
+        "container\n",
+        container_type);
     goto done;
   }
 

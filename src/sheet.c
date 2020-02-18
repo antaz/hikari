@@ -109,6 +109,12 @@ single_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
 }
 
 static struct hikari_view *
+empty_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
+{
+  return first;
+}
+
+static struct hikari_view *
 full_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
 {
   struct hikari_view *view = first;
@@ -250,8 +256,7 @@ SPLIT_LAYOUT(horizontal, y, x, height, width)
     if (nr_of_views > max) {                                                   \
       nr_of_views = max;                                                       \
     }                                                                          \
-                                                                               \
-    if (nr_of_views == 0) {                                                    \
+    if (nr_of_views == 0 && max != 0) {                                        \
       return NULL;                                                             \
     }                                                                          \
                                                                                \
@@ -263,6 +268,7 @@ LAYOUT(horizontal)
 LAYOUT(grid)
 LAYOUT(full)
 LAYOUT(single)
+LAYOUT(empty)
 #undef LAYOUT
 
 #undef LAYOUT_WINDOWS
