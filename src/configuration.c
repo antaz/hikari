@@ -70,6 +70,38 @@ parse_modifier_mask(const char *str, uint8_t *result, const char **remaining)
 }
 
 static bool
+parse_layout_func(const char *layout_func_name,
+    layout_func_t *layout_func,
+    int64_t *views,
+    bool *explicit_nr_of_views)
+{
+  if (!strcmp(layout_func_name, "queue")) {
+    *layout_func = hikari_sheet_queue_layout;
+  } else if (!strcmp(layout_func_name, "stack")) {
+    *layout_func = hikari_sheet_stack_layout;
+  } else if (!strcmp(layout_func_name, "full")) {
+    *layout_func = hikari_sheet_full_layout;
+  } else if (!strcmp(layout_func_name, "grid")) {
+    *layout_func = hikari_sheet_grid_layout;
+  } else if (!strcmp(layout_func_name, "single")) {
+    *views = 1;
+    *explicit_nr_of_views = true;
+    *layout_func = hikari_sheet_single_layout;
+  } else if (!strcmp(layout_func_name, "empty")) {
+    *views = 0;
+    *explicit_nr_of_views = true;
+    *layout_func = hikari_sheet_empty_layout;
+  } else {
+    fprintf(stderr,
+        "configuration error: unknown container \"layout\" \"%s\"\n",
+        layout_func_name);
+    return false;
+  }
+
+  return true;
+}
+
+static bool
 parse_container(
     const ucl_object_t *container_obj, struct hikari_split **container)
 {
@@ -79,49 +111,31 @@ parse_container(
   int64_t views = 256;
   bool explicit_nr_of_views = false;
   bool override_nr_of_views = false;
-  const char *container_type;
+  const char *layout_func_name;
   const ucl_object_t *cur;
 
   ucl_object_iter_t it = ucl_object_iterate_new(container_obj);
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
-    if (!strcmp(key, "type")) {
-      if (!ucl_object_tostring_safe(cur, &container_type)) {
+    if (!strcmp(key, "layout")) {
+      if (!ucl_object_tostring_safe(cur, &layout_func_name)) {
         fprintf(stderr,
-            "configuration error: expected string for container \"type\"\n");
+            "configuration error: expected string for container \"layout\"\n");
         goto done;
       }
 
-      if (!strcmp(container_type, "queue")) {
-        layout_func = hikari_sheet_queue_layout;
-      } else if (!strcmp(container_type, "stack")) {
-        layout_func = hikari_sheet_stack_layout;
-      } else if (!strcmp(container_type, "full")) {
-        layout_func = hikari_sheet_full_layout;
-      } else if (!strcmp(container_type, "grid")) {
-        layout_func = hikari_sheet_grid_layout;
-      } else if (!strcmp(container_type, "single")) {
-        views = 1;
-        explicit_nr_of_views = true;
-        layout_func = hikari_sheet_single_layout;
-      } else if (!strcmp(container_type, "empty")) {
-        views = 0;
-        explicit_nr_of_views = true;
-        layout_func = hikari_sheet_empty_layout;
-      } else {
-        fprintf(stderr,
-            "configuration error: unexpected container \"type\" \"%s\"\n",
-            container_type);
+      if (!parse_layout_func(
+              layout_func_name, &layout_func, &views, &explicit_nr_of_views)) {
         goto done;
       }
     } else if (!strcmp(key, "views")) {
       override_nr_of_views = true;
       if (explicit_nr_of_views) {
         fprintf(stderr,
-            "configuration error: cannot set \"views\" for \"type\" \"%s\" "
+            "configuration error: cannot set \"views\" for \"layout\" \"%s\" "
             "container\n",
-            container_type);
+            layout_func_name);
         goto done;
       }
 
@@ -145,15 +159,15 @@ parse_container(
   }
 
   if (layout_func == NULL) {
-    fprintf(stderr, "configuration error: container expects \"type\"\n");
+    fprintf(stderr, "configuration error: container expects \"layout\"\n");
     goto done;
   }
 
   if (override_nr_of_views && explicit_nr_of_views) {
     fprintf(stderr,
-        "configuration error: cannot set \"views\" for \"type\" \"%s\" "
+        "configuration error: cannot set \"views\" for \"layout\" \"%s\" "
         "container\n",
-        container_type);
+        layout_func_name);
     goto done;
   }
 
@@ -171,6 +185,39 @@ done:
 }
 
 static bool
+split_is_container(const ucl_object_t *top,
+    const ucl_object_t *bottom,
+    const ucl_object_t *left,
+    const ucl_object_t *right,
+    const ucl_object_t *layout)
+{
+  return layout != NULL && left == NULL && right == NULL && top == NULL &&
+         bottom == NULL;
+}
+
+static bool
+split_is_vertical(const ucl_object_t *top,
+    const ucl_object_t *bottom,
+    const ucl_object_t *left,
+    const ucl_object_t *right,
+    const ucl_object_t *layout)
+{
+  return left != NULL && right != NULL && top == NULL && bottom == NULL &&
+         layout == NULL;
+}
+
+static bool
+split_is_horizontal(const ucl_object_t *top,
+    const ucl_object_t *bottom,
+    const ucl_object_t *left,
+    const ucl_object_t *right,
+    const ucl_object_t *layout)
+{
+  return top != NULL && bottom != NULL && left == NULL && right == NULL &&
+         layout == NULL;
+}
+
+static bool
 parse_vertical(const ucl_object_t *, struct hikari_split **);
 
 static bool
@@ -180,50 +227,67 @@ static bool
 parse_split(const ucl_object_t *split_obj, struct hikari_split **split)
 {
   bool success = false;
-  const ucl_object_t *cur;
   struct hikari_split *ret = NULL;
-  ucl_object_iter_t it = ucl_object_iterate_new(split_obj);
+  ucl_type_t type = ucl_object_type(split_obj);
 
-  while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
-    const char *key = ucl_object_key(cur);
-
-    if (ret != NULL) {
-      hikari_split_fini(ret);
-      ret = NULL;
+  if (type == UCL_STRING) {
+    const char *layout_func_name;
+    layout_func_t layout_func;
+    int64_t views = 256;
+    bool explicit_nr_of_views = false;
+    if (!ucl_object_tostring_safe(split_obj, &layout_func_name)) {
       fprintf(stderr,
-          "configuration error: defining overlapping split \"%s\"\n",
-          key);
+          "configuration error: expected string for container layout\n");
       goto done;
     }
 
-    if (!strcmp(key, "vertical")) {
-      if (!parse_vertical(cur, &ret)) {
-        fprintf(stderr,
-            "configuration error: failed to parse \"vertical\" split\n");
+    if (!parse_layout_func(
+            layout_func_name, &layout_func, &views, &explicit_nr_of_views)) {
+      goto done;
+    }
+
+    ret = hikari_malloc(sizeof(struct hikari_container));
+    hikari_container_init((struct hikari_container *)ret, views, layout_func);
+
+  } else if (type == UCL_OBJECT) {
+    const ucl_object_t *left = ucl_object_lookup(split_obj, "left");
+    const ucl_object_t *right = ucl_object_lookup(split_obj, "right");
+    const ucl_object_t *top = ucl_object_lookup(split_obj, "top");
+    const ucl_object_t *bottom = ucl_object_lookup(split_obj, "bottom");
+    const ucl_object_t *layout = ucl_object_lookup(split_obj, "layout");
+
+    if (split_is_vertical(top, bottom, left, right, layout)) {
+      if (!parse_vertical(split_obj, &ret)) {
+        fprintf(
+            stderr, "configuration error: failed to parse vertical split\n");
         goto done;
       }
-    } else if (!strcmp(key, "horizontal")) {
-      if (!parse_horizontal(cur, &ret)) {
-        fprintf(stderr,
-            "configuration error: failed to parse \"horizontal\" split\n");
+    } else if (split_is_horizontal(top, bottom, left, right, layout)) {
+      if (!parse_horizontal(split_obj, &ret)) {
+        fprintf(
+            stderr, "configuration error: failed to parse horizontal split\n");
         goto done;
       }
-    } else if (!strcmp(key, "container")) {
-      if (!parse_container(cur, &ret)) {
+    } else if (split_is_container(top, bottom, left, right, layout)) {
+      if (!parse_container(split_obj, &ret)) {
         fprintf(stderr, "configuration error: failed to parse container\n");
         goto done;
       }
     } else {
-      fprintf(stderr, "configuration error: unknown split \"%s\"\n", key);
+      fprintf(
+          stderr, "configuration error: failed to determine layout element\n");
       goto done;
     }
+  } else {
+    fprintf(stderr,
+        "configuration error: expected string or object for layout element\n");
+    goto done;
   }
 
   success = true;
 
 done:
   *split = ret;
-  ucl_object_iterate_free(it);
 
   return success;
 }
@@ -262,6 +326,7 @@ done:
       const ucl_object_t *name##_obj, struct hikari_split **name)              \
   {                                                                            \
     bool success = false;                                                      \
+    bool found_orientation = false;                                            \
     const ucl_object_t *cur;                                                   \
     struct hikari_##name##_split *ret = NULL;                                  \
     double scale = 0.5;                                                        \
@@ -286,6 +351,11 @@ done:
               "\" split\n");                                                   \
           goto done;                                                           \
         }                                                                      \
+                                                                               \
+        if (!found_orientation) {                                              \
+          orientation = HIKARI_##NAME##_SPLIT_ORIENTATION_##FIRST;             \
+          found_orientation = true;                                            \
+        }                                                                      \
       } else if (!strcmp(key, #second)) {                                      \
         if (!parse_split(cur, &second)) {                                      \
           if (first != NULL) {                                                 \
@@ -296,24 +366,10 @@ done:
               "\" split\n");                                                   \
           goto done;                                                           \
         }                                                                      \
-      } else if (!strcmp(key, "orientation")) {                                \
-        const char *orientation_value;                                         \
-        if (!ucl_object_tostring_safe(cur, &orientation_value)) {              \
-          fprintf(stderr,                                                      \
-              "configration error: expected string for \"orientation\"\n");    \
-          goto done;                                                           \
-        }                                                                      \
                                                                                \
-        if (!strcmp(orientation_value, #first)) {                              \
-          orientation = HIKARI_##NAME##_SPLIT_ORIENTATION_##FIRST;             \
-        } else if (!strcmp(orientation_value, #second)) {                      \
+        if (!found_orientation) {                                              \
           orientation = HIKARI_##NAME##_SPLIT_ORIENTATION_##SECOND;            \
-        } else {                                                               \
-          fprintf(stderr,                                                      \
-              "configuration error: unknown \"orientation\" value \"%s\" for " \
-              "\"" #name "\" split\n",                                         \
-              orientation_value);                                              \
-          goto done;                                                           \
+          found_orientation = true;                                            \
         }                                                                      \
       } else {                                                                 \
         fprintf(stderr,                                                        \
