@@ -44,13 +44,13 @@ struct hikari_view *
 hikari_sheet_first_tileable_view(struct hikari_sheet *sheet);
 
 struct hikari_view *
-hikari_sheet_vertical_layout(struct hikari_sheet *sheet,
+hikari_sheet_queue_layout(struct hikari_sheet *sheet,
     struct hikari_view *first,
     struct wlr_box *frame,
     int max);
 
 struct hikari_view *
-hikari_sheet_horizontal_layout(struct hikari_sheet *sheet,
+hikari_sheet_stack_layout(struct hikari_sheet *sheet,
     struct hikari_view *first,
     struct wlr_box *frame,
     int max);

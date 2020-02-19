@@ -93,10 +93,10 @@ parse_container(
         goto done;
       }
 
-      if (!strcmp(container_type, "vertical")) {
-        layout_func = hikari_sheet_vertical_layout;
-      } else if (!strcmp(container_type, "horizontal")) {
-        layout_func = hikari_sheet_horizontal_layout;
+      if (!strcmp(container_type, "queue")) {
+        layout_func = hikari_sheet_queue_layout;
+      } else if (!strcmp(container_type, "stack")) {
+        layout_func = hikari_sheet_stack_layout;
       } else if (!strcmp(container_type, "full")) {
         layout_func = hikari_sheet_full_layout;
       } else if (!strcmp(container_type, "grid")) {

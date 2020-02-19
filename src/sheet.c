@@ -242,8 +242,8 @@ grid_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
     return scan_next_tileable_view(view);                                      \
   }
 
-SPLIT_LAYOUT(vertical, x, y, width, height)
-SPLIT_LAYOUT(horizontal, y, x, height, width)
+SPLIT_LAYOUT(queue, x, y, width, height)
+SPLIT_LAYOUT(stack, y, x, height, width)
 #undef SPLIT_LAYOUT
 
 #define LAYOUT(name)                                                           \
@@ -263,8 +263,8 @@ SPLIT_LAYOUT(horizontal, y, x, height, width)
     return name##_layout(frame, first, nr_of_views);                           \
   }
 
-LAYOUT(vertical)
-LAYOUT(horizontal)
+LAYOUT(queue)
+LAYOUT(stack)
 LAYOUT(grid)
 LAYOUT(full)
 LAYOUT(single)
