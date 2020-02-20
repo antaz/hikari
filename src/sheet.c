@@ -14,18 +14,23 @@ void
 hikari_sheet_init(
     struct hikari_sheet *sheet, int nr, struct hikari_workspace *workspace)
 {
-  char sheet_name[2];
+  assert(workspace->output != NULL);
+
+  char *output_name = workspace->output->output->name;
+  char *sheet_name = hikari_malloc(strlen(output_name) + 5);
 
   wl_list_init(&sheet->views);
 
   sheet->nr = nr;
-  sprintf(sheet_name, "%d", nr);
+  sprintf(sheet_name, "%d - %s", nr, output_name);
 
   sheet->group = hikari_malloc(sizeof(struct hikari_group));
   hikari_group_init(sheet->group, sheet_name);
   sheet->group->sheet = sheet;
   sheet->workspace = workspace;
   sheet->layout = NULL;
+
+  hikari_free(sheet_name);
 }
 
 void

@@ -111,7 +111,8 @@ hikari_indicator_update_sheet(struct hikari_indicator *indicator,
     bool iconified,
     bool floating)
 {
-  char text[9];
+  char *output_name = output->output->name;
+  char *text = hikari_malloc(strlen(output_name) + 12);
   int i = 0;
 
   if (floating) {
@@ -133,10 +134,16 @@ hikari_indicator_update_sheet(struct hikari_indicator *indicator,
     text[i++] = sheet->workspace->sheet->group->name[0];
   }
 
-  text[i] = '\0';
+  text[i++] = ' ';
+  text[i++] = '-';
+  text[i++] = ' ';
+
+  strcpy(&text[i], output_name);
 
   hikari_indicator_bar_update(
       &indicator->sheet, view_geometry, output, text, background);
+
+  hikari_free(text);
 }
 
 void
