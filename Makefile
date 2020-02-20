@@ -1,4 +1,5 @@
 OBJS = \
+	action_config.o \
 	border.o \
 	command.o \
 	completion.o \
@@ -13,10 +14,10 @@ OBJS = \
 	indicator_bar.o \
 	indicator_frame.o \
 	input_buffer.o \
-	keybinding.o \
 	keyboard.o \
 	keyboard_grab_mode.o \
 	layout.o \
+	layout_config.o \
 	main.o \
 	mark.o \
 	mark_assign_mode.o \

@@ -8,11 +8,7 @@ struct hikari_keybinding {
   uint32_t modifiers;
 
   void (*action)(void *);
-  void (*cleanup)(void *);
   void *arg;
 };
-
-void
-hikari_keybinding_fini(struct hikari_keybinding *keybinding);
 
 #endif

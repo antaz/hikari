@@ -44,6 +44,8 @@ struct hikari_configuration {
   struct wl_list autoconfs;
   struct wl_list output_configs;
   struct wl_list pointer_configs;
+  struct wl_list layout_configs;
+  struct wl_list action_configs;
 };
 
 extern struct hikari_configuration *hikari_configuration;

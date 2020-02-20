@@ -7,12 +7,14 @@
 #include <linux/input-event-codes.h>
 #include <wlr/types/wlr_cursor.h>
 
+#include <hikari/action_config.h>
 #include <hikari/color.h>
 #include <hikari/command.h>
 #include <hikari/exec.h>
 #include <hikari/keybinding.h>
 #include <hikari/keyboard.h>
 #include <hikari/layout.h>
+#include <hikari/layout_config.h>
 #include <hikari/mark.h>
 #include <hikari/memory.h>
 #include <hikari/output.h>
@@ -956,62 +958,94 @@ parse_pointer(struct xkb_state *ignored,
 }
 
 static bool
-parse_action(
-    const char *action_name, const ucl_object_t *actions, char **command)
+parse_action(const char *action_name,
+    const ucl_object_t *action_obj,
+    const char **command)
 {
-  const ucl_object_t *action_obj = ucl_object_lookup(actions, action_name + 7);
-
-  if (action_obj != NULL) {
-    *command = copy_in_config_string(action_obj);
-    return true;
-  } else {
-    fprintf(
-        stderr, "configuration error: unknown action \"%s\"\n", action_name);
+  if (!ucl_object_tostring_safe(action_obj, command)) {
+    fprintf(stderr,
+        "configuration error: expected string for \"action\" command\n");
     return false;
   }
+
+  return true;
 }
 
 static bool
-parse_layout(const char *layout_name,
-    const ucl_object_t *layouts,
-    struct hikari_split **layout)
+parse_actions(
+    struct hikari_configuration *configuration, const ucl_object_t *actions_obj)
 {
-  struct hikari_split *ret = NULL;
   bool success = false;
-  const ucl_object_t *layout_obj = ucl_object_lookup(layouts, layout_name + 7);
+  struct hikari_action_config *action_config;
 
-  if (layout_obj == NULL) {
-    fprintf(
-        stderr, "configuration error: unknown layout \"%s\"\n", layout_name);
-  }
+  const ucl_object_t *cur;
+  ucl_object_iter_t it = ucl_object_iterate_new(actions_obj);
+  while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
+    const char *key = ucl_object_key(cur);
+    const char *command;
 
-  if (!parse_split(layout_obj, &ret)) {
-    fprintf(stderr,
-        "configuration error: failed to parse layout \"%s\"\n",
-        layout_name);
-    goto done;
+    if (!parse_action(key, cur, &command)) {
+      goto done;
+    }
+
+    action_config = hikari_malloc(sizeof(struct hikari_action_config));
+    hikari_action_config_init(action_config, key, command);
+
+    wl_list_insert(&configuration->action_configs, &action_config->link);
   }
 
   success = true;
 
 done:
-  *layout = ret;
-
   return success;
 }
 
-static void
-cleanup_execute(void *arg)
+static bool
+parse_layout(const char *layout_name,
+    const ucl_object_t *layout_obj,
+    struct hikari_split **split)
 {
-  char *command = arg;
-  hikari_free(command);
+  struct hikari_split *ret = NULL;
+
+  if (!parse_split(layout_obj, &ret)) {
+    fprintf(stderr,
+        "configuration error: failed to parse layout \"%s\"\n",
+        layout_name);
+    return false;
+  }
+
+  *split = ret;
+
+  return true;
 }
 
-static void
-cleanup_layout(void *arg)
+static bool
+parse_layouts(
+    struct hikari_configuration *configuration, const ucl_object_t *layouts_obj)
 {
-  struct hikari_split *split = arg;
-  hikari_split_fini(split);
+  bool success = false;
+  struct hikari_layout_config *layout_config;
+  struct hikari_split *split;
+
+  const ucl_object_t *cur;
+  ucl_object_iter_t it = ucl_object_iterate_new(layouts_obj);
+  while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
+    const char *key = ucl_object_key(cur);
+
+    if (!parse_layout(key, cur, &split)) {
+      goto done;
+    }
+
+    layout_config = hikari_malloc(sizeof(struct hikari_layout_config));
+    hikari_layout_config_init(layout_config, key, split);
+
+    wl_list_insert(&configuration->layout_configs, &layout_config->link);
+  }
+
+  success = true;
+
+done:
+  return success;
 }
 
 #ifndef NDEBUG
@@ -1027,12 +1061,38 @@ toggle_damage_tracking(void *arg)
 }
 #endif
 
+struct hikari_split *
+lookup_layout(
+    struct hikari_configuration *configuration, const char *layout_name)
+{
+  struct hikari_layout_config *layout_config;
+  wl_list_for_each (layout_config, &configuration->layout_configs, link) {
+    if (!strcmp(layout_name, layout_config->layout_name)) {
+      return layout_config->split;
+    }
+  }
+
+  return NULL;
+}
+
+char *
+lookup_action(
+    struct hikari_configuration *configuration, const char *action_name)
+{
+  struct hikari_action_config *action_config;
+  wl_list_for_each (action_config, &configuration->action_configs, link) {
+    if (!strcmp(action_name, action_config->action_name)) {
+      return action_config->command;
+    }
+  }
+
+  return NULL;
+}
+
 static bool
-parse_binding(const ucl_object_t *obj,
-    const ucl_object_t *actions,
-    const ucl_object_t *layouts,
+parse_binding(struct hikari_configuration *configuration,
+    const ucl_object_t *obj,
     void (**action)(void *),
-    void (**cleanup)(void *),
     void **arg)
 {
   const char *str;
@@ -1046,419 +1106,329 @@ parse_binding(const ucl_object_t *obj,
 
   if (!strcmp(str, "quit")) {
     *action = hikari_server_terminate;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "lock")) {
     *action = hikari_server_lock;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "reload")) {
     *action = hikari_server_reload;
-    *cleanup = NULL;
     *arg = NULL;
 #ifndef NDEBUG
   } else if (!strcmp(str, "debug-damage")) {
     *action = toggle_damage_tracking;
-    *cleanup = NULL;
     *arg = NULL;
 #endif
 
   } else if (!strcmp(str, "view-move-up")) {
     *action = hikari_server_move_view_up;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-move-down")) {
     *action = hikari_server_move_view_down;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-move-left")) {
     *action = hikari_server_move_view_left;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-move-right")) {
     *action = hikari_server_move_view_right;
-    *cleanup = NULL;
     *arg = NULL;
 
   } else if (!strcmp(str, "view-snap-up")) {
     *action = hikari_server_snap_view_up;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-snap-down")) {
     *action = hikari_server_snap_view_down;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-snap-left")) {
     *action = hikari_server_snap_view_left;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-snap-right")) {
     *action = hikari_server_snap_view_right;
-    *cleanup = NULL;
     *arg = NULL;
 
   } else if (!strcmp(str, "view-toggle-maximize-vertical")) {
     *action = hikari_server_toggle_view_vertical_maximize;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-toggle-maximize-horizontal")) {
     *action = hikari_server_toggle_view_horizontal_maximize;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-toggle-maximize-full")) {
     *action = hikari_server_toggle_view_full_maximize;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-toggle-floating")) {
     *action = hikari_server_toggle_view_floating;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-toggle-iconified")) {
     *action = hikari_server_toggle_view_iconified;
-    *cleanup = NULL;
     *arg = NULL;
 
   } else if (!strcmp(str, "view-raise")) {
     *action = hikari_server_raise_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-lower")) {
     *action = hikari_server_lower_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-hide")) {
     *action = hikari_server_hide_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-only")) {
     *action = hikari_server_only_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-quit")) {
     *action = hikari_server_quit_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-reset-geometry")) {
     *action = hikari_server_reset_view_geometry;
-    *cleanup = NULL;
     *arg = NULL;
 
   } else if (!strcmp(str, "view-pin-to-sheet-0")) {
     *action = hikari_server_pin_view_to_sheet_0;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-1")) {
     *action = hikari_server_pin_view_to_sheet_1;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-2")) {
     *action = hikari_server_pin_view_to_sheet_2;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-3")) {
     *action = hikari_server_pin_view_to_sheet_3;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-4")) {
     *action = hikari_server_pin_view_to_sheet_4;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-5")) {
     *action = hikari_server_pin_view_to_sheet_5;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-6")) {
     *action = hikari_server_pin_view_to_sheet_6;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-7")) {
     *action = hikari_server_pin_view_to_sheet_7;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-8")) {
     *action = hikari_server_pin_view_to_sheet_8;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-9")) {
     *action = hikari_server_pin_view_to_sheet_9;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-alternate")) {
     *action = hikari_server_pin_view_to_sheet_alternate;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-current")) {
     *action = hikari_server_pin_view_to_sheet_current;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-next")) {
     *action = hikari_server_pin_view_to_sheet_next;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-pin-to-sheet-prev")) {
     *action = hikari_server_pin_view_to_sheet_prev;
-    *cleanup = NULL;
     *arg = NULL;
 
   } else if (!strcmp(str, "view-decrease-size-up")) {
     *action = hikari_server_decrease_view_size_up;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-increase-size-down")) {
     *action = hikari_server_increase_view_size_down;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-decrease-size-left")) {
     *action = hikari_server_decrease_view_size_left;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "view-increase-size-right")) {
     *action = hikari_server_increase_view_size_right;
-    *cleanup = NULL;
     *arg = NULL;
 
   } else if (!strcmp(str, "sheet-switch-to-0")) {
     *action = hikari_server_display_sheet_0;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-1")) {
     *action = hikari_server_display_sheet_1;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-2")) {
     *action = hikari_server_display_sheet_2;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-3")) {
     *action = hikari_server_display_sheet_3;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-4")) {
     *action = hikari_server_display_sheet_4;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-5")) {
     *action = hikari_server_display_sheet_5;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-6")) {
     *action = hikari_server_display_sheet_6;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-7")) {
     *action = hikari_server_display_sheet_7;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-8")) {
     *action = hikari_server_display_sheet_8;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-9")) {
     *action = hikari_server_display_sheet_9;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-alternate")) {
     *action = hikari_server_display_sheet_alternate;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-current")) {
     *action = hikari_server_display_sheet_current;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-next")) {
     *action = hikari_server_display_sheet_next;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-prev")) {
     *action = hikari_server_display_sheet_prev;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-next-inhabited")) {
     *action = hikari_server_switch_to_next_inhabited_sheet;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-switch-to-prev-inhabited")) {
     *action = hikari_server_switch_to_prev_inhabited_sheet;
-    *cleanup = NULL;
     *arg = NULL;
 
   } else if (!strcmp(str, "sheet-show-iconified")) {
     *action = hikari_server_show_iconified_sheet_views;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-show-all")) {
     *action = hikari_server_show_all_sheet_views;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-cycle-view-next")) {
     *action = hikari_server_cycle_next_sheet_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-cycle-view-prev")) {
     *action = hikari_server_cycle_prev_sheet_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-reset-layout")) {
     *action = hikari_server_reset_sheet_layout;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-cycle-layout-view-next")) {
     *action = hikari_server_cycle_next_layout_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-cycle-layout-view-prev")) {
     *action = hikari_server_cycle_prev_layout_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-cycle-layout-view-first")) {
     *action = hikari_server_cycle_first_layout_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-cycle-layout-view-last")) {
     *action = hikari_server_cycle_last_layout_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-exchange-layout-view-next")) {
     *action = hikari_server_exchange_next_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-exchange-layout-view-prev")) {
     *action = hikari_server_exchange_prev_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-exchange-layout-view-main")) {
     *action = hikari_server_exchange_main_layout_view;
-    *cleanup = NULL;
     *arg = NULL;
 
   } else if (!strcmp(str, "mode-enter-execute")) {
     *action = hikari_server_enter_exec_select_mode;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "mode-enter-group-assign")) {
     *action = hikari_server_enter_group_assign_mode;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "mode-enter-keyboard-grab")) {
     *action = hikari_server_enter_keyboard_grab_mode;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "mode-enter-mark-assign")) {
     *action = hikari_server_enter_mark_assign_mode;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "mode-enter-mark-select")) {
     *action = hikari_server_enter_mark_select_mode;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "mode-enter-mark-switch-select")) {
     *action = hikari_server_enter_mark_select_switch_mode;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "mode-enter-move")) {
     *action = hikari_server_enter_move_mode;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "mode-enter-resize")) {
     *action = hikari_server_enter_resize_mode;
-    *cleanup = NULL;
     *arg = NULL;
 
   } else if (!strcmp(str, "group-only")) {
     *action = hikari_server_only_group;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "group-hide")) {
     *action = hikari_server_hide_group;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "group-raise")) {
     *action = hikari_server_raise_group;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "group-lower")) {
     *action = hikari_server_lower_group;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "group-cycle-next")) {
     *action = hikari_server_cycle_next_group;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "group-cycle-prev")) {
     *action = hikari_server_cycle_prev_group;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "group-cycle-view-next")) {
     *action = hikari_server_cycle_next_group_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "group-cycle-view-prev")) {
     *action = hikari_server_cycle_prev_group_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "group-cycle-view-first")) {
     *action = hikari_server_cycle_first_group_view;
-    *cleanup = NULL;
     *arg = NULL;
   } else if (!strcmp(str, "group-cycle-view-last")) {
     *action = hikari_server_cycle_last_group_view;
-    *cleanup = NULL;
     *arg = NULL;
 
   } else if (!strcmp(str, "vt-switch-to-1")) {
     *action = hikari_server_session_change_vt;
-    *cleanup = NULL;
     *arg = (void *)(intptr_t)1;
   } else if (!strcmp(str, "vt-switch-to-2")) {
     *action = hikari_server_session_change_vt;
-    *cleanup = NULL;
     *arg = (void *)(intptr_t)2;
   } else if (!strcmp(str, "vt-switch-to-3")) {
     *action = hikari_server_session_change_vt;
-    *cleanup = NULL;
     *arg = (void *)(intptr_t)3;
   } else if (!strcmp(str, "vt-switch-to-4")) {
     *action = hikari_server_session_change_vt;
-    *cleanup = NULL;
     *arg = (void *)(intptr_t)4;
   } else if (!strcmp(str, "vt-switch-to-5")) {
     *action = hikari_server_session_change_vt;
-    *cleanup = NULL;
     *arg = (void *)(intptr_t)5;
   } else if (!strcmp(str, "vt-switch-to-6")) {
     *action = hikari_server_session_change_vt;
-    *cleanup = NULL;
     *arg = (void *)(intptr_t)6;
   } else if (!strcmp(str, "vt-switch-to-7")) {
     *action = hikari_server_session_change_vt;
-    *cleanup = NULL;
     *arg = (void *)(intptr_t)7;
   } else if (!strcmp(str, "vt-switch-to-8")) {
     *action = hikari_server_session_change_vt;
-    *cleanup = NULL;
     *arg = (void *)(intptr_t)8;
   } else if (!strcmp(str, "vt-switch-to-9")) {
     *action = hikari_server_session_change_vt;
-    *cleanup = NULL;
     *arg = (void *)(intptr_t)9;
 
   } else {
     if (!strncmp(str, "action-", 7)) {
       char *command = NULL;
-      if (!parse_action(str, actions, &command)) {
+      const char *action_name = &str[7];
+      if ((command = lookup_action(configuration, action_name)) == NULL) {
+        fprintf(stderr,
+            "configuration error: unknown action \"%s\"\n",
+            action_name);
         goto done;
       } else {
         *action = hikari_server_execute_command;
-        *cleanup = cleanup_execute;
         *arg = command;
       }
     } else if (!strncmp(str, "layout-", 7)) {
+      const char *layout_name = &str[7];
       struct hikari_split *layout = NULL;
-      if (!parse_layout(str, layouts, &layout)) {
+      if ((layout = lookup_layout(configuration, layout_name)) == NULL) {
+        fprintf(stderr,
+            "configuration error: unknown layout \"%s\"\n",
+            layout_name);
         goto done;
       } else {
         *action = hikari_server_layout_sheet;
-        *cleanup = cleanup_layout;
         *arg = layout;
       }
     } else {
@@ -1524,12 +1494,7 @@ parse_input_bindings(bool (*binding_parser)(struct xkb_state *xkb_state,
 
     if (!binding_parser(
             xkb_state, key, &binding->keycode, &binding->modifiers) ||
-        !parse_binding(cur,
-            actions,
-            layouts,
-            &binding->action,
-            &binding->cleanup,
-            &binding->arg)) {
+        !parse_binding(configuration, cur, &binding->action, &binding->arg)) {
       goto done;
     }
     n[mask]++;
@@ -1927,12 +1892,22 @@ hikari_configuration_load(struct hikari_configuration *configuration)
         goto done;
       }
     } else if (!strcmp(key, "bindings")) {
-      const ucl_object_t *actions =
+      const ucl_object_t *actions_obj =
           ucl_object_lookup(configuration_obj, "actions");
-      const ucl_object_t *layouts =
+      const ucl_object_t *layouts_obj =
           ucl_object_lookup(configuration_obj, "layouts");
 
-      if (!parse_bindings(configuration, actions, layouts, cur)) {
+      if (layouts_obj != NULL && !parse_layouts(configuration, layouts_obj)) {
+        fprintf(stderr, "configuration error: failed to parse \"layouts\"\n");
+        goto done;
+      }
+
+      if (actions_obj != NULL && !parse_actions(configuration, actions_obj)) {
+        fprintf(stderr, "configuration error: failed to parse \"actions\"\n");
+        goto done;
+      }
+
+      if (!parse_bindings(configuration, actions_obj, layouts_obj, cur)) {
         goto done;
       }
     } else if (!strcmp(key, "outputs")) {
@@ -2025,7 +2000,6 @@ hikari_configuration_reload(void)
             output, output_config->background, output_config->background_fit);
       }
     }
-
   } else {
     hikari_configuration_fini(configuration);
     hikari_free(configuration);
@@ -2040,6 +2014,8 @@ hikari_configuration_init(struct hikari_configuration *configuration)
   wl_list_init(&configuration->autoconfs);
   wl_list_init(&configuration->output_configs);
   wl_list_init(&configuration->pointer_configs);
+  wl_list_init(&configuration->layout_configs);
+  wl_list_init(&configuration->action_configs);
 
   hikari_color_convert(configuration->clear, 0x282C34);
   hikari_color_convert(configuration->foreground, 0x000000);
@@ -2073,14 +2049,7 @@ cleanup_bindings(struct hikari_keybinding **bindings, uint8_t *n)
 {
   for (int i = 0; i < 256; i++) {
     struct hikari_keybinding *mod_bindings = bindings[i];
-    uint8_t nbindings = n[i];
 
-    for (uint8_t j = 0; j < nbindings; j++) {
-      struct hikari_keybinding *binding = &mod_bindings[j];
-      if (binding != NULL) {
-        hikari_keybinding_fini(binding);
-      }
-    }
     hikari_free(mod_bindings);
   }
 }
@@ -2121,6 +2090,24 @@ hikari_configuration_fini(struct hikari_configuration *configuration)
 
     hikari_pointer_config_fini(pointer_config);
     hikari_free(pointer_config);
+  }
+
+  struct hikari_layout_config *layout_config, *layout_config_temp;
+  wl_list_for_each_safe (
+      layout_config, layout_config_temp, &configuration->layout_configs, link) {
+    wl_list_remove(&layout_config->link);
+
+    hikari_layout_config_fini(layout_config);
+    hikari_free(layout_config);
+  }
+
+  struct hikari_action_config *action_config, *action_config_temp;
+  wl_list_for_each_safe (
+      action_config, action_config_temp, &configuration->action_configs, link) {
+    wl_list_remove(&action_config->link);
+
+    hikari_action_config_fini(action_config);
+    hikari_free(action_config);
   }
 
   for (int i = 0; i < HIKARI_NR_OF_EXECS; i++) {
