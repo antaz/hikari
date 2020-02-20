@@ -136,16 +136,32 @@ hide(struct hikari_view *view)
 }
 
 static void
+migrate_to_workspace(
+    struct hikari_view *view, struct hikari_workspace *workspace)
+{
+  hikari_view_damage_whole(view);
+  if (hikari_view_has_focus(view)) {
+    hikari_indicator_damage(&hikari_server.indicator, view);
+    hikari_workspace_focus_view(view->sheet->workspace, NULL);
+  }
+  view->output = workspace->output;
+}
+
+static void
 regroup_from_sheet_to_sheet(
     struct hikari_view *view, struct hikari_group *group)
 {
   assert(hikari_group_is_sheet(view->group));
   assert(hikari_group_is_sheet(group));
 
-  struct hikari_sheet *sheets = view->sheet->workspace->sheets;
+  struct hikari_sheet *sheets = group->sheet->workspace->sheets;
+  bool migrate = group->sheet->workspace->output != view->output;
 
-  if (group->sheet == view->sheet->workspace->sheet ||
+  if (group->sheet == group->sheet->workspace->sheet ||
       group->sheet == &sheets[0]) {
+    if (migrate) {
+      migrate_to_workspace(view, group->sheet->workspace);
+    }
     remove_from_sheet_group(view);
 
     view->sheet = group->sheet;
@@ -157,10 +173,14 @@ regroup_from_sheet_to_sheet(
     increase_group_visiblity(view);
 
     wl_list_remove(&view->workspace_views);
-    wl_list_insert(&view->sheet->workspace->views, &view->workspace_views);
+    wl_list_insert(&group->sheet->workspace->views, &view->workspace_views);
+
+    if (migrate) {
+      hikari_view_center_cursor(view);
+      hikari_server_cursor_focus();
+    }
   } else {
     assert(view != NULL);
-    assert(hikari_group_is_sheet(group));
 
     hide(view);
 
@@ -171,6 +191,10 @@ regroup_from_sheet_to_sheet(
     view->group = group;
     wl_list_remove(&view->group_views);
     wl_list_insert(&view->group->views, &view->group_views);
+
+    if (migrate) {
+      view->output = group->sheet->workspace->output;
+    }
   }
 }
 
@@ -201,10 +225,14 @@ regroup_from_group_to_sheet(
   assert(!hikari_group_is_sheet(view->group));
   assert(hikari_group_is_sheet(group));
 
-  struct hikari_sheet *sheets = view->sheet->workspace->sheets;
+  struct hikari_sheet *sheets = group->sheet->workspace->sheets;
+  bool migrate = group->sheet->workspace->output != view->output;
 
-  if (group->sheet == view->sheet->workspace->sheet ||
+  if (group->sheet == group->sheet->workspace->sheet ||
       group->sheet == &sheets[0]) {
+    if (migrate) {
+      migrate_to_workspace(view, group->sheet->workspace);
+    }
     remove_from_group(view);
 
     view->sheet = group->sheet;
@@ -218,6 +246,11 @@ regroup_from_group_to_sheet(
 
     wl_list_remove(&view->workspace_views);
     wl_list_insert(&view->sheet->workspace->views, &view->workspace_views);
+
+    if (migrate) {
+      hikari_view_center_cursor(view);
+      hikari_server_cursor_focus();
+    }
   } else {
     hide(view);
 
@@ -230,6 +263,10 @@ regroup_from_group_to_sheet(
     wl_list_insert(&view->sheet->views, &view->sheet_views);
 
     wl_list_insert(&view->group->views, &view->group_views);
+
+    if (migrate) {
+      view->output = group->sheet->workspace->output;
+    }
   }
 }
 
