@@ -44,7 +44,8 @@ hikari_workspace_init(
   wl_list_init(&hikari_server.visible_groups);
   workspace->output = output;
   workspace->focus_view = NULL;
-  workspace->sheets = calloc(HIKARI_NR_OF_SHEETS, sizeof(struct hikari_sheet));
+  workspace->sheets =
+      hikari_calloc(HIKARI_NR_OF_SHEETS, sizeof(struct hikari_sheet));
 
   for (int i = 0; i < HIKARI_NR_OF_SHEETS; i++) {
     hikari_sheet_init(&workspace->sheets[i], i, workspace);
@@ -62,6 +63,9 @@ hikari_workspace_fini(struct hikari_workspace *workspace)
   for (int i = 0; i < HIKARI_NR_OF_SHEETS; i++) {
     hikari_sheet_fini(&workspace->sheets[i]);
   }
+  hikari_free(workspace->sheets);
+
+  wl_list_remove(&workspace->server_workspaces);
 }
 
 void
@@ -401,14 +405,18 @@ void
 hikari_workspace_focus_view(
     struct hikari_workspace *workspace, struct hikari_view *view)
 {
+  assert(hikari_server.workspace != NULL);
+
   struct wlr_seat *seat = hikari_server.seat;
 
   if (!hikari_server_in_normal_mode()) {
     hikari_server_enter_normal_mode(NULL);
   }
 
-  if (hikari_server.workspace->focus_view != NULL) {
-    hikari_view_activate(hikari_server.workspace->focus_view, false);
+  struct hikari_workspace *current_workspace = hikari_server.workspace;
+
+  if (current_workspace->focus_view != NULL) {
+    hikari_view_activate(current_workspace->focus_view, false);
     wlr_seat_keyboard_end_grab(seat);
   }
 

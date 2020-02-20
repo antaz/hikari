@@ -16,8 +16,11 @@ struct hikari_output {
   struct wlr_output_damage *damage;
   struct hikari_workspace *workspace;
 
+  bool enabled;
+
   struct wl_listener damage_frame;
   struct wl_listener destroy;
+  struct wl_listener damage_destroy;
   /* struct wl_listener mode; */
 
   struct wl_list views;

@@ -71,6 +71,13 @@ add_keyboard(struct hikari_server *server, struct wlr_input_device *device)
 }
 
 static void
+set_cursor_image(struct hikari_server *server)
+{
+  wlr_xcursor_manager_set_cursor_image(
+      server->cursor_mgr, "left_ptr", server->cursor);
+}
+
+static void
 new_input_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_server *server = wl_container_of(listener, server, new_input);
@@ -97,8 +104,7 @@ new_input_handler(struct wl_listener *listener, void *data)
   wlr_seat_set_capabilities(server->seat, caps);
 
   if ((caps & WL_SEAT_CAPABILITY_POINTER) != 0) {
-    wlr_xcursor_manager_set_cursor_image(
-        server->cursor_mgr, "left_ptr", server->cursor);
+    set_cursor_image(server);
   }
 }
 
@@ -117,6 +123,8 @@ new_output_handler(struct wl_listener *listener, void *data)
     hikari_server.workspace = output->workspace;
     hikari_server_activate_cursor();
     hikari_server.mode = (struct hikari_mode *)&hikari_server.normal_mode;
+  } else {
+    set_cursor_image(server);
   }
 }
 
@@ -147,6 +155,8 @@ static struct hikari_view_interface *
 view_interface_at(
     double lx, double ly, struct wlr_surface **surface, double *sx, double *sy)
 {
+  assert(hikari_server.workspace != NULL);
+
   struct wlr_output *wlr_output =
       wlr_output_layout_output_at(hikari_server.output_layout, lx, ly);
 
