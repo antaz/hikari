@@ -1355,6 +1355,9 @@ parse_binding(struct hikari_configuration *configuration,
   } else if (!strcmp(str, "mode-enter-resize")) {
     *action = hikari_server_enter_resize_mode;
     *arg = NULL;
+  } else if (!strcmp(str, "mode-enter-sheet-assign")) {
+    *action = hikari_server_enter_sheet_assign_mode;
+    *arg = NULL;
 
   } else if (!strcmp(str, "group-only")) {
     *action = hikari_server_only_group;

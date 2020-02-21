@@ -37,7 +37,8 @@ move_to_top(struct hikari_view *view)
 }
 
 static inline void
-place_visibly_above(struct hikari_view *view)
+place_visibly_above(
+    struct hikari_view *view, struct hikari_workspace *workspace)
 {
   wl_list_remove(&view->visible_group_views);
   wl_list_insert(&view->group->visible_views, &view->visible_group_views);
@@ -47,7 +48,7 @@ place_visibly_above(struct hikari_view *view)
       &hikari_server.visible_groups, &view->group->visible_server_groups);
 
   wl_list_remove(&view->workspace_views);
-  wl_list_insert(&view->sheet->workspace->views, &view->workspace_views);
+  wl_list_insert(&workspace->views, &view->workspace_views);
 }
 
 static void
@@ -734,7 +735,7 @@ raise_view(struct hikari_view *view)
   }
 
   move_to_top(view);
-  place_visibly_above(view);
+  place_visibly_above(view, view->sheet->workspace);
 }
 
 void
@@ -1083,18 +1084,33 @@ hikari_view_pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet)
     } else {
       raise_view(view);
     }
+  } else if (view->sheet->group == view->group) {
+    regroup(view, sheet->group);
   } else {
-    if (view->sheet->group == view->group) {
-      regroup(view, sheet->group);
-    } else {
-      if (view->sheet->workspace->sheet != sheet && sheet->nr != 0) {
-        hide(view);
-      } else {
-        place_visibly_above(view);
+    bool migrate = view->sheet->workspace->output != sheet->workspace->output;
+    struct hikari_sheet *sheets = sheet->workspace->sheets;
+
+    if (sheet->workspace->sheet == sheet || sheet == &sheets[0]) {
+      if (migrate) {
+        migrate_to_workspace(view, sheet->workspace);
       }
 
-      view->sheet = sheet;
-      move_to_top(view);
+      place_visibly_above(view, sheet->workspace);
+    } else {
+      if (migrate) {
+        hikari_view_hide(view);
+        view->output = sheet->workspace->output;
+      } else {
+        hide(view);
+      }
+    }
+
+    view->sheet = sheet;
+    move_to_top(view);
+
+    if (migrate && !hikari_view_is_hidden(view)) {
+      hikari_view_center_cursor(view);
+      hikari_server_cursor_focus();
     }
   }
 

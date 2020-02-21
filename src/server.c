@@ -665,6 +665,7 @@ server_init(struct hikari_server *server)
   hikari_tiling_mode_init(&server->tiling_mode);
   hikari_move_mode_init(&server->move_mode);
   hikari_resize_mode_init(&server->resize_mode);
+  hikari_sheet_assign_mode_init(&server->sheet_assign_mode);
 
   hikari_marks_init();
 }
@@ -827,6 +828,33 @@ hikari_server_enter_normal_mode(void *arg)
   hikari_server.mode->cancel();
 
   hikari_server.mode = (struct hikari_mode *)&hikari_server.normal_mode;
+  hikari_server_refresh_indication();
+}
+
+void
+hikari_server_enter_sheet_assign_mode(void *arg)
+{
+  assert(hikari_server.workspace != NULL);
+
+  struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_view *focus_view = workspace->focus_view;
+
+  if (focus_view == NULL) {
+    return;
+  }
+
+  struct wlr_box *geometry = hikari_view_geometry(focus_view);
+
+  hikari_indicator_update_sheet(&hikari_server.indicator,
+      geometry,
+      workspace->output,
+      focus_view->sheet,
+      hikari_configuration->indicator_insert,
+      hikari_view_is_iconified(focus_view),
+      hikari_view_is_floating(focus_view));
+
+  hikari_server.sheet_assign_mode.sheet = focus_view->sheet;
+  hikari_server.mode = (struct hikari_mode *)&hikari_server.sheet_assign_mode;
   hikari_server_refresh_indication();
 }
 

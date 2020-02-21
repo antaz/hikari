@@ -111,7 +111,7 @@ hikari_indicator_update_sheet(struct hikari_indicator *indicator,
     bool iconified,
     bool floating)
 {
-  char *output_name = output->output->name;
+  char *output_name = sheet->workspace->output->output->name;
   char *text = hikari_malloc(strlen(output_name) + 12);
   int i = 0;
 

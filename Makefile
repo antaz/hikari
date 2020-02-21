@@ -33,6 +33,7 @@ OBJS = \
 	resize_mode.o \
 	server.o \
 	sheet.o \
+	sheet_assign_mode.o \
 	split.o \
 	tile.o \
 	tiling_mode.o \

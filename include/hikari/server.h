@@ -13,6 +13,7 @@
 #include <hikari/move_mode.h>
 #include <hikari/normal_mode.h>
 #include <hikari/resize_mode.h>
+#include <hikari/sheet_assign_mode.h>
 #include <hikari/tiling_mode.h>
 #include <hikari/workspace.h>
 
@@ -85,6 +86,7 @@ struct hikari_server {
   struct hikari_mark_assign_mode mark_assign_mode;
   struct hikari_exec_select_mode exec_select_mode;
   struct hikari_group_assign_mode group_assign_mode;
+  struct hikari_sheet_assign_mode sheet_assign_mode;
   struct hikari_keyboard_grab_mode keyboard_grab_mode;
   struct hikari_tiling_mode tiling_mode;
   struct hikari_move_mode move_mode;
@@ -281,6 +283,7 @@ MODE(mark_select)
 MODE(exec_select)
 MODE(move)
 MODE(resize)
+MODE(sheet_assign)
 
 void
 hikari_server_enter_mark_select_switch_mode(void *arg);
