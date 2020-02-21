@@ -733,6 +733,7 @@ parse_autoconf(struct hikari_configuration *configuration,
             "\"group\"\n");
         goto done;
       } else if (strlen(group_name) == 0) {
+        hikari_free(group_name);
         fprintf(stderr,
             "configuration error: expected non-empty string for \"autoconf\" "
             "\"group\"\n");
