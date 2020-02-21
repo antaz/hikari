@@ -1,5 +1,6 @@
 #include <hikari/configuration.h>
 
+#include <ctype.h>
 #include <errno.h>
 
 #include <ucl.h>
@@ -737,6 +738,13 @@ parse_autoconf(struct hikari_configuration *configuration,
         fprintf(stderr,
             "configuration error: expected non-empty string for \"autoconf\" "
             "\"group\"\n");
+        goto done;
+      } else if (isdigit(group_name[0])) {
+        fprintf(stderr,
+            "configuration error: \"autoconf\" "
+            "\"group\" \"%s\" starts with digit\n",
+            group_name);
+        hikari_free(group_name);
         goto done;
       }
 

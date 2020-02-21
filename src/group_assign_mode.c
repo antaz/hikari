@@ -1,5 +1,6 @@
 #include <hikari/group_assign_mode.h>
 
+#include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -226,8 +227,8 @@ confirm_group_assign(struct hikari_workspace *workspace)
   struct wlr_box *geometry = hikari_view_geometry(workspace->focus_view);
 
   struct hikari_group *group;
-
-  if (!strcmp(mode->input_buffer.buffer, "")) {
+  char *input = mode->input_buffer.buffer;
+  if (!strcmp(input, "")) {
     group = workspace->sheet->group;
     hikari_indicator_update_group(&hikari_server.indicator,
         geometry,
@@ -235,7 +236,23 @@ confirm_group_assign(struct hikari_workspace *workspace)
         "",
         hikari_configuration->indicator_selected);
   } else {
-    group = hikari_server_find_or_create_group(mode->input_buffer.buffer);
+    if (isdigit(input[0])) {
+      group = hikari_server_find_group(input);
+
+      if (group == NULL) {
+        hikari_indicator_update_group(&hikari_server.indicator,
+            geometry,
+            workspace->output,
+            input,
+            hikari_configuration->indicator_conflict);
+        return;
+      }
+    } else {
+      group = hikari_server_find_or_create_group(input);
+    }
+
+    assert(group != NULL);
+
     if (group->sheet == NULL) {
       hikari_indicator_update_group(&hikari_server.indicator,
           geometry,
