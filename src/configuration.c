@@ -1010,7 +1010,7 @@ done:
 }
 
 static bool
-parse_layout(const char *layout_name,
+parse_layout(char layout_register,
     const ucl_object_t *layout_obj,
     struct hikari_split **split)
 {
@@ -1018,8 +1018,8 @@ parse_layout(const char *layout_name,
 
   if (!parse_split(layout_obj, &ret)) {
     fprintf(stderr,
-        "configuration error: failed to parse layout \"%s\"\n",
-        layout_name);
+        "configuration error: failed to parse layout for register \"%c\"\n",
+        layout_register);
     return false;
   }
 
@@ -1041,12 +1041,19 @@ parse_layouts(
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
-    if (!parse_layout(key, cur, &split)) {
+    if (strlen(key) > 1) {
+      fprintf(stderr, "configuration error: expected layout register name\n");
+      goto done;
+    }
+
+    char layout_register = key[0];
+
+    if (!parse_layout(layout_register, cur, &split)) {
       goto done;
     }
 
     layout_config = hikari_malloc(sizeof(struct hikari_layout_config));
-    hikari_layout_config_init(layout_config, key, split);
+    hikari_layout_config_init(layout_config, layout_register, split);
 
     wl_list_insert(&configuration->layout_configs, &layout_config->link);
   }
@@ -1071,12 +1078,12 @@ toggle_damage_tracking(void *arg)
 #endif
 
 struct hikari_split *
-lookup_layout(
-    struct hikari_configuration *configuration, const char *layout_name)
+hikari_configuration_lookup_layout(
+    struct hikari_configuration *configuration, char layout_register)
 {
   struct hikari_layout_config *layout_config;
   wl_list_for_each (layout_config, &configuration->layout_configs, link) {
-    if (!strcmp(layout_name, layout_config->layout_name)) {
+    if (layout_register == layout_config->layout_register) {
       return layout_config->split;
     }
   }
@@ -1358,6 +1365,9 @@ parse_binding(struct hikari_configuration *configuration,
   } else if (!strcmp(str, "mode-enter-sheet-assign")) {
     *action = hikari_server_enter_sheet_assign_mode;
     *arg = NULL;
+  } else if (!strcmp(str, "mode-enter-layout")) {
+    *action = hikari_server_enter_layout_select_mode;
+    *arg = NULL;
 
   } else if (!strcmp(str, "group-only")) {
     *action = hikari_server_only_group;
@@ -1431,20 +1441,8 @@ parse_binding(struct hikari_configuration *configuration,
         *action = hikari_server_execute_command;
         *arg = command;
       }
-    } else if (!strncmp(str, "layout-", 7)) {
-      const char *layout_name = &str[7];
-      struct hikari_split *layout = NULL;
-      if ((layout = lookup_layout(configuration, layout_name)) == NULL) {
-        fprintf(stderr,
-            "configuration error: unknown layout \"%s\"\n",
-            layout_name);
-        goto done;
-      } else {
-        *action = hikari_server_layout_sheet;
-        *arg = layout;
-      }
     } else {
-      fprintf(stderr, "configuration error: unknown command \"%s\"\n", str);
+      fprintf(stderr, "configuration error: unknown action \"%s\"\n", str);
       goto done;
     }
   }

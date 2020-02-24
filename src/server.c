@@ -656,16 +656,17 @@ server_init(struct hikari_server *server)
   wl_list_init(&server->workspaces);
   wl_list_init(&server->pointers);
 
-  hikari_normal_mode_init(&server->normal_mode);
   hikari_exec_select_mode_init(&server->exec_select_mode);
-  hikari_mark_select_mode_init(&server->mark_select_mode);
-  hikari_mark_assign_mode_init(&server->mark_assign_mode);
   hikari_group_assign_mode_init(&server->group_assign_mode);
   hikari_keyboard_grab_mode_init(&server->keyboard_grab_mode);
-  hikari_tiling_mode_init(&server->tiling_mode);
+  hikari_layout_select_mode_init(&server->layout_select_mode);
+  hikari_mark_assign_mode_init(&server->mark_assign_mode);
+  hikari_mark_select_mode_init(&server->mark_select_mode);
   hikari_move_mode_init(&server->move_mode);
+  hikari_normal_mode_init(&server->normal_mode);
   hikari_resize_mode_init(&server->resize_mode);
   hikari_sheet_assign_mode_init(&server->sheet_assign_mode);
+  hikari_tiling_mode_init(&server->tiling_mode);
 
   hikari_marks_init();
 }
@@ -987,6 +988,16 @@ hikari_server_enter_exec_select_mode(void *arg)
   assert(hikari_server.workspace != NULL);
 
   hikari_server.mode = (struct hikari_mode *)&hikari_server.exec_select_mode;
+
+  hikari_server_refresh_indication();
+}
+
+void
+hikari_server_enter_layout_select_mode(void *arg)
+{
+  assert(hikari_server.workspace != NULL);
+
+  hikari_server.mode = (struct hikari_mode *)&hikari_server.layout_select_mode;
 
   hikari_server_refresh_indication();
 }

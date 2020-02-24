@@ -8,6 +8,7 @@
 #include <hikari/group_assign_mode.h>
 #include <hikari/indicator.h>
 #include <hikari/keyboard_grab_mode.h>
+#include <hikari/layout_select_mode.h>
 #include <hikari/mark_assign_mode.h>
 #include <hikari/mark_select_mode.h>
 #include <hikari/move_mode.h>
@@ -81,16 +82,17 @@ struct hikari_server {
 
   struct hikari_mode *mode;
 
-  struct hikari_normal_mode normal_mode;
-  struct hikari_mark_select_mode mark_select_mode;
-  struct hikari_mark_assign_mode mark_assign_mode;
   struct hikari_exec_select_mode exec_select_mode;
   struct hikari_group_assign_mode group_assign_mode;
-  struct hikari_sheet_assign_mode sheet_assign_mode;
   struct hikari_keyboard_grab_mode keyboard_grab_mode;
-  struct hikari_tiling_mode tiling_mode;
+  struct hikari_layout_select_mode layout_select_mode;
+  struct hikari_mark_assign_mode mark_assign_mode;
+  struct hikari_mark_select_mode mark_select_mode;
   struct hikari_move_mode move_mode;
+  struct hikari_normal_mode normal_mode;
   struct hikari_resize_mode resize_mode;
+  struct hikari_sheet_assign_mode sheet_assign_mode;
+  struct hikari_tiling_mode tiling_mode;
 
   struct {
     uint32_t modifiers;
@@ -274,16 +276,17 @@ hikari_server_clear_workspace(void *arg)
            (struct hikari_mode *)&hikari_server.name##_mode;                   \
   }
 
-MODE(normal)
+MODE(exec_select)
 MODE(group_assign)
 MODE(keyboard_grab)
-MODE(tiling)
+MODE(layout_select)
 MODE(mark_assign)
 MODE(mark_select)
-MODE(exec_select)
 MODE(move)
+MODE(normal)
 MODE(resize)
 MODE(sheet_assign)
+MODE(tiling)
 
 void
 hikari_server_enter_mark_select_switch_mode(void *arg);

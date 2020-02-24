@@ -7,19 +7,15 @@
 
 void
 hikari_layout_config_init(struct hikari_layout_config *layout_config,
-    const char *layout_name,
+    char layout_register,
     struct hikari_split *split)
 {
-  size_t layout_name_len = strlen(layout_name);
-  layout_config->layout_name = hikari_malloc(layout_name_len + 1);
-
-  strcpy(layout_config->layout_name, layout_name);
+  layout_config->layout_register = layout_register;
   layout_config->split = split;
 }
 
 void
 hikari_layout_config_fini(struct hikari_layout_config *layout_config)
 {
-  hikari_free(layout_config->layout_name);
   hikari_split_fini(layout_config->split);
 }

@@ -81,4 +81,8 @@ struct hikari_pointer_config *
 hikari_configuration_resolve_pointer_config(
     struct hikari_configuration *configuration, const char *pointer_name);
 
+struct hikari_split *
+hikari_configuration_lookup_layout(
+    struct hikari_configuration *configuration, char layout_register);
+
 #endif

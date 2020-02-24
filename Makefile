@@ -18,6 +18,7 @@ OBJS = \
 	keyboard_grab_mode.o \
 	layout.o \
 	layout_config.o \
+	layout_select_mode.o \
 	main.o \
 	mark.o \
 	mark_assign_mode.o \
