@@ -318,4 +318,10 @@ hikari_view_is_mapped(struct hikari_view *view)
   return view->surface != NULL;
 }
 
+static inline bool
+hikari_view_is_maximized(struct hikari_view *view)
+{
+  return view->maximized_state != NULL;
+}
+
 #endif

@@ -7,16 +7,13 @@
 #include <hikari/view.h>
 
 void
-hikari_layout_init(struct hikari_layout *layout, struct hikari_split *split)
+hikari_layout_init(struct hikari_layout *layout,
+    struct hikari_split *split,
+    struct hikari_sheet *sheet)
 {
   layout->split = split;
+  layout->sheet = sheet;
   wl_list_init(&layout->tiles);
-}
-
-void
-hikari_layout_fini(struct hikari_layout *layout)
-{
-  /* hikari_split_fini(layout->split); */
 }
 
 #define CYCLE_LAYOUT(name, link)                                               \

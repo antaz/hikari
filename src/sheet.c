@@ -424,7 +424,7 @@ hikari_sheet_apply_split(struct hikari_sheet *sheet, struct hikari_split *split)
     }
   } else {
     sheet->layout = hikari_malloc(sizeof(struct hikari_layout));
-    hikari_layout_init(sheet->layout, split);
+    hikari_layout_init(sheet->layout, split, sheet);
   }
 
   struct wlr_box geometry = { .x = 0, .y = 0 };

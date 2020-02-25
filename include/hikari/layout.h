@@ -8,12 +8,15 @@ struct hikari_view;
 
 struct hikari_layout {
   struct hikari_split *split;
+  struct hikari_sheet *sheet;
 
   struct wl_list tiles;
 };
 
 void
-hikari_layout_init(struct hikari_layout *layout, struct hikari_split *split);
+hikari_layout_init(struct hikari_layout *layout,
+    struct hikari_split *split,
+    struct hikari_sheet *sheet);
 
 void
 hikari_layout_fini(struct hikari_layout *layout);

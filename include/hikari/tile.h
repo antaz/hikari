@@ -8,6 +8,7 @@ struct hikari_view;
 
 struct hikari_tile {
   struct hikari_view *view;
+  struct hikari_layout *layout;
   struct wlr_box view_geometry;
   struct wlr_box tile_geometry;
 
@@ -17,6 +18,7 @@ struct hikari_tile {
 void
 hikari_tile_init(struct hikari_tile *tile,
     struct hikari_view *view,
+    struct hikari_layout *layout,
     struct wlr_box *tile_geometry,
     struct wlr_box *view_geometry);
 

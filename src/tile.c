@@ -9,10 +9,12 @@
 void
 hikari_tile_init(struct hikari_tile *tile,
     struct hikari_view *view,
+    struct hikari_layout *layout,
     struct wlr_box *tile_geometry,
     struct wlr_box *view_geometry)
 {
   tile->view = view;
+  tile->layout = layout;
   tile->tile_geometry = *tile_geometry;
   tile->view_geometry = *view_geometry;
 }
@@ -20,8 +22,7 @@ hikari_tile_init(struct hikari_tile *tile,
 void
 hikari_tile_fini(struct hikari_tile *tile)
 {
-  assert(tile->view->tile == NULL);
-  wl_list_remove(&tile->layout_tiles);
+  tile->view->tile = NULL;
 }
 
 #define CYCLE_LAYOUT(link)                                                     \

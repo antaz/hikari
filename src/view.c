@@ -141,10 +141,12 @@ migrate_to_workspace(
     struct hikari_view *view, struct hikari_workspace *workspace)
 {
   hikari_view_damage_whole(view);
+
   if (hikari_view_has_focus(view)) {
     hikari_indicator_damage(&hikari_server.indicator, view);
     hikari_workspace_focus_view(view->sheet->workspace, NULL);
   }
+
   view->output = workspace->output;
 }
 
@@ -176,7 +178,9 @@ regroup_from_sheet_to_sheet(
     wl_list_remove(&view->workspace_views);
     wl_list_insert(&group->sheet->workspace->views, &view->workspace_views);
 
-    if (migrate) {
+    if (hikari_view_is_tiled(view)) {
+      hikari_view_reset_geometry(view);
+    } else if (migrate) {
       hikari_view_center_cursor(view);
       hikari_server_cursor_focus();
     }
@@ -192,6 +196,10 @@ regroup_from_sheet_to_sheet(
     view->group = group;
     wl_list_remove(&view->group_views);
     wl_list_insert(&view->group->views, &view->group_views);
+
+    if (hikari_view_is_tiled(view)) {
+      hikari_view_reset_geometry(view);
+    }
 
     if (migrate) {
       view->output = group->sheet->workspace->output;
@@ -248,7 +256,9 @@ regroup_from_group_to_sheet(
     wl_list_remove(&view->workspace_views);
     wl_list_insert(&view->sheet->workspace->views, &view->workspace_views);
 
-    if (migrate) {
+    if (hikari_view_is_tiled(view)) {
+      hikari_view_reset_geometry(view);
+    } else if (migrate) {
       hikari_view_center_cursor(view);
       hikari_server_cursor_focus();
     }
@@ -264,6 +274,10 @@ regroup_from_group_to_sheet(
     wl_list_insert(&view->sheet->views, &view->sheet_views);
 
     wl_list_insert(&view->group->views, &view->group_views);
+
+    if (hikari_view_is_tiled(view)) {
+      hikari_view_reset_geometry(view);
+    }
 
     if (migrate) {
       view->output = group->sheet->workspace->output;
@@ -831,7 +845,7 @@ hikari_view_tile(struct hikari_view *view, struct wlr_box *geometry)
   struct hikari_layout *layout = view->sheet->workspace->sheet->layout;
 
   struct hikari_tile *tile = hikari_malloc(sizeof(struct hikari_tile));
-  hikari_tile_init(tile, view, geometry, geometry);
+  hikari_tile_init(tile, view, layout, geometry, geometry);
 
   tile_view(view, layout, tile);
 
@@ -1066,6 +1080,17 @@ hikari_view_reset_geometry(struct hikari_view *view)
         op->geometry.height);
   }
 
+  if (hikari_view_is_tiled(view)) {
+    struct hikari_layout *layout = view->tile->layout;
+
+    wl_list_remove(&view->tile->layout_tiles);
+
+    if (wl_list_empty(&layout->tiles)) {
+      layout->sheet->layout = NULL;
+      hikari_free(layout);
+    }
+  }
+
   hikari_view_set_dirty(view);
 }
 
@@ -1108,7 +1133,9 @@ hikari_view_pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet)
     view->sheet = sheet;
     move_to_top(view);
 
-    if (migrate && !hikari_view_is_hidden(view)) {
+    if (hikari_view_is_tiled(view)) {
+      hikari_view_reset_geometry(view);
+    } else if (migrate && !hikari_view_is_hidden(view)) {
       hikari_view_center_cursor(view);
       hikari_server_cursor_focus();
     }
@@ -1206,8 +1233,8 @@ hikari_view_exchange(struct hikari_view *from, struct hikari_view *to)
   struct hikari_tile *from_tile = hikari_malloc(sizeof(struct hikari_tile));
   struct hikari_tile *to_tile = hikari_malloc(sizeof(struct hikari_tile));
 
-  hikari_tile_init(from_tile, from, to_geometry, to_geometry);
-  hikari_tile_init(to_tile, to, from_geometry, from_geometry);
+  hikari_tile_init(from_tile, from, layout, to_geometry, to_geometry);
+  hikari_tile_init(to_tile, to, layout, from_geometry, from_geometry);
 
   wl_list_insert(&from->tile->layout_tiles, &to_tile->layout_tiles);
   wl_list_insert(&to->tile->layout_tiles, &from_tile->layout_tiles);
@@ -1399,39 +1426,32 @@ commit_reset(struct hikari_view *view,
     struct hikari_operation *operation,
     struct wlr_box *geometry_before)
 {
-  if (view->tile) {
-    struct hikari_tile *tile = view->tile;
-    struct hikari_sheet *sheet = view->sheet;
-    struct hikari_layout *layout = sheet->layout;
-
-    assert(layout != NULL);
-
-    view->tile = NULL;
-
-    hikari_tile_fini(tile);
-    hikari_free(tile);
-
-    if (wl_list_empty(&layout->tiles)) {
-      hikari_layout_fini(layout);
-      hikari_free(layout);
-      sheet->layout = NULL;
-    }
+  if (hikari_view_is_tiled(view)) {
+    hikari_tile_fini(view->tile);
   }
 
-  if (view->maximized_state) {
+  if (hikari_view_is_maximized(view)) {
     hikari_maximized_state_destroy(view->maximized_state);
     view->maximized_state = NULL;
+
     if (!view->use_csd) {
       view->border.state = HIKARI_BORDER_INACTIVE;
     }
   }
 
-  raise_view(view);
-  hikari_indicator_damage(&hikari_server.indicator, view);
-  commit_pending_geometry(view, &operation->geometry, geometry_before);
-  hikari_indicator_damage(&hikari_server.indicator, view);
+  if (hikari_view_is_hidden(view)) {
+    move_to_top(view);
+  } else {
+    raise_view(view);
+    hikari_indicator_damage(&hikari_server.indicator, view);
+    commit_pending_geometry(view, &operation->geometry, geometry_before);
+    hikari_indicator_damage(&hikari_server.indicator, view);
 
-  hikari_view_center_cursor(view);
+    hikari_view_center_cursor(view);
+    // TODO we only need this because a view might have migrated to another
+    // workspace
+    hikari_server_cursor_focus();
+  }
 }
 
 static void
