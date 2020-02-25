@@ -274,13 +274,22 @@ confirm_group_assign(struct hikari_workspace *workspace)
 static void
 cancel_group_assign(struct hikari_workspace *workspace)
 {
-  struct wlr_box *geometry = hikari_view_geometry(workspace->focus_view);
+  struct hikari_view *focus_view = workspace->focus_view;
+  struct wlr_box *geometry = hikari_view_geometry(focus_view);
 
-  hikari_indicator_update_group(&hikari_server.indicator,
-      geometry,
-      workspace->output,
-      workspace->focus_view->group->name,
-      hikari_configuration->indicator_selected);
+  if (focus_view->group != focus_view->sheet->group) {
+    hikari_indicator_update_group(&hikari_server.indicator,
+        geometry,
+        workspace->output,
+        focus_view->group->name,
+        hikari_configuration->indicator_selected);
+  } else {
+    hikari_indicator_update_group(&hikari_server.indicator,
+        geometry,
+        workspace->output,
+        "",
+        hikari_configuration->indicator_selected);
+  }
   hikari_server_enter_normal_mode(NULL);
 }
 
