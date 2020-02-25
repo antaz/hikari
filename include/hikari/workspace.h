@@ -30,6 +30,16 @@ hikari_workspace_init(
 void
 hikari_workspace_fini(struct hikari_workspace *workspace);
 
+struct hikari_workspace *
+hikari_workspace_next(struct hikari_workspace *workspace);
+
+struct hikari_workspace *
+hikari_workspace_prev(struct hikari_workspace *workspace);
+
+void
+hikari_workspace_merge(
+    struct hikari_workspace *workspace, struct hikari_workspace *into);
+
 void
 hikari_workspace_focus_view(
     struct hikari_workspace *workspace, struct hikari_view *view);

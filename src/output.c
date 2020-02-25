@@ -462,6 +462,13 @@ destroy_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_output *output = wl_container_of(listener, output, destroy);
 
+  struct hikari_workspace *workspace = output->workspace;
+  struct hikari_workspace *next = hikari_workspace_next(workspace);
+
+  if (workspace != next) {
+    hikari_workspace_merge(workspace, next);
+  }
+
   hikari_output_fini(output);
   hikari_free(output);
 }

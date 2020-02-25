@@ -68,6 +68,43 @@ hikari_workspace_fini(struct hikari_workspace *workspace)
   wl_list_remove(&workspace->server_workspaces);
 }
 
+#define CYCLE_WORKSPACE(name)                                                  \
+  struct hikari_workspace *hikari_workspace_##name(                            \
+      struct hikari_workspace *workspace)                                      \
+  {                                                                            \
+    struct wl_list *name = workspace->server_workspaces.name;                  \
+                                                                               \
+    if (name == &hikari_server.workspaces) {                                   \
+      name = hikari_server.workspaces.name;                                    \
+    }                                                                          \
+                                                                               \
+    struct hikari_workspace *name##_workspace =                                \
+        wl_container_of(name, name##_workspace, server_workspaces);            \
+                                                                               \
+    return name##_workspace;                                                   \
+  }
+
+CYCLE_WORKSPACE(next)
+CYCLE_WORKSPACE(prev)
+#undef CYCLE_WORKSPACE
+
+void
+hikari_workspace_merge(
+    struct hikari_workspace *workspace, struct hikari_workspace *into)
+{
+  assert(workspace != NULL);
+  assert(into != NULL);
+
+  for (int i = 0; i < HIKARI_NR_OF_SHEETS; i++) {
+    struct hikari_sheet *from = &workspace->sheets[i];
+    struct hikari_sheet *to = &into->sheets[i];
+    struct hikari_view *view, *view_temp;
+    wl_list_for_each_reverse_safe (view, view_temp, &from->views, sheet_views) {
+      hikari_view_pin_to_sheet(view, to);
+    }
+  }
+}
+
 void
 hikari_workspace_quit_view(struct hikari_workspace *workspace)
 {

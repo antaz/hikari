@@ -63,18 +63,11 @@ check_cancellation(
 #define CYCLE_SHEET(name)                                                      \
   static struct hikari_sheet *name##_sheet(struct hikari_sheet *sheet)         \
   {                                                                            \
-    struct wl_list *name = sheet->workspace->server_workspaces.name;           \
+    struct hikari_workspace *name = hikari_workspace_##name(sheet->workspace); \
                                                                                \
-    if (name == &hikari_server.workspaces) {                                   \
-      name = hikari_server.workspaces.name;                                    \
-    }                                                                          \
+    assert(name != NULL);                                                      \
                                                                                \
-    struct hikari_workspace *workspace =                                       \
-        wl_container_of(name, workspace, server_workspaces);                   \
-                                                                               \
-    assert(workspace != NULL);                                                 \
-                                                                               \
-    return &workspace->sheets[sheet->nr];                                      \
+    return &name->sheets[sheet->nr];                                           \
   }
 
 CYCLE_SHEET(next)
