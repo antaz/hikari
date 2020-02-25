@@ -95,7 +95,7 @@ commit_handler(struct wl_listener *listener, void *data)
       hikari_view_refresh_geometry(view, geometry);
 
       hikari_view_damage_whole(view);
-    } else {
+    } else if (view->output->enabled) {
       pixman_region32_t damage;
       pixman_region32_init(&damage);
       wlr_surface_get_effective_damage(surface->surface, &damage);

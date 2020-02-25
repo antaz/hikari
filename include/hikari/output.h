@@ -65,7 +65,9 @@ hikari_output_add_damage(struct hikari_output *output, struct wlr_box *region)
   assert(output != NULL);
   assert(region != NULL);
 
-  wlr_output_damage_add_box(output->damage, region);
+  if (output->enabled) {
+    wlr_output_damage_add_box(output->damage, region);
+  }
 }
 
 #endif
