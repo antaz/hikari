@@ -1400,6 +1400,41 @@ parse_binding(struct hikari_configuration *configuration,
     *action = hikari_server_cycle_last_group_view;
     *arg = NULL;
 
+#define PARSE_LAYOUT_BINDING(reg)                                              \
+  }                                                                            \
+  else if (!strcmp(str, "layout-apply-" #reg))                                 \
+  {                                                                            \
+    *action = hikari_server_layout_sheet;                                      \
+    *arg = (void *)(intptr_t) #reg[0];
+
+    PARSE_LAYOUT_BINDING(a)
+    PARSE_LAYOUT_BINDING(b)
+    PARSE_LAYOUT_BINDING(c)
+    PARSE_LAYOUT_BINDING(d)
+    PARSE_LAYOUT_BINDING(e)
+    PARSE_LAYOUT_BINDING(f)
+    PARSE_LAYOUT_BINDING(g)
+    PARSE_LAYOUT_BINDING(h)
+    PARSE_LAYOUT_BINDING(i)
+    PARSE_LAYOUT_BINDING(j)
+    PARSE_LAYOUT_BINDING(k)
+    PARSE_LAYOUT_BINDING(l)
+    PARSE_LAYOUT_BINDING(m)
+    PARSE_LAYOUT_BINDING(n)
+    PARSE_LAYOUT_BINDING(o)
+    PARSE_LAYOUT_BINDING(p)
+    PARSE_LAYOUT_BINDING(q)
+    PARSE_LAYOUT_BINDING(r)
+    PARSE_LAYOUT_BINDING(s)
+    PARSE_LAYOUT_BINDING(t)
+    PARSE_LAYOUT_BINDING(u)
+    PARSE_LAYOUT_BINDING(v)
+    PARSE_LAYOUT_BINDING(w)
+    PARSE_LAYOUT_BINDING(x)
+    PARSE_LAYOUT_BINDING(y)
+    PARSE_LAYOUT_BINDING(z)
+#undef PARSE_LAYOUT_BINDING
+
   } else if (!strcmp(str, "vt-switch-to-1")) {
     *action = hikari_server_session_change_vt;
     *arg = (void *)(intptr_t)1;

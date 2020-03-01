@@ -1083,8 +1083,13 @@ hikari_server_reset_sheet_layout(void *arg)
 void
 hikari_server_layout_sheet(void *arg)
 {
-  struct hikari_split *split = arg;
-  hikari_sheet_apply_split(hikari_server.workspace->sheet, split);
+  char layout_register = (char)arg;
+  struct hikari_split *split =
+      hikari_configuration_lookup_layout(hikari_configuration, layout_register);
+
+  if (split != NULL) {
+    hikari_sheet_apply_split(hikari_server.workspace->sheet, split);
+  }
 }
 
 void
