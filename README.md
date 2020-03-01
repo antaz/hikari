@@ -34,21 +34,6 @@ Wayland currently requires some care to work properly on FreeBSD. This section
 aims to document the recent state of how to enable Wayland on the FreeBSD
 `STABLE` branch and will change once support is being improved.
 
-### Local `devfs.rules`
-
-NOTE: this should only be used on single user setups since it allows members of
-the `video` group to gain access to the `input` devices. This is a temporary
-solution until FreeBSD offers ways to handle this in a better way.
-
-Add the following to `/etc/devfs.rules`
-
-```
-[localrules=10]
-add path 'input/*' mode 0660 group video
-```
-
-Add `devfs_system_ruleset="localrules"` to `/etc/rc.conf`.
-
 ### Start `moused`
 
 Some systems might require `moused` for mice to work. Enable it with `service
