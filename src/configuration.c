@@ -1135,31 +1135,31 @@ parse_binding(struct hikari_configuration *configuration,
     *arg = NULL;
 #endif
 
-  } else if (!strcmp(str, "view-move-up")) {
-    *action = hikari_server_move_view_up;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-move-down")) {
-    *action = hikari_server_move_view_down;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-move-left")) {
-    *action = hikari_server_move_view_left;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-move-right")) {
-    *action = hikari_server_move_view_right;
+#define PARSE_MOVE_BINDING(d)                                                  \
+  }                                                                            \
+  else if (!strcmp(str, "view-move-" #d))                                      \
+  {                                                                            \
+    *action = hikari_server_move_view_##d;                                     \
     *arg = NULL;
 
-  } else if (!strcmp(str, "view-snap-up")) {
-    *action = hikari_server_snap_view_up;
+    PARSE_MOVE_BINDING(up)
+    PARSE_MOVE_BINDING(down)
+    PARSE_MOVE_BINDING(left)
+    PARSE_MOVE_BINDING(right)
+#undef PARSE_MOVE_BINDING
+
+#define PARSE_SNAP_BINDING(d)                                                  \
+  }                                                                            \
+  else if (!strcmp(str, "view-snap-" #d))                                      \
+  {                                                                            \
+    *action = hikari_server_snap_view_##d;                                     \
     *arg = NULL;
-  } else if (!strcmp(str, "view-snap-down")) {
-    *action = hikari_server_snap_view_down;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-snap-left")) {
-    *action = hikari_server_snap_view_left;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-snap-right")) {
-    *action = hikari_server_snap_view_right;
-    *arg = NULL;
+
+    PARSE_SNAP_BINDING(up)
+    PARSE_SNAP_BINDING(down)
+    PARSE_SNAP_BINDING(left)
+    PARSE_SNAP_BINDING(right)
+#undef PARSE_SNAP_BINDING
 
   } else if (!strcmp(str, "view-toggle-maximize-vertical")) {
     *action = hikari_server_toggle_view_vertical_maximize;
@@ -1196,48 +1196,28 @@ parse_binding(struct hikari_configuration *configuration,
     *action = hikari_server_reset_view_geometry;
     *arg = NULL;
 
-  } else if (!strcmp(str, "view-pin-to-sheet-0")) {
-    *action = hikari_server_pin_view_to_sheet_0;
+#define PARSE_PIN_BINDING(n)                                                   \
+  }                                                                            \
+  else if (!strcmp(str, "view-pin-to-sheet-" #n))                              \
+  {                                                                            \
+    *action = hikari_server_pin_view_to_sheet_##n;                             \
     *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-1")) {
-    *action = hikari_server_pin_view_to_sheet_1;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-2")) {
-    *action = hikari_server_pin_view_to_sheet_2;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-3")) {
-    *action = hikari_server_pin_view_to_sheet_3;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-4")) {
-    *action = hikari_server_pin_view_to_sheet_4;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-5")) {
-    *action = hikari_server_pin_view_to_sheet_5;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-6")) {
-    *action = hikari_server_pin_view_to_sheet_6;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-7")) {
-    *action = hikari_server_pin_view_to_sheet_7;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-8")) {
-    *action = hikari_server_pin_view_to_sheet_8;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-9")) {
-    *action = hikari_server_pin_view_to_sheet_9;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-alternate")) {
-    *action = hikari_server_pin_view_to_sheet_alternate;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-current")) {
-    *action = hikari_server_pin_view_to_sheet_current;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-next")) {
-    *action = hikari_server_pin_view_to_sheet_next;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-pin-to-sheet-prev")) {
-    *action = hikari_server_pin_view_to_sheet_prev;
-    *arg = NULL;
+
+    PARSE_PIN_BINDING(0)
+    PARSE_PIN_BINDING(1)
+    PARSE_PIN_BINDING(2)
+    PARSE_PIN_BINDING(3)
+    PARSE_PIN_BINDING(4)
+    PARSE_PIN_BINDING(5)
+    PARSE_PIN_BINDING(6)
+    PARSE_PIN_BINDING(7)
+    PARSE_PIN_BINDING(8)
+    PARSE_PIN_BINDING(9)
+    PARSE_PIN_BINDING(alternate)
+    PARSE_PIN_BINDING(current)
+    PARSE_PIN_BINDING(next)
+    PARSE_PIN_BINDING(prev)
+#undef PARSE_PIN_BINDING
 
   } else if (!strcmp(str, "view-decrease-size-up")) {
     *action = hikari_server_decrease_view_size_up;
@@ -1252,48 +1232,28 @@ parse_binding(struct hikari_configuration *configuration,
     *action = hikari_server_increase_view_size_right;
     *arg = NULL;
 
-  } else if (!strcmp(str, "sheet-switch-to-0")) {
-    *action = hikari_server_display_sheet_0;
+#define PARSE_SHEET_BINDING(n)                                                 \
+  }                                                                            \
+  else if (!strcmp(str, "sheet-switch-to-" #n))                                \
+  {                                                                            \
+    *action = hikari_server_display_sheet_##n;                                 \
     *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-1")) {
-    *action = hikari_server_display_sheet_1;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-2")) {
-    *action = hikari_server_display_sheet_2;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-3")) {
-    *action = hikari_server_display_sheet_3;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-4")) {
-    *action = hikari_server_display_sheet_4;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-5")) {
-    *action = hikari_server_display_sheet_5;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-6")) {
-    *action = hikari_server_display_sheet_6;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-7")) {
-    *action = hikari_server_display_sheet_7;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-8")) {
-    *action = hikari_server_display_sheet_8;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-9")) {
-    *action = hikari_server_display_sheet_9;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-alternate")) {
-    *action = hikari_server_display_sheet_alternate;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-current")) {
-    *action = hikari_server_display_sheet_current;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-next")) {
-    *action = hikari_server_display_sheet_next;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-prev")) {
-    *action = hikari_server_display_sheet_prev;
-    *arg = NULL;
+
+    PARSE_SHEET_BINDING(0)
+    PARSE_SHEET_BINDING(1)
+    PARSE_SHEET_BINDING(2)
+    PARSE_SHEET_BINDING(3)
+    PARSE_SHEET_BINDING(4)
+    PARSE_SHEET_BINDING(5)
+    PARSE_SHEET_BINDING(6)
+    PARSE_SHEET_BINDING(7)
+    PARSE_SHEET_BINDING(8)
+    PARSE_SHEET_BINDING(9)
+    PARSE_SHEET_BINDING(alternate)
+    PARSE_SHEET_BINDING(current)
+    PARSE_SHEET_BINDING(next)
+    PARSE_SHEET_BINDING(prev)
+#undef PARSE_SHEET_BINDING
   } else if (!strcmp(str, "sheet-switch-to-next-inhabited")) {
     *action = hikari_server_switch_to_next_inhabited_sheet;
     *arg = NULL;
@@ -1435,33 +1395,23 @@ parse_binding(struct hikari_configuration *configuration,
     PARSE_LAYOUT_BINDING(z)
 #undef PARSE_LAYOUT_BINDING
 
-  } else if (!strcmp(str, "vt-switch-to-1")) {
-    *action = hikari_server_session_change_vt;
-    *arg = (void *)(intptr_t)1;
-  } else if (!strcmp(str, "vt-switch-to-2")) {
-    *action = hikari_server_session_change_vt;
-    *arg = (void *)(intptr_t)2;
-  } else if (!strcmp(str, "vt-switch-to-3")) {
-    *action = hikari_server_session_change_vt;
-    *arg = (void *)(intptr_t)3;
-  } else if (!strcmp(str, "vt-switch-to-4")) {
-    *action = hikari_server_session_change_vt;
-    *arg = (void *)(intptr_t)4;
-  } else if (!strcmp(str, "vt-switch-to-5")) {
-    *action = hikari_server_session_change_vt;
-    *arg = (void *)(intptr_t)5;
-  } else if (!strcmp(str, "vt-switch-to-6")) {
-    *action = hikari_server_session_change_vt;
-    *arg = (void *)(intptr_t)6;
-  } else if (!strcmp(str, "vt-switch-to-7")) {
-    *action = hikari_server_session_change_vt;
-    *arg = (void *)(intptr_t)7;
-  } else if (!strcmp(str, "vt-switch-to-8")) {
-    *action = hikari_server_session_change_vt;
-    *arg = (void *)(intptr_t)8;
-  } else if (!strcmp(str, "vt-switch-to-9")) {
-    *action = hikari_server_session_change_vt;
-    *arg = (void *)(intptr_t)9;
+#define PARSE_VT_BINDING(n)                                                    \
+  }                                                                            \
+  else if (!strcmp(str, "vt-switch-to-" #n))                                   \
+  {                                                                            \
+    *action = hikari_server_session_change_vt;                                 \
+    *arg = (void *)(intptr_t)n;
+
+    PARSE_VT_BINDING(1)
+    PARSE_VT_BINDING(2)
+    PARSE_VT_BINDING(3)
+    PARSE_VT_BINDING(4)
+    PARSE_VT_BINDING(5)
+    PARSE_VT_BINDING(6)
+    PARSE_VT_BINDING(7)
+    PARSE_VT_BINDING(8)
+    PARSE_VT_BINDING(9)
+#undef PARSE_VT_BINDING
 
   } else {
     if (!strncmp(str, "action-", 7)) {
