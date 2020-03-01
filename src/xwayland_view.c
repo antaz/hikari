@@ -84,8 +84,10 @@ commit_handler(struct wl_listener *listener, void *data)
     if (surface->width != geometry->width ||
         surface->height != geometry->height || surface->x != geometry->x ||
         surface->y != geometry->y) {
-      hikari_indicator_damage(&hikari_server.indicator, view);
-      hikari_view_damage_whole(view);
+      if (!hikari_view_is_hidden(view)) {
+        hikari_indicator_damage(&hikari_server.indicator, view);
+        hikari_view_damage_whole(view);
+      }
 
       geometry->x = surface->x;
       geometry->y = surface->y;
@@ -94,8 +96,10 @@ commit_handler(struct wl_listener *listener, void *data)
 
       hikari_view_refresh_geometry(view, geometry);
 
-      hikari_view_damage_whole(view);
-    } else if (view->output->enabled) {
+      if (!hikari_view_is_hidden(view)) {
+        hikari_view_damage_whole(view);
+      }
+    } else if (view->output->enabled && !hikari_view_is_hidden(view)) {
       pixman_region32_t damage;
       pixman_region32_init(&damage);
       wlr_surface_get_effective_damage(surface->surface, &damage);
@@ -363,14 +367,6 @@ for_each_surface(struct hikari_view_interface *view_interface,
 }
 
 static void
-hide(struct hikari_view *view)
-{}
-
-static void
-show(struct hikari_view *view)
-{}
-
-static void
 constraints(struct hikari_view *view,
     int *min_width,
     int *min_height,
@@ -442,8 +438,6 @@ hikari_xwayland_view_init(struct hikari_xwayland_view *xwayland_view,
   view->move = move;
   view->move_resize = move_resize;
   view->quit = quit;
-  view->hide = hide;
-  view->show = show;
   view->constraints = constraints;
 }
 #endif

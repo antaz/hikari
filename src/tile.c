@@ -19,12 +19,6 @@ hikari_tile_init(struct hikari_tile *tile,
   tile->view_geometry = *view_geometry;
 }
 
-void
-hikari_tile_fini(struct hikari_tile *tile)
-{
-  tile->view->tile = NULL;
-}
-
 #define CYCLE_LAYOUT(link)                                                     \
   struct hikari_view *hikari_tile_##link##_view(struct hikari_tile *tile)      \
   {                                                                            \
@@ -53,3 +47,19 @@ hikari_tile_fini(struct hikari_tile *tile)
 CYCLE_LAYOUT(next)
 CYCLE_LAYOUT(prev)
 #undef CYCLE_LAYOUT
+
+void
+hikari_tile_detach(struct hikari_tile *tile)
+{
+  struct hikari_layout *layout = tile->layout;
+
+  if (layout != NULL) {
+    wl_list_remove(&tile->layout_tiles);
+
+    if (wl_list_empty(&layout->tiles)) {
+      layout->sheet->layout = NULL;
+      hikari_free(layout);
+    }
+    tile->layout = NULL;
+  }
+}

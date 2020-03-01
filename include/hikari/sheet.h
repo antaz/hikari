@@ -101,4 +101,7 @@ void
 hikari_sheet_apply_split(
     struct hikari_sheet *sheet, struct hikari_split *split);
 
+bool
+hikari_sheet_is_visible(struct hikari_sheet *sheet);
+
 #endif

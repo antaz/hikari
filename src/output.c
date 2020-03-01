@@ -465,6 +465,10 @@ destroy_handler(struct wl_listener *listener, void *data)
   struct hikari_workspace *workspace = output->workspace;
   struct hikari_workspace *next = hikari_workspace_next(workspace);
 
+#ifndef NDEBUG
+  printf("DESTORY OUTPUT %p\n", output);
+#endif
+
   if (workspace != next) {
     hikari_workspace_merge(workspace, next);
   }

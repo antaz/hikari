@@ -73,8 +73,6 @@ struct hikari_view {
   void (*move_resize)(struct hikari_view *, int, int, int, int);
   void (*activate)(struct hikari_view *, bool);
   void (*quit)(struct hikari_view *);
-  void (*hide)(struct hikari_view *);
-  void (*show)(struct hikari_view *);
   void (*constraints)(struct hikari_view *, int *, int *, int *, int *);
 };
 
@@ -172,6 +170,10 @@ VIEW_ACTION(center_cursor)
 VIEW_ACTION(toggle_iconified)
 VIEW_ACTION(reset_geometry)
 #undef VIEW_ACTION
+
+void
+hikari_view_migrate_to_sheet(
+    struct hikari_view *view, struct hikari_sheet *sheet);
 
 void
 hikari_view_pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet);

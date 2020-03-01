@@ -19,6 +19,7 @@ struct hikari_operation {
   enum hikari_operation_type type;
   bool dirty;
   bool center;
+  bool migrate;
   uint32_t serial;
   struct wlr_box geometry;
   struct hikari_tile *tile;

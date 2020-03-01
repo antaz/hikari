@@ -39,12 +39,7 @@ commit_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_xdg_view *xdg_view =
       wl_container_of(listener, xdg_view, commit);
-
   struct hikari_view *view = (struct hikari_view *)xdg_view;
-
-  assert(!hikari_view_is_hidden(view));
-
-  struct wlr_box *geometry = hikari_view_geometry(view);
 
   assert(view->surface != NULL);
 
@@ -70,19 +65,25 @@ commit_handler(struct wl_listener *listener, void *data)
     }
     hikari_view_commit_pending_operation(view);
   } else {
+    struct wlr_box *geometry = hikari_view_geometry(view);
+
     struct wlr_box new_geometry;
     wlr_xdg_surface_get_geometry(xdg_view->surface, &new_geometry);
 
     if (new_geometry.width != geometry->width ||
         new_geometry.height != geometry->height) {
-      hikari_view_damage_whole(view);
+      if (!hikari_view_is_hidden(view)) {
+        hikari_view_damage_whole(view);
+      }
 
       geometry->width = new_geometry.width;
       geometry->height = new_geometry.height;
 
       hikari_view_refresh_geometry(view, geometry);
 
-      hikari_view_damage_whole(view);
+      if (!hikari_view_is_hidden(view)) {
+        hikari_view_damage_whole(view);
+      }
     } else if (view->output->enabled) {
       pixman_region32_t damage;
       pixman_region32_init(&damage);
@@ -125,14 +126,17 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   hikari_view_manage(view, sheet, group);
   hikari_view_set_title(view, xdg_view->surface->toplevel->title);
 
-  xdg_view->set_title.notify = set_title_handler;
-  wl_signal_add(
-      &xdg_view->surface->toplevel->events.set_title, &xdg_view->set_title);
-
   hikari_geometry_constrain_position(
       geometry, screen_width, screen_height, x, y);
 
   hikari_view_refresh_geometry(view, geometry);
+
+  xdg_view->set_title.notify = set_title_handler;
+  wl_signal_add(
+      &xdg_view->surface->toplevel->events.set_title, &xdg_view->set_title);
+
+  xdg_view->commit.notify = commit_handler;
+  wl_signal_add(&xdg_view->surface->surface->events.commit, &xdg_view->commit);
 }
 
 static struct wlr_surface *
@@ -208,6 +212,8 @@ unmap(struct hikari_view *view)
   }
 
   view->surface = NULL;
+
+  wl_list_remove(&xdg_view->commit.link);
 }
 
 static void
@@ -448,22 +454,6 @@ request_fullscreen_handler(struct wl_listener *listener, void *data)
 }
 
 static void
-hide(struct hikari_view *view)
-{
-  struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
-  wl_list_remove(&xdg_view->commit.link);
-}
-
-static void
-show(struct hikari_view *view)
-{
-  struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
-
-  xdg_view->commit.notify = commit_handler;
-  wl_signal_add(&xdg_view->surface->surface->events.commit, &xdg_view->commit);
-}
-
-static void
 constraints(struct hikari_view *view,
     int *min_width,
     int *min_height,
@@ -527,8 +517,6 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
   xdg_view->view.resize = resize;
   xdg_view->view.move_resize = NULL;
   xdg_view->view.quit = quit;
-  xdg_view->view.hide = hide;
   xdg_view->view.constraints = constraints;
-  xdg_view->view.show = show;
   xdg_view->view.move = NULL;
 }

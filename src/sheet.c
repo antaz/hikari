@@ -437,3 +437,11 @@ hikari_sheet_apply_split(struct hikari_sheet *sheet, struct hikari_split *split)
 
   hikari_split_apply(split, &geometry, first);
 }
+
+bool
+hikari_sheet_is_visible(struct hikari_sheet *sheet)
+{
+  struct hikari_sheet *sheets = sheet->workspace->sheets;
+
+  return sheet == sheet->workspace->sheet || sheet == &sheets[0];
+}

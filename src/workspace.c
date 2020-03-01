@@ -100,7 +100,7 @@ hikari_workspace_merge(
     struct hikari_sheet *to = &into->sheets[i];
     struct hikari_view *view, *view_temp;
     wl_list_for_each_reverse_safe (view, view_temp, &from->views, sheet_views) {
-      hikari_view_pin_to_sheet(view, to);
+      hikari_view_migrate_to_sheet(view, to);
     }
   }
 }
@@ -321,7 +321,7 @@ CYCLE_VIEW(prev)
                                                                                \
     struct hikari_view *focus_view = workspace->focus_view;                    \
                                                                                \
-    if (focus_view == NULL || focus_view->tile == NULL) {                      \
+    if (focus_view == NULL || !hikari_view_is_tiled(focus_view)) {             \
       return hikari_layout_##fallback##_view(layout);                          \
     } else {                                                                   \
       return hikari_tile_##link##_view(focus_view->tile);                      \
@@ -796,6 +796,8 @@ pin_to_sheet(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
         hikari_view_is_iconified(focus_view),
         hikari_view_is_floating(focus_view));
   }
+
+  hikari_server_refresh_indication();
 }
 
 #define PIN_TO_SHEET(name, sheet)                                              \
@@ -918,7 +920,8 @@ hikari_workspace_reset_view_geometry(struct hikari_workspace *workspace)
     struct hikari_view *focus_view = workspace->focus_view;                    \
     struct hikari_layout *layout = workspace->sheet->layout;                   \
                                                                                \
-    if (focus_view == NULL || layout == NULL || focus_view->tile == NULL ||    \
+    if (focus_view == NULL || layout == NULL ||                                \
+        !hikari_view_is_tiled(focus_view) ||                                   \
         hikari_view_is_dirty(focus_view)) {                                    \
       return;                                                                  \
     }                                                                          \
@@ -945,8 +948,8 @@ hikari_workspace_exchange_main_layout_view(struct hikari_workspace *workspace)
   struct hikari_view *focus_view = workspace->focus_view;
   struct hikari_layout *layout = workspace->sheet->layout;
 
-  if (focus_view == NULL || layout == NULL || focus_view->tile == NULL ||
-      hikari_view_is_dirty(focus_view)) {
+  if (focus_view == NULL || layout == NULL ||
+      !hikari_view_is_tiled(focus_view) || hikari_view_is_dirty(focus_view)) {
     return;
   }
 
