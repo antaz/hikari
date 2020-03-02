@@ -71,10 +71,9 @@ add_keyboard(struct hikari_server *server, struct wlr_input_device *device)
 }
 
 static void
-set_cursor_image(struct hikari_server *server)
+set_cursor_image(struct hikari_server *server, const char *ptr)
 {
-  wlr_xcursor_manager_set_cursor_image(
-      server->cursor_mgr, "left_ptr", server->cursor);
+  wlr_xcursor_manager_set_cursor_image(server->cursor_mgr, ptr, server->cursor);
 }
 
 static void
@@ -104,7 +103,7 @@ new_input_handler(struct wl_listener *listener, void *data)
   wlr_seat_set_capabilities(server->seat, caps);
 
   if ((caps & WL_SEAT_CAPABILITY_POINTER) != 0) {
-    set_cursor_image(server);
+    set_cursor_image(server, "left_ptr");
   }
 }
 
@@ -124,7 +123,7 @@ new_output_handler(struct wl_listener *listener, void *data)
     hikari_server_activate_cursor();
     hikari_server.mode = (struct hikari_mode *)&hikari_server.normal_mode;
   } else {
-    set_cursor_image(server);
+    set_cursor_image(server, "left_ptr");
   }
 }
 
@@ -442,7 +441,7 @@ setup_cursor(struct hikari_server *server)
   server->cursor = wlr_cursor_create();
   wlr_cursor_attach_output_layout(server->cursor, server->output_layout);
 
-  server->cursor_mgr = wlr_xcursor_manager_create("left_ptr", 24);
+  server->cursor_mgr = wlr_xcursor_manager_create("Adwaita", 24);
   wlr_xcursor_manager_load(server->cursor_mgr, 1);
 }
 
@@ -823,11 +822,15 @@ CYCLE_ACTION(prev_sheet_view)
 void
 hikari_server_enter_normal_mode(void *arg)
 {
-  assert(hikari_server.workspace != NULL);
+  struct hikari_server *server = &hikari_server;
 
-  hikari_server.mode->cancel();
+  assert(server->workspace != NULL);
 
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.normal_mode;
+  server->mode->cancel();
+  server->mode = (struct hikari_mode *)&server->normal_mode;
+
+  set_cursor_image(server, "left_ptr");
+
   hikari_server_refresh_indication();
 }
 
@@ -969,34 +972,43 @@ hikari_server_enter_tiling_mode(void *arg)
   hikari_output_damage_whole(workspace->output);
 }
 
-void
-hikari_server_enter_mark_select_mode(void *arg)
+static void
+enter_mark_select(bool swtch)
 {
-  assert(hikari_server.workspace != NULL);
+  struct hikari_server *server = &hikari_server;
 
-  hikari_server.mark_select_mode.switch_workspace = false;
+  assert(server->workspace != NULL);
 
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.mark_select_mode;
+  server->mark_select_mode.switch_workspace = swtch;
+  server->mode = (struct hikari_mode *)&server->mark_select_mode;
+
+  set_cursor_image(server, "link");
 
   hikari_server_refresh_indication();
 }
 
 void
-hikari_server_enter_layout_select_mode(void *arg)
+hikari_server_enter_mark_select_mode(void *arg)
 {
-  assert(hikari_server.workspace != NULL);
-
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.layout_select_mode;
-
-  hikari_server_refresh_indication();
+  enter_mark_select(false);
 }
 
 void
 hikari_server_enter_mark_select_switch_mode(void *arg)
 {
-  hikari_server.mark_select_mode.switch_workspace = true;
+  enter_mark_select(true);
+}
 
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.mark_select_mode;
+void
+hikari_server_enter_layout_select_mode(void *arg)
+{
+  struct hikari_server *server = &hikari_server;
+
+  assert(server->workspace != NULL);
+
+  server->mode = (struct hikari_mode *)&server->layout_select_mode;
+
+  set_cursor_image(server, "context-menu");
 
   hikari_server_refresh_indication();
 }
