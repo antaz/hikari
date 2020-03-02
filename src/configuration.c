@@ -1395,6 +1395,46 @@ parse_binding(struct hikari_configuration *configuration,
     PARSE_LAYOUT_BINDING(z)
 #undef PARSE_LAYOUT_BINDING
 
+#define PARSE_MARK_BINDING(mark)                                               \
+  }                                                                            \
+  else if (!strcmp(str, "mark-show-" #mark))                                   \
+  {                                                                            \
+    *action = hikari_server_show_mark;                                         \
+    *arg = HIKARI_MARK_##mark;                                                 \
+  }                                                                            \
+  else if (!strcmp(str, "mark-switch-to-" #mark))                              \
+  {                                                                            \
+    *action = hikari_server_switch_to_mark;                                    \
+    *arg = HIKARI_MARK_##mark;
+
+    PARSE_MARK_BINDING(a)
+    PARSE_MARK_BINDING(b)
+    PARSE_MARK_BINDING(c)
+    PARSE_MARK_BINDING(d)
+    PARSE_MARK_BINDING(e)
+    PARSE_MARK_BINDING(f)
+    PARSE_MARK_BINDING(g)
+    PARSE_MARK_BINDING(h)
+    PARSE_MARK_BINDING(i)
+    PARSE_MARK_BINDING(j)
+    PARSE_MARK_BINDING(k)
+    PARSE_MARK_BINDING(l)
+    PARSE_MARK_BINDING(m)
+    PARSE_MARK_BINDING(n)
+    PARSE_MARK_BINDING(o)
+    PARSE_MARK_BINDING(p)
+    PARSE_MARK_BINDING(q)
+    PARSE_MARK_BINDING(r)
+    PARSE_MARK_BINDING(s)
+    PARSE_MARK_BINDING(t)
+    PARSE_MARK_BINDING(u)
+    PARSE_MARK_BINDING(v)
+    PARSE_MARK_BINDING(w)
+    PARSE_MARK_BINDING(x)
+    PARSE_MARK_BINDING(y)
+    PARSE_MARK_BINDING(z)
+#undef PARSE_MARK_BINDING
+
 #define PARSE_VT_BINDING(n)                                                    \
   }                                                                            \
   else if (!strcmp(str, "vt-switch-to-" #n))                                   \

@@ -1103,3 +1103,47 @@ hikari_server_session_change_vt(void *arg)
     wlr_session_change_vt(session, vt);
   }
 }
+
+static void
+show_marked_view(struct hikari_view *view)
+{
+  assert(view != NULL);
+
+  if (!hikari_view_is_hidden(view)) {
+    hikari_view_raise(view);
+  } else {
+    hikari_view_show(view);
+    hikari_view_raise(view);
+  }
+
+  hikari_view_center_cursor(view);
+  hikari_server_cursor_focus();
+}
+
+void
+hikari_server_show_mark(void *arg)
+{
+  struct hikari_mark *mark = (struct hikari_mark *)arg;
+
+  if (mark->view != NULL) {
+    struct hikari_view *view = mark->view;
+
+    show_marked_view(view);
+  }
+}
+
+void
+hikari_server_switch_to_mark(void *arg)
+{
+  struct hikari_mark *mark = (struct hikari_mark *)arg;
+
+  if (mark->view != NULL) {
+    struct hikari_view *view = mark->view;
+
+    if (view->sheet->workspace->sheet != view->sheet) {
+      hikari_workspace_switch_sheet(view->sheet->workspace, view->sheet);
+    }
+
+    show_marked_view(view);
+  }
+}

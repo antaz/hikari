@@ -304,4 +304,10 @@ hikari_server_layout_sheet(void *arg);
 void
 hikari_server_session_change_vt(void *arg);
 
+void
+hikari_server_show_mark(void *arg);
+
+void
+hikari_server_switch_to_mark(void *arg);
+
 #endif

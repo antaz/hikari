@@ -179,28 +179,13 @@ mark_select(struct hikari_workspace *workspace,
 
   hikari_server_enter_normal_mode(NULL);
 
-  if (mark != NULL && mark->view != NULL) {
-    struct hikari_view *view = mark->view;
-
+  if (mark != NULL) {
     if (hikari_server.mark_select_mode.switch_workspace) {
-      hikari_workspace_switch_sheet(view->sheet->workspace, view->sheet);
-    }
-
-    if (!hikari_view_is_hidden(view)) {
-      hikari_view_raise(view);
+      hikari_server_switch_to_mark(mark);
     } else {
-      hikari_view_raise_hidden(view);
-      hikari_view_show(view);
+      hikari_server_show_mark(mark);
     }
-
-    if (view != hikari_server.workspace->focus_view) {
-      hikari_workspace_focus_view(workspace, view);
-    }
-
-    hikari_view_center_cursor(view);
   }
-
-  hikari_server_cursor_focus();
 }
 
 static void
