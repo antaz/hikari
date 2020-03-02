@@ -6,6 +6,8 @@
 
 #include <wlr/types/wlr_input_device.h>
 
+struct hikari_mark;
+
 struct hikari_keyboard {
   struct wl_list link;
   struct wlr_input_device *device;
@@ -32,5 +34,10 @@ hikari_keyboard_confirmation(
 bool
 hikari_keyboard_cancellation(
     struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event);
+
+struct hikari_mark *
+hikari_keyboard_resolve_mark(struct hikari_keyboard *keyboard,
+    struct wlr_event_keyboard_key *event,
+    bool *selected);
 
 #endif
