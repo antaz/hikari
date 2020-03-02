@@ -5,6 +5,7 @@ struct hikari_view;
 
 struct hikari_mark {
   char *name;
+  int nr;
   struct hikari_view *view;
 };
 

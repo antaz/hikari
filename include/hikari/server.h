@@ -4,7 +4,6 @@
 #include <wayland-server-core.h>
 #include <wayland-util.h>
 
-#include <hikari/exec_select_mode.h>
 #include <hikari/group_assign_mode.h>
 #include <hikari/indicator.h>
 #include <hikari/keyboard_grab_mode.h>
@@ -82,7 +81,6 @@ struct hikari_server {
 
   struct hikari_mode *mode;
 
-  struct hikari_exec_select_mode exec_select_mode;
   struct hikari_group_assign_mode group_assign_mode;
   struct hikari_keyboard_grab_mode keyboard_grab_mode;
   struct hikari_layout_select_mode layout_select_mode;
@@ -276,7 +274,6 @@ hikari_server_clear_workspace(void *arg)
            (struct hikari_mode *)&hikari_server.name##_mode;                   \
   }
 
-MODE(exec_select)
 MODE(group_assign)
 MODE(keyboard_grab)
 MODE(layout_select)

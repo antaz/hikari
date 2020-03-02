@@ -90,7 +90,7 @@ void
 hikari_layout_select_mode_init(
     struct hikari_layout_select_mode *layout_select_mode)
 {
-  layout_select_mode->mode.type = HIKARI_MODE_TYPE_SELECT_EXEC;
+  layout_select_mode->mode.type = HIKARI_MODE_TYPE_SELECT_LAYOUT;
   layout_select_mode->mode.key_handler = key_handler;
   layout_select_mode->mode.button_handler = button_handler;
   layout_select_mode->mode.modifier_handler = modifier_handler;

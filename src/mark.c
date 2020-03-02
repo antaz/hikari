@@ -44,6 +44,7 @@ hikari_marks_init(void)
     name = hikari_malloc(2);
     snprintf(name, 2, "%c", 'a' + i);
     hikari_marks[i].name = name;
+    hikari_marks[i].nr = i;
     hikari_marks[i].view = NULL;
   }
 }

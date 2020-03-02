@@ -1298,9 +1298,6 @@ parse_binding(struct hikari_configuration *configuration,
     *action = hikari_server_exchange_main_layout_view;
     *arg = NULL;
 
-  } else if (!strcmp(str, "mode-enter-execute")) {
-    *action = hikari_server_enter_exec_select_mode;
-    *arg = NULL;
   } else if (!strcmp(str, "mode-enter-group-assign")) {
     *action = hikari_server_enter_group_assign_mode;
     *arg = NULL;

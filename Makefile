@@ -5,7 +5,6 @@ OBJS = \
 	completion.o \
 	configuration.o \
 	exec.o \
-	exec_select_mode.o \
 	font.o \
 	geometry.o \
 	group.o \

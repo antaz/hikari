@@ -656,7 +656,6 @@ server_init(struct hikari_server *server)
   wl_list_init(&server->workspaces);
   wl_list_init(&server->pointers);
 
-  hikari_exec_select_mode_init(&server->exec_select_mode);
   hikari_group_assign_mode_init(&server->group_assign_mode);
   hikari_keyboard_grab_mode_init(&server->keyboard_grab_mode);
   hikari_layout_select_mode_init(&server->layout_select_mode);
@@ -983,16 +982,6 @@ hikari_server_enter_mark_select_mode(void *arg)
 }
 
 void
-hikari_server_enter_exec_select_mode(void *arg)
-{
-  assert(hikari_server.workspace != NULL);
-
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.exec_select_mode;
-
-  hikari_server_refresh_indication();
-}
-
-void
 hikari_server_enter_layout_select_mode(void *arg)
 {
   assert(hikari_server.workspace != NULL);
@@ -1105,45 +1094,49 @@ hikari_server_session_change_vt(void *arg)
 }
 
 static void
-show_marked_view(struct hikari_view *view)
+show_marked_view(struct hikari_view *view, struct hikari_mark *mark)
 {
-  assert(view != NULL);
+  if (view != NULL) {
+    if (!hikari_view_is_hidden(view)) {
+      hikari_view_raise(view);
+    } else {
+      hikari_view_show(view);
+      hikari_view_raise(view);
+    }
 
-  if (!hikari_view_is_hidden(view)) {
-    hikari_view_raise(view);
+    hikari_view_center_cursor(view);
+    hikari_server_cursor_focus();
   } else {
-    hikari_view_show(view);
-    hikari_view_raise(view);
-  }
+    char *command = hikari_configuration->execs[mark->nr].command;
 
-  hikari_view_center_cursor(view);
-  hikari_server_cursor_focus();
+    if (command != NULL) {
+      hikari_command_execute(command);
+    }
+  }
 }
 
 void
 hikari_server_show_mark(void *arg)
 {
+  assert(arg != NULL);
+
   struct hikari_mark *mark = (struct hikari_mark *)arg;
+  struct hikari_view *view = mark->view;
 
-  if (mark->view != NULL) {
-    struct hikari_view *view = mark->view;
-
-    show_marked_view(view);
-  }
+  show_marked_view(view, mark);
 }
 
 void
 hikari_server_switch_to_mark(void *arg)
 {
+  assert(arg != NULL);
+
   struct hikari_mark *mark = (struct hikari_mark *)arg;
+  struct hikari_view *view = mark->view;
 
-  if (mark->view != NULL) {
-    struct hikari_view *view = mark->view;
-
-    if (view->sheet->workspace->sheet != view->sheet) {
-      hikari_workspace_switch_sheet(view->sheet->workspace, view->sheet);
-    }
-
-    show_marked_view(view);
+  if (view != NULL && view->sheet->workspace->sheet != view->sheet) {
+    hikari_workspace_switch_sheet(view->sheet->workspace, view->sheet);
   }
+
+  show_marked_view(view, mark);
 }

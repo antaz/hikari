@@ -2,17 +2,10 @@
 
 #include <stdbool.h>
 
-#include <wlr/types/wlr_input_device.h>
-#include <wlr/types/wlr_keyboard.h>
-
-#include <hikari/configuration.h>
-#include <hikari/indicator.h>
-#include <hikari/indicator_frame.h>
 #include <hikari/keyboard.h>
 #include <hikari/mark.h>
-#include <hikari/normal_mode.h>
 #include <hikari/render_data.h>
-#include <hikari/view.h>
+#include <hikari/server.h>
 #include <hikari/workspace.h>
 
 static struct hikari_mark *
