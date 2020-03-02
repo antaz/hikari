@@ -123,3 +123,43 @@ hikari_keyboard_fini(struct hikari_keyboard *keyboard)
   wl_list_remove(&keyboard->destroy.link);
   wl_list_remove(&keyboard->link);
 }
+
+bool
+hikari_keyboard_confirmation(
+    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
+{
+  uint32_t keycode = event->keycode + 8;
+  const xkb_keysym_t *syms;
+  int nsyms = xkb_state_key_get_syms(
+      keyboard->device->keyboard->xkb_state, keycode, &syms);
+
+  for (int i = 0; i < nsyms; i++) {
+    switch (syms[i]) {
+      case XKB_KEY_Return:
+        return true;
+        break;
+    }
+  }
+
+  return false;
+}
+
+bool
+hikari_keyboard_cancellation(
+    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
+{
+  uint32_t keycode = event->keycode + 8;
+  const xkb_keysym_t *syms;
+  int nsyms = xkb_state_key_get_syms(
+      keyboard->device->keyboard->xkb_state, keycode, &syms);
+
+  for (int i = 0; i < nsyms; i++) {
+    switch (syms[i]) {
+      case XKB_KEY_Escape:
+        return true;
+        break;
+    }
+  }
+
+  return false;
+}

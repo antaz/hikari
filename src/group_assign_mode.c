@@ -21,46 +21,6 @@
 #include <hikari/view.h>
 #include <hikari/workspace.h>
 
-static bool
-check_confirmation(
-    struct wlr_event_keyboard_key *event, struct hikari_keyboard *keyboard)
-{
-  uint32_t keycode = event->keycode + 8;
-  const xkb_keysym_t *syms;
-  int nsyms = xkb_state_key_get_syms(
-      keyboard->device->keyboard->xkb_state, keycode, &syms);
-
-  for (int i = 0; i < nsyms; i++) {
-    switch (syms[i]) {
-      case XKB_KEY_Return:
-        return true;
-        break;
-    }
-  }
-
-  return false;
-}
-
-static bool
-check_cancellation(
-    struct wlr_event_keyboard_key *event, struct hikari_keyboard *keyboard)
-{
-  uint32_t keycode = event->keycode + 8;
-  const xkb_keysym_t *syms;
-  int nsyms = xkb_state_key_get_syms(
-      keyboard->device->keyboard->xkb_state, keycode, &syms);
-
-  for (int i = 0; i < nsyms; i++) {
-    switch (syms[i]) {
-      case XKB_KEY_Escape:
-        return true;
-        break;
-    }
-  }
-
-  return false;
-}
-
 static void
 init_completion(void)
 {
@@ -335,9 +295,9 @@ assign_group(struct hikari_workspace *workspace,
     struct wlr_event_keyboard_key *event,
     struct hikari_keyboard *keyboard)
 {
-  if (check_confirmation(event, keyboard)) {
+  if (hikari_keyboard_confirmation(keyboard, event)) {
     confirm_group_assign(workspace);
-  } else if (check_cancellation(event, keyboard)) {
+  } else if (hikari_keyboard_cancellation(keyboard, event)) {
     cancel_group_assign(workspace);
   } else {
     update_state(workspace, keyboard, event);

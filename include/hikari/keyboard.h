@@ -25,4 +25,12 @@ hikari_keyboard_fini(struct hikari_keyboard *keyboard);
 struct xkb_keymap *
 hikari_load_keymap();
 
+bool
+hikari_keyboard_confirmation(
+    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event);
+
+bool
+hikari_keyboard_cancellation(
+    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event);
+
 #endif
