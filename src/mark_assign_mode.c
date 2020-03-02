@@ -135,14 +135,11 @@ assign_mark(struct hikari_workspace *workspace,
 {
   assert(hikari_server.workspace->focus_view != NULL);
 
-  bool selected;
-
-  struct hikari_mark *mark =
-      hikari_keyboard_resolve_mark(keyboard, event, &selected);
+  struct hikari_mark *mark = hikari_keyboard_resolve_mark(keyboard, event);
   struct wlr_box *geometry = hikari_view_border_geometry(workspace->focus_view);
   struct hikari_output *output = workspace->output;
 
-  if (selected) {
+  if (mark != NULL) {
     update_state(mark, geometry, output);
     hikari_server_refresh_indication();
   } else if (hikari_keyboard_confirmation(keyboard, event)) {

@@ -21,8 +21,7 @@ lookup_layout(struct hikari_configuration *configuration,
     struct hikari_keyboard *keyboard)
 {
   uint32_t keycode = event->keycode + 8;
-  uint32_t codepoint =
-      xkb_state_key_get_utf32(keyboard->device->keyboard->xkb_state, keycode);
+  uint32_t codepoint = hikari_keyboard_get_codepoint(keyboard, keycode);
 
   struct hikari_split *split = NULL;
   if (codepoint != 0 && (codepoint >= 'a' && codepoint <= 'z')) {

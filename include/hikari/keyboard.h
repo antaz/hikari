@@ -36,8 +36,15 @@ hikari_keyboard_cancellation(
     struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event);
 
 struct hikari_mark *
-hikari_keyboard_resolve_mark(struct hikari_keyboard *keyboard,
-    struct wlr_event_keyboard_key *event,
-    bool *selected);
+hikari_keyboard_resolve_mark(
+    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event);
+
+static inline uint32_t
+hikari_keyboard_get_codepoint(
+    struct hikari_keyboard *keyboard, uint32_t keycode)
+{
+  return xkb_state_key_get_utf32(
+      keyboard->device->keyboard->xkb_state, keycode);
+}
 
 #endif

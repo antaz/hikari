@@ -13,9 +13,7 @@ mark_select(struct hikari_workspace *workspace,
     struct wlr_event_keyboard_key *event,
     struct hikari_keyboard *keyboard)
 {
-  bool selected;
-  struct hikari_mark *mark =
-      hikari_keyboard_resolve_mark(keyboard, event, &selected);
+  struct hikari_mark *mark = hikari_keyboard_resolve_mark(keyboard, event);
 
   hikari_server_enter_normal_mode(NULL);
 

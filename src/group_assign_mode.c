@@ -71,10 +71,10 @@ fini_completion(void)
 
 static void
 put_char(struct hikari_input_buffer *input_buffer,
-    struct xkb_state *xkb_state,
+    struct hikari_keyboard *keyboard,
     uint32_t keycode)
 {
-  uint32_t codepoint = xkb_state_key_get_utf32(xkb_state, keycode);
+  uint32_t codepoint = hikari_keyboard_get_codepoint(keyboard, keycode);
 
   if (codepoint) {
     fini_completion();
@@ -122,9 +122,7 @@ process_input_key(struct hikari_workspace *workspace,
             fini_completion();
           }
         } else {
-          put_char(&mode->input_buffer,
-              keyboard->device->keyboard->xkb_state,
-              keycode);
+          put_char(&mode->input_buffer, keyboard, keycode);
         }
         break;
 
@@ -133,9 +131,7 @@ process_input_key(struct hikari_workspace *workspace,
         if (modifiers == WLR_MODIFIER_CTRL) {
           hikari_input_buffer_remove_char(&mode->input_buffer);
         } else {
-          put_char(&mode->input_buffer,
-              keyboard->device->keyboard->xkb_state,
-              keycode);
+          put_char(&mode->input_buffer, keyboard, keycode);
         }
         break;
 
@@ -144,9 +140,7 @@ process_input_key(struct hikari_workspace *workspace,
         if (modifiers == WLR_MODIFIER_CTRL) {
           hikari_input_buffer_clear(&mode->input_buffer);
         } else {
-          put_char(&mode->input_buffer,
-              keyboard->device->keyboard->xkb_state,
-              keycode);
+          put_char(&mode->input_buffer, keyboard, keycode);
         }
         break;
 
@@ -168,9 +162,7 @@ process_input_key(struct hikari_workspace *workspace,
         break;
 
       default:
-        put_char(&mode->input_buffer,
-            keyboard->device->keyboard->xkb_state,
-            keycode);
+        put_char(&mode->input_buffer, keyboard, keycode);
         break;
     }
   }

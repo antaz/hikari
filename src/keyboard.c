@@ -159,155 +159,17 @@ hikari_keyboard_cancellation(
 }
 
 struct hikari_mark *
-hikari_keyboard_resolve_mark(struct hikari_keyboard *keyboard,
-    struct wlr_event_keyboard_key *event,
-    bool *selected)
+hikari_keyboard_resolve_mark(
+    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
 {
   uint32_t keycode = event->keycode + 8;
-  const xkb_keysym_t *syms;
-  int nsyms = xkb_state_key_get_syms(
-      keyboard->device->keyboard->xkb_state, keycode, &syms);
+  uint32_t codepoint = hikari_keyboard_get_codepoint(keyboard, keycode);
 
-  *selected = false;
-  struct hikari_mark *mark = NULL;
-  for (int i = 0; i < nsyms; i++) {
-    switch (syms[i]) {
-      case XKB_KEY_a:
-        mark = HIKARI_MARK_a;
-        *selected = true;
-        break;
+  if (codepoint != 0 && (codepoint >= 'a' && codepoint <= 'z')) {
+    uint32_t nr = codepoint - 'a';
 
-      case XKB_KEY_b:
-        mark = HIKARI_MARK_b;
-        *selected = true;
-        break;
-
-      case XKB_KEY_c:
-        mark = HIKARI_MARK_c;
-        *selected = true;
-        break;
-
-      case XKB_KEY_d:
-        mark = HIKARI_MARK_d;
-        *selected = true;
-        break;
-
-      case XKB_KEY_e:
-        mark = HIKARI_MARK_e;
-        *selected = true;
-        break;
-
-      case XKB_KEY_f:
-        mark = HIKARI_MARK_f;
-        *selected = true;
-        break;
-
-      case XKB_KEY_g:
-        mark = HIKARI_MARK_g;
-        *selected = true;
-        break;
-
-      case XKB_KEY_h:
-        mark = HIKARI_MARK_h;
-        *selected = true;
-        break;
-
-      case XKB_KEY_i:
-        mark = HIKARI_MARK_i;
-        *selected = true;
-        break;
-
-      case XKB_KEY_j:
-        mark = HIKARI_MARK_j;
-        *selected = true;
-        break;
-
-      case XKB_KEY_k:
-        mark = HIKARI_MARK_k;
-        *selected = true;
-        break;
-
-      case XKB_KEY_l:
-        mark = HIKARI_MARK_l;
-        *selected = true;
-        break;
-
-      case XKB_KEY_m:
-        mark = HIKARI_MARK_m;
-        *selected = true;
-        break;
-
-      case XKB_KEY_n:
-        mark = HIKARI_MARK_n;
-        *selected = true;
-        break;
-
-      case XKB_KEY_o:
-        mark = HIKARI_MARK_o;
-        *selected = true;
-        break;
-
-      case XKB_KEY_p:
-        mark = HIKARI_MARK_p;
-        *selected = true;
-        break;
-
-      case XKB_KEY_q:
-        mark = HIKARI_MARK_q;
-        *selected = true;
-        break;
-
-      case XKB_KEY_r:
-        mark = HIKARI_MARK_r;
-        *selected = true;
-        break;
-
-      case XKB_KEY_s:
-        mark = HIKARI_MARK_s;
-        *selected = true;
-        break;
-
-      case XKB_KEY_t:
-        mark = HIKARI_MARK_t;
-        *selected = true;
-        break;
-
-      case XKB_KEY_u:
-        mark = HIKARI_MARK_u;
-        *selected = true;
-        break;
-
-      case XKB_KEY_v:
-        mark = HIKARI_MARK_v;
-        *selected = true;
-        break;
-
-      case XKB_KEY_w:
-        mark = HIKARI_MARK_w;
-        *selected = true;
-        break;
-
-      case XKB_KEY_x:
-        mark = HIKARI_MARK_x;
-        *selected = true;
-        break;
-
-      case XKB_KEY_y:
-        mark = HIKARI_MARK_y;
-        *selected = true;
-        break;
-
-      case XKB_KEY_z:
-        mark = HIKARI_MARK_z;
-        *selected = true;
-        break;
-
-      case XKB_KEY_BackSpace:
-        mark = NULL;
-        *selected = true;
-        break;
-    }
+    return &hikari_marks[nr];
   }
 
-  return mark;
+  return NULL;
 }

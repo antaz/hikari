@@ -134,8 +134,7 @@ hikari_unlocker_key_handler(struct wl_listener *listener, void *data)
           break;
 
         default:
-          codepoint = xkb_state_key_get_utf32(
-              keyboard->device->keyboard->xkb_state, keycode);
+          codepoint = hikari_keyboard_get_codepoint(keyboard, keycode);
 
           if (codepoint) {
             put_char(codepoint);
