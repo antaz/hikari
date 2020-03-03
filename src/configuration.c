@@ -1273,29 +1273,30 @@ parse_binding(struct hikari_configuration *configuration,
   } else if (!strcmp(str, "sheet-show-all")) {
     *action = hikari_server_show_all_sheet_views;
     *arg = NULL;
-  } else if (!strcmp(str, "sheet-reset-layout")) {
-    *action = hikari_server_reset_sheet_layout;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-cycle-layout-view-next")) {
+
+  } else if (!strcmp(str, "layout-cycle-view-next")) {
     *action = hikari_server_cycle_next_layout_view;
     *arg = NULL;
-  } else if (!strcmp(str, "sheet-cycle-layout-view-prev")) {
+  } else if (!strcmp(str, "layout-cycle-view-prev")) {
     *action = hikari_server_cycle_prev_layout_view;
     *arg = NULL;
-  } else if (!strcmp(str, "sheet-cycle-layout-view-first")) {
+  } else if (!strcmp(str, "layout-cycle-view-first")) {
     *action = hikari_server_cycle_first_layout_view;
     *arg = NULL;
-  } else if (!strcmp(str, "sheet-cycle-layout-view-last")) {
+  } else if (!strcmp(str, "layout-cycle-view-last")) {
     *action = hikari_server_cycle_last_layout_view;
     *arg = NULL;
-  } else if (!strcmp(str, "sheet-exchange-layout-view-next")) {
+  } else if (!strcmp(str, "layout-exchange-view-next")) {
     *action = hikari_server_exchange_next_view;
     *arg = NULL;
-  } else if (!strcmp(str, "sheet-exchange-layout-view-prev")) {
+  } else if (!strcmp(str, "layout-exchange-view-prev")) {
     *action = hikari_server_exchange_prev_view;
     *arg = NULL;
-  } else if (!strcmp(str, "sheet-exchange-layout-view-main")) {
+  } else if (!strcmp(str, "layout-exchange-view-main")) {
     *action = hikari_server_exchange_main_layout_view;
+    *arg = NULL;
+  } else if (!strcmp(str, "layout-reset")) {
+    *action = hikari_server_reset_sheet_layout;
     *arg = NULL;
 
   } else if (!strcmp(str, "mode-enter-group-assign")) {
