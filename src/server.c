@@ -441,7 +441,9 @@ setup_cursor(struct hikari_server *server)
   server->cursor = wlr_cursor_create();
   wlr_cursor_attach_output_layout(server->cursor, server->output_layout);
 
-  server->cursor_mgr = wlr_xcursor_manager_create("Adwaita", 24);
+  char *cursor_theme = getenv("XCURSOR_THEME");
+
+  server->cursor_mgr = wlr_xcursor_manager_create(cursor_theme, 24);
   wlr_xcursor_manager_load(server->cursor_mgr, 1);
 }
 
