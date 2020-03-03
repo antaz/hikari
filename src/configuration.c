@@ -1195,6 +1195,12 @@ parse_binding(struct hikari_configuration *configuration,
   } else if (!strcmp(str, "view-reset-geometry")) {
     *action = hikari_server_reset_view_geometry;
     *arg = NULL;
+  } else if (!strcmp(str, "view-cycle-next")) {
+    *action = hikari_server_cycle_next_view;
+    *arg = NULL;
+  } else if (!strcmp(str, "view-cycle-prev")) {
+    *action = hikari_server_cycle_prev_view;
+    *arg = NULL;
 
 #define PARSE_PIN_BINDING(n)                                                   \
   }                                                                            \
@@ -1266,12 +1272,6 @@ parse_binding(struct hikari_configuration *configuration,
     *arg = NULL;
   } else if (!strcmp(str, "sheet-show-all")) {
     *action = hikari_server_show_all_sheet_views;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-cycle-view-next")) {
-    *action = hikari_server_cycle_next_sheet_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-cycle-view-prev")) {
-    *action = hikari_server_cycle_prev_sheet_view;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-reset-layout")) {
     *action = hikari_server_reset_sheet_layout;

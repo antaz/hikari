@@ -268,8 +268,8 @@ hikari_workspace_last_view(struct hikari_workspace *workspace)
   return view;
 }
 
-#define CYCLE_VIEW(link)                                                       \
-  struct hikari_view *hikari_workspace_##link##_view(                          \
+#define CYCLE_VIEW(name, link)                                                 \
+  struct hikari_view *hikari_workspace_##name##_view(                          \
       struct hikari_workspace *workspace)                                      \
   {                                                                            \
     if (wl_list_empty(&workspace->views)) {                                    \
@@ -294,8 +294,8 @@ hikari_workspace_last_view(struct hikari_workspace *workspace)
     return view;                                                               \
   }
 
-CYCLE_VIEW(next)
-CYCLE_VIEW(prev)
+CYCLE_VIEW(next, prev)
+CYCLE_VIEW(prev, next)
 #undef CYCLE_VIEW
 
 #define CYCLE_LAYOUT_VIEW(fallback, link)                                      \
@@ -349,30 +349,8 @@ CYCLE_GROUP_VIEW(first)
 CYCLE_GROUP_VIEW(last)
 #undef CYCLE_GROUP_VIEW
 
-#define CYCLE_SHEET_VIEW(link, fallback)                                       \
-  struct hikari_view *hikari_workspace_##link##_sheet_view(                    \
-      struct hikari_workspace *workspace)                                      \
-  {                                                                            \
-    struct hikari_view *focus_view = workspace->focus_view;                    \
-    struct hikari_sheet *sheet = workspace->sheet;                             \
-                                                                               \
-    if (focus_view != NULL) {                                                  \
-      if (focus_view->sheet != sheet) {                                        \
-        return hikari_sheet_##fallback##_view(sheet);                          \
-      } else {                                                                 \
-        return hikari_sheet_##link##_view(sheet, focus_view);                  \
-      }                                                                        \
-    } else {                                                                   \
-      return hikari_sheet_##fallback##_view(sheet);                            \
-    }                                                                          \
-  }
-
-CYCLE_SHEET_VIEW(next, first)
-CYCLE_SHEET_VIEW(prev, last)
-#undef CYCLE_SHEET_VIEW
-
-#define CYCLE_GROUP_VIEW(link)                                                 \
-  struct hikari_view *hikari_workspace_##link##_group_view(                    \
+#define CYCLE_GROUP_VIEW(name, link)                                           \
+  struct hikari_view *hikari_workspace_##name##_group_view(                    \
       struct hikari_workspace *workspace)                                      \
   {                                                                            \
     struct hikari_view *focus_view = workspace->focus_view;                    \
@@ -395,12 +373,12 @@ CYCLE_SHEET_VIEW(prev, last)
     return view;                                                               \
   }
 
-CYCLE_GROUP_VIEW(next)
-CYCLE_GROUP_VIEW(prev)
+CYCLE_GROUP_VIEW(next, prev)
+CYCLE_GROUP_VIEW(prev, next)
 #undef CYCLE_GROUP_VIEW
 
-#define CYCLE_GROUP(link)                                                      \
-  struct hikari_view *hikari_workspace_##link##_group(                         \
+#define CYCLE_GROUP(name, link)                                                \
+  struct hikari_view *hikari_workspace_##name##_group(                         \
       struct hikari_workspace *workspace)                                      \
   {                                                                            \
     if (wl_list_empty(&hikari_server.visible_groups)) {                        \
@@ -434,8 +412,8 @@ CYCLE_GROUP_VIEW(prev)
     return view;                                                               \
   }
 
-CYCLE_GROUP(next)
-CYCLE_GROUP(prev)
+CYCLE_GROUP(next, prev)
+CYCLE_GROUP(prev, next)
 #undef CYCLE_GROUP
 
 void

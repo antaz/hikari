@@ -815,8 +815,8 @@ CYCLE_ACTION(first_layout_view)
 CYCLE_ACTION(last_layout_view)
 CYCLE_ACTION(next_group)
 CYCLE_ACTION(prev_group)
-CYCLE_ACTION(next_sheet_view)
-CYCLE_ACTION(prev_sheet_view)
+CYCLE_ACTION(next_view)
+CYCLE_ACTION(prev_view)
 #undef CYCLE_ACTION
 
 void
