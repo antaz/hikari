@@ -94,7 +94,6 @@ cursor_move(void)
 void
 hikari_tiling_mode_init(struct hikari_tiling_mode *tiling_mode)
 {
-  tiling_mode->mode.type = HIKARI_MODE_TYPE_TILING;
   tiling_mode->mode.key_handler = key_handler;
   tiling_mode->mode.button_handler = button_handler;
   tiling_mode->mode.modifier_handler = modifier_handler;

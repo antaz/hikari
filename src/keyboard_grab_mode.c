@@ -100,7 +100,6 @@ void
 hikari_keyboard_grab_mode_init(
     struct hikari_keyboard_grab_mode *keyboard_grab_mode)
 {
-  keyboard_grab_mode->mode.type = HIKARI_MODE_TYPE_GRAB_KEYBOARD;
   keyboard_grab_mode->mode.key_handler = key_handler;
   keyboard_grab_mode->mode.button_handler = button_handler;
   keyboard_grab_mode->mode.modifier_handler = modifier_handler;

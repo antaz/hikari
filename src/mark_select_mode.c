@@ -62,7 +62,6 @@ cursor_move(void)
 void
 hikari_mark_select_mode_init(struct hikari_mark_select_mode *mark_select_mode)
 {
-  mark_select_mode->mode.type = HIKARI_MODE_TYPE_SELECT_MARK;
   mark_select_mode->mode.key_handler = key_handler;
   mark_select_mode->mode.button_handler = button_handler;
   mark_select_mode->mode.modifier_handler = modifier_handler;

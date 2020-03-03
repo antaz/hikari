@@ -378,7 +378,6 @@ void
 hikari_group_assign_mode_init(
     struct hikari_group_assign_mode *group_assign_mode)
 {
-  group_assign_mode->mode.type = HIKARI_MODE_TYPE_GROUP_CHANGE;
   group_assign_mode->mode.key_handler = key_handler;
   group_assign_mode->mode.button_handler = button_handler;
   group_assign_mode->mode.modifier_handler = modifier_handler;

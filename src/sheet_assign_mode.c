@@ -239,7 +239,6 @@ void
 hikari_sheet_assign_mode_init(
     struct hikari_sheet_assign_mode *sheet_assign_mode)
 {
-  sheet_assign_mode->mode.type = HIKARI_MODE_TYPE_ASSIGN_SHEET;
   sheet_assign_mode->mode.key_handler = key_handler;
   sheet_assign_mode->mode.button_handler = button_handler;
   sheet_assign_mode->mode.modifier_handler = modifier_handler;

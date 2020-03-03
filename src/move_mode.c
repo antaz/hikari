@@ -83,7 +83,6 @@ button_handler(struct wl_listener *listener, void *data)
 void
 hikari_move_mode_init(struct hikari_move_mode *move_mode)
 {
-  move_mode->mode.type = HIKARI_MODE_TYPE_MOVE;
   move_mode->mode.key_handler = key_handler;
   move_mode->mode.button_handler = button_handler;
   move_mode->mode.modifier_handler = modifier_handler;

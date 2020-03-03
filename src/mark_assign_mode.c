@@ -216,7 +216,6 @@ cursor_move(void)
 void
 hikari_mark_assign_mode_init(struct hikari_mark_assign_mode *mark_assign_mode)
 {
-  mark_assign_mode->mode.type = HIKARI_MODE_TYPE_ASSIGN_MARK;
   mark_assign_mode->mode.key_handler = key_handler;
   mark_assign_mode->mode.button_handler = button_handler;
   mark_assign_mode->mode.modifier_handler = modifier_handler;

@@ -227,7 +227,6 @@ cancel(void)
 void
 hikari_normal_mode_init(struct hikari_normal_mode *normal_mode)
 {
-  normal_mode->mode.type = HIKARI_MODE_TYPE_NORMAL;
   normal_mode->mode.key_handler = key_handler;
   normal_mode->mode.button_handler = button_handler;
   normal_mode->mode.modifier_handler = modifier_handler;

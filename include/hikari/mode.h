@@ -8,21 +8,7 @@ struct hikari_output;
 struct hikari_render_data;
 struct hikari_workspace;
 
-enum hikari_mode_type {
-  HIKARI_MODE_TYPE_NORMAL,
-  HIKARI_MODE_TYPE_GROUP_CHANGE,
-  HIKARI_MODE_TYPE_ASSIGN_SHEET,
-  HIKARI_MODE_TYPE_ASSIGN_MARK,
-  HIKARI_MODE_TYPE_SELECT_MARK,
-  HIKARI_MODE_TYPE_SELECT_LAYOUT,
-  HIKARI_MODE_TYPE_GRAB_KEYBOARD,
-  HIKARI_MODE_TYPE_MOVE,
-  HIKARI_MODE_TYPE_TILING
-};
-
 struct hikari_mode {
-  enum hikari_mode_type type;
-
   void (*key_handler)(struct wl_listener *listener, void *data);
   void (*modifier_handler)(struct wl_listener *listener, void *data);
   void (*button_handler)(struct wl_listener *listener, void *data);

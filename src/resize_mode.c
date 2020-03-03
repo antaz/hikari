@@ -91,7 +91,6 @@ button_handler(struct wl_listener *listener, void *data)
 void
 hikari_resize_mode_init(struct hikari_resize_mode *resize_mode)
 {
-  resize_mode->mode.type = HIKARI_MODE_TYPE_MOVE;
   resize_mode->mode.key_handler = key_handler;
   resize_mode->mode.button_handler = button_handler;
   resize_mode->mode.modifier_handler = modifier_handler;
