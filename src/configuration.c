@@ -516,7 +516,7 @@ parse_colorscheme(struct hikari_configuration *configuration,
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
-    if (!strcmp("indicator_selected", key)) {
+    if (!strcmp("selected", key)) {
       if (!ucl_object_toint_safe(cur, &color)) {
         fprintf(
             stderr, "configuration error: expected integer for \"%s\"\n", key);
@@ -524,7 +524,7 @@ parse_colorscheme(struct hikari_configuration *configuration,
       }
 
       hikari_color_convert(configuration->indicator_selected, color);
-    } else if (!strcmp("indicator_grouped", key)) {
+    } else if (!strcmp("grouped", key)) {
       if (!ucl_object_toint_safe(cur, &color)) {
         fprintf(
             stderr, "configuration error: expected integer for \"%s\"\n", key);
@@ -532,7 +532,7 @@ parse_colorscheme(struct hikari_configuration *configuration,
       }
 
       hikari_color_convert(configuration->indicator_grouped, color);
-    } else if (!strcmp("indicator_first", key)) {
+    } else if (!strcmp("first", key)) {
       if (!ucl_object_toint_safe(cur, &color)) {
         fprintf(
             stderr, "configuration error: expected integer for \"%s\"\n", key);
@@ -540,7 +540,7 @@ parse_colorscheme(struct hikari_configuration *configuration,
       }
 
       hikari_color_convert(configuration->indicator_first, color);
-    } else if (!strcmp("indicator_conflict", key)) {
+    } else if (!strcmp("conflict", key)) {
       if (!ucl_object_toint_safe(cur, &color)) {
         fprintf(
             stderr, "configuration error: expected integer for \"%s\"\n", key);
@@ -548,7 +548,7 @@ parse_colorscheme(struct hikari_configuration *configuration,
       }
 
       hikari_color_convert(configuration->indicator_conflict, color);
-    } else if (!strcmp("indicator_insert", key)) {
+    } else if (!strcmp("insert", key)) {
       if (!ucl_object_toint_safe(cur, &color)) {
         fprintf(
             stderr, "configuration error: expected integer for \"%s\"\n", key);
@@ -556,7 +556,7 @@ parse_colorscheme(struct hikari_configuration *configuration,
       }
 
       hikari_color_convert(configuration->indicator_insert, color);
-    } else if (!strcmp("border_active", key)) {
+    } else if (!strcmp("active", key)) {
       if (!ucl_object_toint_safe(cur, &color)) {
         fprintf(
             stderr, "configuration error: expected integer for \"%s\"\n", key);
@@ -564,7 +564,7 @@ parse_colorscheme(struct hikari_configuration *configuration,
       }
 
       hikari_color_convert(configuration->border_active, color);
-    } else if (!strcmp("border_inactive", key)) {
+    } else if (!strcmp("inactive", key)) {
       if (!ucl_object_toint_safe(cur, &color)) {
         fprintf(
             stderr, "configuration error: expected integer for \"%s\"\n", key);
