@@ -798,7 +798,7 @@ OUTPUTS
 =======
 
 The *outputs* section allows users to define background for outputs using their
-name.
+name. The file format for the background image has to be *PNG*.
 
 ```
 outputs {
