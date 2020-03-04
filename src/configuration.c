@@ -833,7 +833,7 @@ parse_autoconfs(
 
     if (!parse_autoconf(configuration, cur, &autoconf)) {
       fprintf(stderr,
-          "configuration error: failed to parse \"autoconf\" \"%s\"\n",
+          "configuration error: failed to parse \"auto\" \"%s\"\n",
           key);
       goto done;
     }
@@ -1916,7 +1916,7 @@ hikari_configuration_load(struct hikari_configuration *configuration)
       if (!parse_colorscheme(configuration, cur)) {
         goto done;
       }
-    } else if (!strcmp(key, "autoconf")) {
+    } else if (!strcmp(key, "auto")) {
       if (!parse_autoconfs(configuration, cur)) {
         goto done;
       }
