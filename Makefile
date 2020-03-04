@@ -1,3 +1,9 @@
+.ifmake doc
+.ifndef VERSION
+.error please specify VERSION
+.endif
+.endif
+
 OBJS = \
 	action_config.o \
 	border.o \
@@ -129,9 +135,16 @@ hikari-unlocker: hikari_unlocker.c
 	${CC} -lpam hikari_unlocker.c -o hikari-unlocker
 
 clean:
+	rm hikari.1 ||:
 	rm *.o ||:
 	rm hikari ||:
 	rm hikari-unlocker ||:
 	rm xdg-shell-protocol.h ||:
 
 debug: hikari hikari-unlocker
+
+hikari.1!
+	@sed '1s/VERSION/${VERSION}/' share/man/man1/hikari.md |\
+		pandoc --standalone --to man -o hikari.1
+
+doc: hikari.1

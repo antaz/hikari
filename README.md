@@ -109,9 +109,11 @@ Example:
 make WITH_XWAYLAND=YES
 ```
 
-## TODO before 1.0
+#### Building the manpage
 
-* Manpage is still missing.
+Building the `hikari` manpage requires [`pandoc`](http://pandoc.org/). To build
+the manpage just run `make VERSION=1.0.0 doc`, where `VERSION` is the version
+number that will be spliced into the manpage.
 
 ## Community
 
