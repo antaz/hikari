@@ -677,13 +677,34 @@ sig_handler(int signal)
   hikari_server_terminate(NULL);
 }
 
+static char *
+get_autostart_path(void)
+{
+  char *config_home = getenv("HOME");
+  char *path = "/.config/hikari/autostart";
+  size_t len = strlen(config_home) + strlen(path);
+
+  char *ret = malloc(len + 1);
+
+  memset(ret, 0, len + 1);
+
+  strcat(ret, config_home);
+  strcat(ret, path);
+
+  return ret;
+}
+
 void
 hikari_server_start(void)
 {
   server_init(&hikari_server);
   signal(SIGTERM, sig_handler);
   wlr_backend_start(hikari_server.backend);
-  hikari_command_execute("hikari-session");
+
+  char *autostart = get_autostart_path();
+  hikari_command_execute(autostart);
+  free(autostart);
+
   wl_display_run(hikari_server.display);
 }
 
