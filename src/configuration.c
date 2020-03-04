@@ -1630,6 +1630,11 @@ parse_pointer_config(struct hikari_configuration *configuration,
         goto done;
       }
 
+      if (accel < -1.0 || accel > 1.0) {
+        fprintf(
+            stderr, "configuration error: expected float between -1 and 1\n");
+        goto done;
+      }
       pointer_config->accel = accel;
     } else if (!strcmp(key, "scroll-method")) {
       const char *scroll_method;
