@@ -1760,11 +1760,11 @@ parse_output_config(struct hikari_configuration *configuration,
             stderr, "configuration error: failed to parse \"background\"\n");
         goto done;
       }
-    } else if (!strcmp(key, "background_fit")) {
+    } else if (!strcmp(key, "background-fit")) {
       const char *fit_value;
       if (!ucl_object_tostring_safe(cur, &fit_value)) {
         fprintf(stderr,
-            "configuration error: failed to parse \"background_fit\"\n");
+            "configuration error: failed to parse \"background-fit\"\n");
         goto done;
       }
 
@@ -1776,7 +1776,7 @@ parse_output_config(struct hikari_configuration *configuration,
         background_fit = HIKARI_BACKGROUND_TILE;
       } else {
         fprintf(stderr,
-            "configuration error: failed to parse \"background_fit\"\n");
+            "configuration error: failed to parse \"background-fit\"\n");
         goto done;
       }
     } else {
