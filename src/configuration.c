@@ -886,7 +886,7 @@ parse_key(struct xkb_state *state,
           remaining + 1);
       return false;
     }
-    *keycode = (uint32_t)value;
+    *keycode = (uint32_t)value - 8;
   } else {
     const xkb_keysym_t keysym =
         xkb_keysym_from_name(remaining + 1, XKB_KEYSYM_CASE_INSENSITIVE);
