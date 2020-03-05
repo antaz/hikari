@@ -366,24 +366,26 @@ request_set_selection_handler(struct wl_listener *listener, void *data)
 void
 hikari_server_activate_cursor(void)
 {
-  hikari_server.cursor_motion_absolute.notify = cursor_motion_absolute_handler;
-  wl_signal_add(&hikari_server.cursor->events.motion_absolute,
-      &hikari_server.cursor_motion_absolute);
 
-  hikari_server.cursor_frame.notify = cursor_frame_handler;
+  struct hikari_server *server = &hikari_server;
+
+  server->cursor_motion_absolute.notify = cursor_motion_absolute_handler;
   wl_signal_add(
-      &hikari_server.cursor->events.frame, &hikari_server.cursor_frame);
+      &server->cursor->events.motion_absolute, &server->cursor_motion_absolute);
 
-  hikari_server.cursor_motion.notify = cursor_motion_handler;
-  wl_signal_add(
-      &hikari_server.cursor->events.motion, &hikari_server.cursor_motion);
+  server->cursor_frame.notify = cursor_frame_handler;
+  wl_signal_add(&server->cursor->events.frame, &server->cursor_frame);
 
-  hikari_server.cursor_button.notify = cursor_button_handler;
-  wl_signal_add(
-      &hikari_server.cursor->events.button, &hikari_server.cursor_button);
+  server->cursor_motion.notify = cursor_motion_handler;
+  wl_signal_add(&server->cursor->events.motion, &server->cursor_motion);
 
-  hikari_server.cursor_axis.notify = cursor_axis_handler;
-  wl_signal_add(&hikari_server.cursor->events.axis, &hikari_server.cursor_axis);
+  server->cursor_button.notify = cursor_button_handler;
+  wl_signal_add(&server->cursor->events.button, &server->cursor_button);
+
+  server->cursor_axis.notify = cursor_axis_handler;
+  wl_signal_add(&server->cursor->events.axis, &server->cursor_axis);
+
+  set_cursor_image(server, "left_ptr");
 }
 
 void
