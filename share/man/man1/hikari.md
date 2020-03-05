@@ -477,12 +477,12 @@ marks {
 }
 ```
 
-AUTO CONFIGURATION
+VIEW CONFIGURATION
 ==================
 
 When an application start its views can be automatically configured by _hikari_.
 Each view has a property called *app_id* (*class* for X applications), in the
-*auto* section this can be used to specify certain properties you want for that
+*views* section this can be used to specify certain properties you want for that
 view to apply.
 
 

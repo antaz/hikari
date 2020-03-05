@@ -730,18 +730,18 @@ parse_autoconf(struct hikari_configuration *configuration,
       char *group_name = copy_in_config_string(cur);
       if (group_name == NULL) {
         fprintf(stderr,
-            "configuration error: expected string for \"autoconf\" "
+            "configuration error: expected string for \"views\" "
             "\"group\"\n");
         goto done;
       } else if (strlen(group_name) == 0) {
         hikari_free(group_name);
         fprintf(stderr,
-            "configuration error: expected non-empty string for \"autoconf\" "
+            "configuration error: expected non-empty string for \"views\" "
             "\"group\"\n");
         goto done;
       } else if (isdigit(group_name[0])) {
         fprintf(stderr,
-            "configuration error: \"autoconf\" "
+            "configuration error: \"views\" "
             "\"group\" \"%s\" starts with digit\n",
             group_name);
         hikari_free(group_name);
@@ -754,7 +754,7 @@ parse_autoconf(struct hikari_configuration *configuration,
       int64_t sheet_nr;
       if (!ucl_object_toint_safe(cur, &sheet_nr)) {
         fprintf(stderr,
-            "configuration error: expected integer for \"autoconf\" "
+            "configuration error: expected integer for \"views\" "
             "\"sheet\"\n");
         goto done;
       }
@@ -765,14 +765,14 @@ parse_autoconf(struct hikari_configuration *configuration,
 
       if (!ucl_object_tostring_safe(cur, &mark_name)) {
         fprintf(stderr,
-            "configuration error: expected string for \"autoconf\" \"mark\"");
+            "configuration error: expected string for \"views\" \"mark\"");
         goto done;
       }
 
       if (strlen(mark_name) != 1) {
         fprintf(stderr,
             "configuration error: invalid \"mark\" register \"%s\" for "
-            "\"autoconf\"\n",
+            "\"views\"\n",
             mark_name);
         goto done;
       }
@@ -782,7 +782,7 @@ parse_autoconf(struct hikari_configuration *configuration,
       if (!parse_position(
               cur, &(*autoconf)->position.x, &(*autoconf)->position.y)) {
         fprintf(stderr,
-            "configuration error: failed to parse \"autoconf\" \"position\"\n");
+            "configuration error: failed to parse \"views\" \"position\"\n");
         goto done;
       }
     } else if (!strcmp(key, "focus")) {
@@ -790,7 +790,7 @@ parse_autoconf(struct hikari_configuration *configuration,
 
       if (!ucl_object_toboolean_safe(cur, &focus)) {
         fprintf(stderr,
-            "configuration error: expected boolean for \"autoconf\" "
+            "configuration error: expected boolean for \"views\" "
             "\"focus\"\n");
         goto done;
       }
@@ -798,7 +798,7 @@ parse_autoconf(struct hikari_configuration *configuration,
       (*autoconf)->focus = focus;
     } else {
       fprintf(
-          stderr, "configuration error: unkown \"autoconf\" key \"%s\"\n", key);
+          stderr, "configuration error: unkown \"views\" key \"%s\"\n", key);
       goto done;
     }
   }
@@ -833,7 +833,7 @@ parse_autoconfs(
 
     if (!parse_autoconf(configuration, cur, &autoconf)) {
       fprintf(stderr,
-          "configuration error: failed to parse \"auto\" \"%s\"\n",
+          "configuration error: failed to parse \"views\" \"%s\"\n",
           key);
       goto done;
     }
@@ -1921,7 +1921,7 @@ hikari_configuration_load(struct hikari_configuration *configuration)
       if (!parse_colorscheme(configuration, cur)) {
         goto done;
       }
-    } else if (!strcmp(key, "auto")) {
+    } else if (!strcmp(key, "views")) {
       if (!parse_autoconfs(configuration, cur)) {
         goto done;
       }
