@@ -1,4 +1,4 @@
-.ifmake doc
+.ifmake doc || dist
 .ifndef VERSION
 .error please specify VERSION
 .endif
@@ -53,10 +53,10 @@ OBJS = \
 
 WAYLAND_PROTOCOLS ?= `pkg-config --variable pkgdatadir wayland-protocols`
 
-.PHONY: clean debug
+.PHONY: clean doc dist
 .PATH: src
 
-.ifmake debug
+.ifdef DEBUG
 CFLAGS += -g -O0 -fsanitize=address
 .else
 CFLAGS += -DNDEBUG
@@ -135,16 +135,36 @@ hikari-unlocker: hikari_unlocker.c
 	${CC} -lpam hikari_unlocker.c -o hikari-unlocker
 
 clean:
-	rm hikari.1 ||:
-	rm *.o ||:
-	rm hikari ||:
-	rm hikari-unlocker ||:
-	rm xdg-shell-protocol.h ||:
+	@test -e _darcs && echo "cleaning manpage"
+	@test -e _darcs && rm share/man/man1/hikari.1 2> /dev/null ||:
+	@echo "cleaning headers"
+	@rm xdg-shell-protocol.h 2> /dev/null ||:
+	@echo "cleaning object files"
+	@rm ${OBJS} 2> /dev/null ||:
+	@echo "cleaning executables"
+	@rm hikari 2> /dev/null ||:
+	@rm hikari-unlocker 2> /dev/null ||:
 
 debug: hikari hikari-unlocker
 
-hikari.1!
+share/man/man1/hikari.1!
 	@sed '1s/VERSION/${VERSION}/' share/man/man1/hikari.md |\
-		pandoc --standalone --to man -o hikari.1
+		pandoc --standalone --to man -o share/man/man1/hikari.1
 
-doc: hikari.1
+doc: share/man/man1/hikari.1
+
+hikari-${VERSION}.tar.gz: share/man/man1/hikari.1
+	@darcs revert
+	@tar -s "#^#hikari-${VERSION}/#" -czf hikari-${VERSION}.tar.gz \
+		main.c \
+		hikari_unlocker.c \
+		include/hikari/*.h \
+		src/*.c \
+		Makefile \
+		LICENSE \
+		README.md \
+		share/man/man1/hikari.md \
+		share/man/man1/hikari.1 \
+		share/examples/example_hikari.conf
+
+dist: hikari-${VERSION}.tar.gz
