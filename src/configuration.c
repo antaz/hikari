@@ -618,7 +618,7 @@ parse_execute(
 
     if (strlen(key) != 1 || !(key[0] >= 'a' && key[0] <= 'z')) {
       fprintf(stderr,
-          "configuration error: invalid \"execute\" register \"%s\"\n",
+          "configuration error: invalid \"marks\" register \"%s\"\n",
           key);
       goto done;
     } else {
@@ -634,7 +634,7 @@ parse_execute(
       execute->command = command;
     } else {
       fprintf(stderr,
-          "configuration error: invalid command \"%s\" for \"execute\" "
+          "configuration error: invalid command \"%s\" for \"marks\" "
           "register \"%c\"\n",
           command,
           key[0]);
@@ -1925,7 +1925,7 @@ hikari_configuration_load(struct hikari_configuration *configuration)
       if (!parse_autoconfs(configuration, cur)) {
         goto done;
       }
-    } else if (!strcmp(key, "execute")) {
+    } else if (!strcmp(key, "marks")) {
       if (!parse_execute(configuration, cur)) {
         goto done;
       }

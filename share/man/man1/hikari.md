@@ -468,11 +468,11 @@ start an application that can then take over that mark using auto configuration.
 Note that the started application does not automatically take over the mark.
 
 To specify commands that are issued on unassigned marks one can specify the
-commands associated with the mark in the *execute* section in the configuration
+commands associated with the mark in the *marks* section in the configuration
 file.
 
 ```
-execute {
+marks {
   s = sakura
 }
 ```
