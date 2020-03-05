@@ -55,7 +55,8 @@ check_password(void)
 
   bool success = false;
   pam_handle_t *auth_handle = NULL;
-  if (pam_start("passwd", username, &conv, &auth_handle) != PAM_SUCCESS) {
+  if (pam_start("hikari-unlocker", username, &conv, &auth_handle) !=
+      PAM_SUCCESS) {
     return false;
   }
 

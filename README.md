@@ -50,6 +50,13 @@ persist this setting edit your `/etc/fstab` appropriately to automatically mount
 
 Additionally set `XDG_RUNTIME_DIR` to `/tmp` in your environment.
 
+### Setting up PAM
+
+Setting up PAM is needed to give `hikari` the ability to unlock the screen when
+using the screen locker. Copy the appropriate `hikari-unlocker` file from the
+`pam.d` folder to `/usr/local/etc/pam.d` (or `/etc/pam.d` on most Linux
+systems).
+
 ### Setting up XKB
 
 `hikari` currently gets its `xkb` settings settings the appropriate environment
