@@ -1744,8 +1744,69 @@ done:
 }
 
 static bool
+parse_background(struct hikari_configuration *configuration,
+    const ucl_object_t *background_obj,
+    char **background,
+    enum hikari_background_fit *fit)
+{
+  bool success = false;
+
+  ucl_object_iter_t it = ucl_object_iterate_new(background_obj);
+  bool has_background = false;
+
+  const ucl_object_t *cur;
+  while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
+    const char *key = ucl_object_key(cur);
+    if (!strcmp(key, "path")) {
+      has_background = true;
+      *background = copy_in_config_string(cur);
+    } else if (!strcmp(key, "fit")) {
+      const char *fit_value;
+      if (!ucl_object_tostring_safe(cur, &fit_value)) {
+        fprintf(stderr,
+            "configuration error: expected string for \"background\" "
+            "\"fit\"\n");
+        goto done;
+      }
+      if (!strcmp(fit_value, "center")) {
+        *fit = HIKARI_BACKGROUND_CENTER;
+      } else if (!strcmp(fit_value, "stretch")) {
+        *fit = HIKARI_BACKGROUND_STRETCH;
+      } else if (!strcmp(fit_value, "tile")) {
+        *fit = HIKARI_BACKGROUND_TILE;
+      } else {
+        fprintf(stderr,
+            "configuration error: unexpected \"background\" \"fit\" \"%s\"\n",
+            fit_value);
+        goto done;
+      }
+    } else {
+      fprintf(stderr,
+          "configuration error: unknown \"background\" configuration key "
+          "\"%s\"\n",
+          key);
+      goto done;
+    }
+  }
+
+  if (!has_background) {
+    fprintf(
+        stderr, "configuration error: missing \"path\" for \"background\"\n");
+    goto done;
+  }
+
+  success = true;
+
+done:
+  ucl_object_iterate_free(it);
+
+  return success;
+}
+
+static bool
 parse_output_config(struct hikari_configuration *configuration,
     const ucl_object_t *output_config_obj)
+
 {
   bool success = false;
   ucl_object_iter_t it = ucl_object_iterate_new(output_config_obj);
@@ -1758,30 +1819,24 @@ parse_output_config(struct hikari_configuration *configuration,
     const char *key = ucl_object_key(cur);
 
     if (!strcmp(key, "background")) {
-      background = copy_in_config_string(cur);
+      ucl_type_t type = ucl_object_type(cur);
 
-      if (background == NULL) {
-        fprintf(
-            stderr, "configuration error: failed to parse \"background\"\n");
-        goto done;
-      }
-    } else if (!strcmp(key, "background-fit")) {
-      const char *fit_value;
-      if (!ucl_object_tostring_safe(cur, &fit_value)) {
-        fprintf(stderr,
-            "configuration error: failed to parse \"background-fit\"\n");
-        goto done;
-      }
-
-      if (!strcmp(fit_value, "center")) {
-        background_fit = HIKARI_BACKGROUND_CENTER;
-      } else if (!strcmp(fit_value, "stretch")) {
-        background_fit = HIKARI_BACKGROUND_STRETCH;
-      } else if (!strcmp(fit_value, "tile")) {
-        background_fit = HIKARI_BACKGROUND_TILE;
+      if (type == UCL_STRING) {
+        background = copy_in_config_string(cur);
+        if (background == NULL) {
+          fprintf(
+              stderr, "configuration error: invalid \"background\" value\n");
+          goto done;
+        }
+      } else if (type == UCL_OBJECT) {
+        if (!parse_background(
+                configuration, cur, &background, &background_fit)) {
+          goto done;
+        }
       } else {
         fprintf(stderr,
-            "configuration error: failed to parse \"background-fit\"\n");
+            "configuration error: expected string or object for "
+            "\"background\"\n");
         goto done;
       }
     } else {

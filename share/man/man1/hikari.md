@@ -798,16 +798,34 @@ OUTPUTS
 =======
 
 The *outputs* section allows users to define background for outputs using their
-name. The file format for the background image has to be *PNG*.
+name using the *background* attribute which can be either the path to the
+background image, or an object which enables the user to define additional
+attributes for the background image. Background file format has to be *PNG*.
+
+When defining a *background* object the following attributes are available.
+
+* **path**
+
+  This attribute giving the *path* to the wallpaper image file is mandatory.
+
+* **fit**
+
+  Specifies how the wallpaper should be displayed. Available options are
+  *center*, *stretch* and *tile*. *stretch* is the default even when specifying
+  the background image as a string.
 
 ```
 outputs {
   "eDP-1" = {
     background = "/path/to/wallpaper"
-    background-fit = center
+  }
+
+  WL-1 = {
+    background = {
+      path = "/path/to/wallpaper"
+      fit = center
+    }
   }
 }
 ```
 
-The optional attribute `background-fit` allows for wallpaper scaling. Available
-options are *center*, *stretch* and *tile*.
