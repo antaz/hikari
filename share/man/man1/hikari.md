@@ -414,8 +414,8 @@ Workspace actions
   one member. If none exists is a no-op. This action also sets the **current
   sheet** of the workspace to this sheet.
 
-User defined actions
---------------------
+USER DEFINED ACTIONS
+====================
 
 Actions can also be user defined, this is done in the *actions* section of the
 configuration file. A user defined action consists of a name and a command that
