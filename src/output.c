@@ -116,7 +116,9 @@ hikari_output_load_background(struct hikari_output *output,
   cairo_surface_destroy(output_surface);
 
 done:
-  hikari_output_damage_whole(output);
+  if (output->enabled) {
+    hikari_output_damage_whole(output);
+  }
 }
 
 static void
@@ -516,7 +518,9 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 
   output_geometry(output);
 
-  hikari_output_enable(output);
+  if (!hikari_server.locked) {
+    hikari_output_enable(output);
+  }
 
   const struct hikari_output_config *output_config =
       hikari_configuration_resolve_output(

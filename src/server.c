@@ -807,13 +807,12 @@ hikari_server_unlock(void)
 {
   hikari_server.locked = false;
 
-  hikari_server_activate_cursor();
-
   struct hikari_output *output = NULL;
   wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
     hikari_output_enable(output);
   }
 
+  hikari_server_activate_cursor();
   hikari_server_cursor_focus();
 }
 
