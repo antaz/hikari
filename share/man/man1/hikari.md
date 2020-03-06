@@ -152,8 +152,10 @@ General actions
 
   Lock _hikari_ and turn off all outputs. To unlock you need to enter your
   password and press enter. Being able to unlock requires _hikari-unlocker_ to
-  be in the **PATH** and running setuid(2) root privileges (those are required
-  to check if the entered password is correct).
+  be in the **PATH** and running with setuid(2) root privileges (those are
+  required to check if the entered password is correct). _hikari-unlocker_ also
+  needs pam.conf(5) to be aware of its existence, therefore there must be a
+  _hikari-unlocker_ service file in _pam.d_.
 
 * **quit**
 
