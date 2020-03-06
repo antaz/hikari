@@ -309,22 +309,6 @@ Sheet actions
   Clears the current workspace and populates it with all **iconified** views
   that are a member of its current sheet.
 
-* **sheet-switch-to-[0-9|alternate|current]**
-
-  Clears the current workspace and populates it with all views that are a member
-  of the specified sheet. This action also sets the **current sheet** of the
-  workspace to this very sheet. Views that are a member of sheet **0** will also
-  be displayed on the bottom of the stacking order. Switching to the current
-  sheet will reset the state of the sheet e.g. hiding borrowed views, showing
-  views that have previously been hidden and hiding views that are in iconified
-  state.
-
-* **sheet-switch-to-[next|prev]-inhabited**
-
-  Switch to the next or previous sheet (excluding **00**) that contains at least
-  one member. If none exists is a no-op. This action also sets the **current
-  sheet** of the workspace to this sheet.
-
 View actions
 ------------
 * **view-cycle-[next|prev]**
@@ -411,6 +395,24 @@ VT actions
 * **vt-switch-to-[1-9]**
 
   Switches to another virtual terminal.
+
+Workspace actions
+-----------------
+* **workspace-switch-to-sheet-[0-9|alternate|current]**
+
+  Clears the current workspace and populates it with all views that are a member
+  of the specified sheet. This action also sets the **current sheet** of the
+  workspace to this very sheet. Views that are a member of sheet **0** will also
+  be displayed on the bottom of the stacking order. Switching to the current
+  sheet will reset the state of the sheet e.g. hiding borrowed views, showing
+  views that have previously been hidden and hiding views that are in iconified
+  state.
+
+* **workspace-switch-to-sheet-[next|prev]-inhabited**
+
+  Switch to the next or previous sheet (excluding **00**) that contains at least
+  one member. If none exists is a no-op. This action also sets the **current
+  sheet** of the workspace to this sheet.
 
 User defined actions
 --------------------

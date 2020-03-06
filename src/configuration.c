@@ -1238,32 +1238,32 @@ parse_binding(struct hikari_configuration *configuration,
     *action = hikari_server_increase_view_size_right;
     *arg = NULL;
 
-#define PARSE_SHEET_BINDING(n)                                                 \
+#define PARSE_WORKSPACE_BINDING(n)                                             \
   }                                                                            \
-  else if (!strcmp(str, "sheet-switch-to-" #n))                                \
+  else if (!strcmp(str, "workspace-switch-to-sheet-" #n))                      \
   {                                                                            \
     *action = hikari_server_display_sheet_##n;                                 \
     *arg = NULL;
 
-    PARSE_SHEET_BINDING(0)
-    PARSE_SHEET_BINDING(1)
-    PARSE_SHEET_BINDING(2)
-    PARSE_SHEET_BINDING(3)
-    PARSE_SHEET_BINDING(4)
-    PARSE_SHEET_BINDING(5)
-    PARSE_SHEET_BINDING(6)
-    PARSE_SHEET_BINDING(7)
-    PARSE_SHEET_BINDING(8)
-    PARSE_SHEET_BINDING(9)
-    PARSE_SHEET_BINDING(alternate)
-    PARSE_SHEET_BINDING(current)
-    PARSE_SHEET_BINDING(next)
-    PARSE_SHEET_BINDING(prev)
-#undef PARSE_SHEET_BINDING
-  } else if (!strcmp(str, "sheet-switch-to-next-inhabited")) {
+    PARSE_WORKSPACE_BINDING(0)
+    PARSE_WORKSPACE_BINDING(1)
+    PARSE_WORKSPACE_BINDING(2)
+    PARSE_WORKSPACE_BINDING(3)
+    PARSE_WORKSPACE_BINDING(4)
+    PARSE_WORKSPACE_BINDING(5)
+    PARSE_WORKSPACE_BINDING(6)
+    PARSE_WORKSPACE_BINDING(7)
+    PARSE_WORKSPACE_BINDING(8)
+    PARSE_WORKSPACE_BINDING(9)
+    PARSE_WORKSPACE_BINDING(alternate)
+    PARSE_WORKSPACE_BINDING(current)
+    PARSE_WORKSPACE_BINDING(next)
+    PARSE_WORKSPACE_BINDING(prev)
+#undef PARSE_WORKSPACE_BINDING
+  } else if (!strcmp(str, "workspace-switch-to-sheet-next-inhabited")) {
     *action = hikari_server_switch_to_next_inhabited_sheet;
     *arg = NULL;
-  } else if (!strcmp(str, "sheet-switch-to-prev-inhabited")) {
+  } else if (!strcmp(str, "workspace-switch-to-sheet-prev-inhabited")) {
     *action = hikari_server_switch_to_prev_inhabited_sheet;
     *arg = NULL;
 
