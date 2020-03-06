@@ -82,7 +82,8 @@ the future when more systems adopt Wayland.
 * pixman
 * libucl
 * glib
-* epoll-shim
+* evdev-proto
+* epoll-shim (FreeBSD)
 
 ### Compiling and Installing
 
