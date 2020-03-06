@@ -321,6 +321,10 @@ Sheet actions
 
 * **sheet-switch-to-[next|prev]-inhabited**
 
+  Switch to the next or previous sheet (excluding **00**) that contains at least
+  one member. If none exists is a no-op. This action also sets the **current
+  sheet** of the workspace to this sheet.
+
 View actions
 ------------
 * **view-cycle-[next|prev]**
