@@ -138,7 +138,7 @@ CONFIGURATION
 
 _hikari_ is configured using libucl(3) as a configuration file format. The
 configuration is located under _$HOME/.config/hikari/hikari.conf_. An example
-can be found under _share/examples/example_hikari.conf_.
+can be found under _share/examples/hikari.conf_.
 
 On startup _hikari_ attempts to execute _$HOME/.config/hikari/autostart_ to
 autostart applications.
