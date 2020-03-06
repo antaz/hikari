@@ -135,7 +135,7 @@ hikari-unlocker: hikari_unlocker.c
 	${CC} -lpam hikari_unlocker.c -o hikari-unlocker
 
 clean:
-	@test -e _darcs && echo "cleaning manpage"
+	@test -e _darcs && echo "cleaning manpage" ||:
 	@test -e _darcs && rm share/man/man1/hikari.1 2> /dev/null ||:
 	@echo "cleaning headers"
 	@rm xdg-shell-protocol.h 2> /dev/null ||:
