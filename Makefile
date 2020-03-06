@@ -165,6 +165,8 @@ hikari-${VERSION}.tar.gz: share/man/man1/hikari.1
 		README.md \
 		share/man/man1/hikari.md \
 		share/man/man1/hikari.1 \
-		share/examples/example_hikari.conf
+		share/examples/example_hikari.conf \
+		pam.d/hikari-unlocker.freebsd \
+		pam.d/hikari-unlocker.linux
 
 dist: hikari-${VERSION}.tar.gz
