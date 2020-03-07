@@ -111,8 +111,6 @@ bmake WITH_POSIX_C_SOURCE=YES
 `hikari` offers optional XWayland support which is enabled via setting
 `WITH_XWAYLAND`.
 
-Example:
-
 ```
 make WITH_XWAYLAND=YES
 ```
