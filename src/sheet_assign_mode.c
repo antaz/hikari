@@ -15,6 +15,8 @@
 #define CYCLE_SHEET(name)                                                      \
   static struct hikari_sheet *name##_sheet(struct hikari_sheet *sheet)         \
   {                                                                            \
+    assert(sheet != NULL); \
+                                                                               \
     struct hikari_workspace *name = hikari_workspace_##name(sheet->workspace); \
                                                                                \
     assert(name != NULL);                                                      \
@@ -40,7 +42,9 @@ process_input_key(struct hikari_workspace *workspace,
   int nsyms = xkb_state_key_get_syms(
       keyboard->device->keyboard->xkb_state, keycode, &syms);
 
-  struct hikari_sheet *sheet;
+  struct hikari_sheet *sheet = mode->sheet;
+
+  assert(sheet != NULL);
 
   for (int i = 0; i < nsyms; i++) {
     switch (syms[i]) {
@@ -85,15 +89,14 @@ process_input_key(struct hikari_workspace *workspace,
         break;
 
       case XKB_KEY_Tab:
-        sheet = next_sheet(mode->sheet);
+        sheet = next_sheet(sheet);
         break;
 
       case XKB_KEY_ISO_Left_Tab:
-        sheet = prev_sheet(mode->sheet);
+        sheet = prev_sheet(sheet);
         break;
 
       default:
-        sheet = mode->sheet;
         break;
     }
   }
@@ -111,16 +114,20 @@ confirm_sheet_assign(struct hikari_workspace *workspace)
 
   struct hikari_view *focus_view = workspace->focus_view;
   struct wlr_box *geometry = hikari_view_geometry(focus_view);
+  struct hikari_sheet *sheet = mode->sheet;
+
+  assert(sheet != NULL);
 
   hikari_indicator_update_sheet(&hikari_server.indicator,
       geometry,
       workspace->output,
-      mode->sheet,
+      sheet,
       hikari_configuration->indicator_selected,
       hikari_view_is_iconified(focus_view),
       hikari_view_is_floating(focus_view));
 
-  hikari_view_pin_to_sheet(focus_view, mode->sheet);
+  hikari_view_pin_to_sheet(focus_view, sheet);
+
   hikari_server_enter_normal_mode(NULL);
 }
 
@@ -129,6 +136,8 @@ cancel_sheet_assign(struct hikari_workspace *workspace)
 {
   struct hikari_view *focus_view = workspace->focus_view;
   struct wlr_box *geometry = hikari_view_geometry(focus_view);
+
+  assert(focus_view->sheet != NULL);
 
   hikari_indicator_update_sheet(&hikari_server.indicator,
       geometry,
@@ -153,16 +162,19 @@ update_state(struct hikari_workspace *workspace,
 
   struct hikari_view *focus_view = workspace->focus_view;
   struct wlr_box *geometry = hikari_view_border_geometry(focus_view);
+  struct hikari_sheet *sheet = process_input_key(workspace, event, keyboard);
 
-  mode->sheet = process_input_key(workspace, event, keyboard);
+  assert(sheet != NULL);
 
   hikari_indicator_update_sheet(&hikari_server.indicator,
       geometry,
       workspace->output,
-      mode->sheet,
+      sheet,
       hikari_configuration->indicator_insert,
       hikari_view_is_iconified(focus_view),
       hikari_view_is_floating(focus_view));
+
+  mode->sheet = sheet;
 }
 
 static void
