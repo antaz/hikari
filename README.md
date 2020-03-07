@@ -119,7 +119,7 @@ make WITH_XWAYLAND=YES
 
 Screencopy support allows tools like `grim` to work with `hikari`, it also
 allows applications to copy the desktop content. This is disabled by default
-and can be added by settings `WITH_SCREENCOPY`.
+and can be added by setting `WITH_SCREENCOPY`.
 
 ```
 make WITH_SCREENCOPY=YES
