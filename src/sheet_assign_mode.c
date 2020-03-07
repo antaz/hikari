@@ -1,21 +1,13 @@
 #include <hikari/sheet_assign_mode.h>
 
-#include <stdbool.h>
-#include <string.h>
-
 #include <wayland-util.h>
 
-#include <hikari/color.h>
-#include <hikari/completion.h>
 #include <hikari/configuration.h>
-#include <hikari/group.h>
 #include <hikari/indicator.h>
 #include <hikari/indicator_frame.h>
 #include <hikari/keyboard.h>
-#include <hikari/memory.h>
 #include <hikari/normal_mode.h>
 #include <hikari/render_data.h>
-#include <hikari/server.h>
 #include <hikari/sheet.h>
 #include <hikari/view.h>
 #include <hikari/workspace.h>
