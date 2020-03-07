@@ -466,7 +466,6 @@ hikari_view_init(struct hikari_view *view,
   view->mark = NULL;
   view->surface = NULL;
   view->maximized_state = NULL;
-  view->sheet = NULL;
   view->output = NULL;
   view->group = NULL;
   view->title = NULL;

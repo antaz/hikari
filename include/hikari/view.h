@@ -326,4 +326,10 @@ hikari_view_is_maximized(struct hikari_view *view)
   return view->maximized_state != NULL;
 }
 
+static inline bool
+hikari_view_is_unmanaged(struct hikari_view *view)
+{
+  return view->sheet == NULL;
+}
+
 #endif

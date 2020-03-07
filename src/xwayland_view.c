@@ -209,7 +209,7 @@ map_handler(struct wl_listener *listener, void *data)
   struct hikari_view *view = (struct hikari_view *)xwayland_view;
   bool focus = false;
 
-  if (view->sheet == NULL) {
+  if (hikari_view_is_unmanaged(view)) {
     first_map(xwayland_view, &focus);
   }
 
