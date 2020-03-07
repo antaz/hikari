@@ -634,9 +634,8 @@ parse_execute(
       execute->command = command;
     } else {
       fprintf(stderr,
-          "configuration error: invalid command \"%s\" for \"marks\" "
+          "configuration error: invalid command for \"marks\" "
           "register \"%c\"\n",
-          command,
           key[0]);
       goto done;
     }
