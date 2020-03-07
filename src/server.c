@@ -1108,7 +1108,7 @@ hikari_server_reset_sheet_layout(void *arg)
 void
 hikari_server_layout_sheet(void *arg)
 {
-  char layout_register = (char)arg;
+  char layout_register = (intptr_t)arg;
   struct hikari_split *split =
       hikari_configuration_lookup_layout(hikari_configuration, layout_register);
 
