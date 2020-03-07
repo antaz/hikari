@@ -9,6 +9,9 @@
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_data_device.h>
+#ifdef HAVE_GAMMACONTROL
+#include <wlr/types/wlr_gamma_control_v1.h>
+#endif
 #include <wlr/types/wlr_gtk_primary_selection.h>
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_keyboard.h>
@@ -647,6 +650,10 @@ server_init(struct hikari_server *server)
 
   server->new_output.notify = new_output_handler;
   wl_signal_add(&server->backend->events.new_output, &server->new_output);
+
+#ifdef HAVE_GAMMACONTROL
+  wlr_gamma_control_manager_v1_create(server->display);
+#endif
 
 #ifdef HAVE_SCREENCOPY
   wlr_screencopy_manager_v1_create(server->display);

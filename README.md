@@ -127,6 +127,15 @@ and can be added by settings `WITH_SCREENCOPY`.
 make WITH_SCREENCOPY=YES
 ```
 
+### Building with gammacontrol support
+
+Gamma control is needed for tools like `redshift`. This is disabled by default
+and can be enabled via setting `WITH_GAMMACONTROL`.
+
+```
+make WITH_GAMMACONTROL=YES
+```
+
 #### Building the manpage
 
 Building the `hikari` manpage requires [`pandoc`](http://pandoc.org/). To build
