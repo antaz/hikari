@@ -883,7 +883,7 @@ queue_tile(struct hikari_view *view,
       op->serial = view->resize(view, op->geometry.width, op->geometry.height);
     }
   } else {
-    hikari_view_commit_pending_operation(view);
+    hikari_view_commit_pending_operation(view, current_geometry);
   }
 }
 
@@ -1706,10 +1706,14 @@ commit_operation(struct hikari_operation *operation, struct hikari_view *view)
 }
 
 void
-hikari_view_commit_pending_operation(struct hikari_view *view)
+hikari_view_commit_pending_operation(
+    struct hikari_view *view, struct wlr_box *geometry)
 {
   assert(view != NULL);
   assert(view->pending_operation.dirty);
+
+  view->pending_operation.geometry.width = geometry->width;
+  view->pending_operation.geometry.height = geometry->height;
 
   commit_operation(&view->pending_operation, view);
   hikari_view_unset_dirty(view);

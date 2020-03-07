@@ -46,6 +46,9 @@ commit_handler(struct wl_listener *listener, void *data)
   uint32_t serial = xdg_view->surface->configure_serial;
 
   if (hikari_view_was_updated(view, serial)) {
+    struct wlr_box new_geometry;
+    wlr_xdg_surface_get_geometry(xdg_view->surface, &new_geometry);
+
     switch (view->pending_operation.type) {
       case HIKARI_OPERATION_TYPE_TILE:
       case HIKARI_OPERATION_TYPE_FULL_MAXIMIZE:
@@ -63,7 +66,7 @@ commit_handler(struct wl_listener *listener, void *data)
       case HIKARI_OPERATION_TYPE_RESIZE:
         break;
     }
-    hikari_view_commit_pending_operation(view);
+    hikari_view_commit_pending_operation(view, &new_geometry);
   } else {
     struct wlr_box *geometry = hikari_view_geometry(view);
 

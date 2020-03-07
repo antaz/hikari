@@ -163,13 +163,16 @@ VIEW_ACTION(toggle_vertical_maximize)
 VIEW_ACTION(toggle_horizontal_maximize)
 VIEW_ACTION(toggle_floating)
 VIEW_ACTION(damage_whole)
-VIEW_ACTION(commit_pending_geometry)
 VIEW_ACTION(top_left_cursor)
 VIEW_ACTION(bottom_right_cursor)
 VIEW_ACTION(center_cursor)
 VIEW_ACTION(toggle_iconified)
 VIEW_ACTION(reset_geometry)
 #undef VIEW_ACTION
+
+void
+hikari_view_commit_pending_operation(
+    struct hikari_view *view, struct wlr_box *geometry);
 
 void
 hikari_view_migrate_to_sheet(
@@ -201,9 +204,6 @@ hikari_view_tile(struct hikari_view *view, struct wlr_box *geometry);
 
 void
 hikari_view_exchange(struct hikari_view *from, struct hikari_view *to);
-
-void
-hikari_view_commit_pending_operation(struct hikari_view *view);
 
 void
 hikari_view_damage_surface(

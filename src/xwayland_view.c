@@ -76,7 +76,8 @@ commit_handler(struct wl_listener *listener, void *data)
   struct wlr_box *geometry = hikari_view_geometry(view);
 
   if (hikari_view_is_dirty(view)) {
-    hikari_view_commit_pending_operation(view);
+    hikari_view_commit_pending_operation(
+        view, &view->pending_operation.geometry);
   } else {
     struct wlr_xwayland_surface *surface = xwayland_view->surface;
     struct hikari_output *output = view->output;
