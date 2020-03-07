@@ -70,6 +70,10 @@ CFLAGS += -D_POSIX_C_SOURCE=200809L
 CFLAGS += -DHAVE_XWAYLAND=1
 .endif
 
+.ifdef WITH_SCREENCOPY
+CFLAGS += -DHAVE_SCREENCOPY=1
+.endif
+
 CFLAGS += -Wall -I. -Iinclude
 
 WLROOTS_CFLAGS ?= `pkg-config --cflags wlroots`

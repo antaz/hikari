@@ -15,6 +15,9 @@
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_primary_selection.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
+#ifdef HAVE_SCREENCOPY
+#include <wlr/types/wlr_screencopy_v1.h>
+#endif
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_server_decoration.h>
 #include <wlr/types/wlr_xcursor_manager.h>
@@ -644,6 +647,10 @@ server_init(struct hikari_server *server)
 
   server->new_output.notify = new_output_handler;
   wl_signal_add(&server->backend->events.new_output, &server->new_output);
+
+#ifdef HAVE_SCREENCOPY
+  wlr_screencopy_manager_v1_create(server->display);
+#endif
 
 #ifdef HAVE_XWAYLAND
   setup_xwayland(server);

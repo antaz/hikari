@@ -117,6 +117,16 @@ Example:
 make WITH_XWAYLAND=YES
 ```
 
+#### Building with screencopy support
+
+Screencopy support allows tools like `grim` to work with `hikari`, it also
+allows applications to copy the desktop content. This is disabled by default
+and can be added by settings `WITH_SCREENCOPY`.
+
+```
+make WITH_SCREENCOPY=YES
+```
+
 #### Building the manpage
 
 Building the `hikari` manpage requires [`pandoc`](http://pandoc.org/). To build
