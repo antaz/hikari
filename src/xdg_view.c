@@ -84,7 +84,7 @@ commit_handler(struct wl_listener *listener, void *data)
       if (!hikari_view_is_hidden(view)) {
         hikari_view_damage_whole(view);
       }
-    } else if (view->output->enabled) {
+    } else if (!hikari_view_is_hidden(view) && view->output->enabled) {
       pixman_region32_t damage;
       pixman_region32_init(&damage);
       wlr_surface_get_effective_damage(xdg_view->surface->surface, &damage);
