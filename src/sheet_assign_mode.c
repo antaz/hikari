@@ -15,7 +15,7 @@
 #define CYCLE_SHEET(name)                                                      \
   static struct hikari_sheet *name##_sheet(struct hikari_sheet *sheet)         \
   {                                                                            \
-    assert(sheet != NULL); \
+    assert(sheet != NULL);                                                     \
                                                                                \
     struct hikari_workspace *name = hikari_workspace_##name(sheet->workspace); \
                                                                                \
