@@ -125,7 +125,7 @@ and can be added by setting `WITH_SCREENCOPY`.
 make WITH_SCREENCOPY=YES
 ```
 
-### Building with gammacontrol support
+#### Building with gammacontrol support
 
 Gamma control is needed for tools like `redshift`. This is disabled by default
 and can be enabled via setting `WITH_GAMMACONTROL`.
