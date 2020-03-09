@@ -1,5 +1,3 @@
-% HIKARI(1) VERSION | hikari - Wayland Compositor
-
 NAME
 ====
 hikari - _hikari_ Wayland Compositor

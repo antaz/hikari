@@ -156,8 +156,8 @@ clean:
 debug: hikari hikari-unlocker
 
 share/man/man1/hikari.1!
-	@sed '1s/VERSION/${VERSION}/' share/man/man1/hikari.md |\
-		pandoc --standalone --to man -o share/man/man1/hikari.1
+	@pandoc -M title:"HIKARI(1) ${VERSION} | hikari - Wayland Compositor" -s \
+		--to man -o share/man/man1/hikari.1 share/man/man1/hikari.md
 
 doc: share/man/man1/hikari.1
 
