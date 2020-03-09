@@ -207,9 +207,25 @@ remove_from_sheet_group(struct hikari_view *view)
 }
 
 static void
+cancel_tile(struct hikari_view *view)
+{
+  if (hikari_view_is_tiling(view)) {
+    struct hikari_tile *tile = view->pending_operation.tile;
+
+    hikari_tile_detach(tile);
+    hikari_free(tile);
+    view->pending_operation.tile = NULL;
+
+    hikari_view_unset_dirty(view);
+  }
+}
+
+static void
 queue_reset(struct hikari_view *view, bool center, bool migrate)
 {
   struct wlr_box *geometry = hikari_view_geometry(view);
+
+  cancel_tile(view);
 
   if (geometry->width != view->geometry.width &&
       geometry->height != view->geometry.height) {
@@ -519,12 +535,7 @@ hikari_view_fini(struct hikari_view *view)
     view->tile = NULL;
   }
 
-  if (view->pending_operation.tile != NULL) {
-    struct hikari_tile *tile = view->pending_operation.tile;
-    hikari_tile_detach(tile);
-    hikari_free(tile);
-    view->pending_operation.tile = NULL;
-  }
+  cancel_tile(view);
 }
 
 void
@@ -1251,12 +1262,15 @@ void
 hikari_view_exchange(struct hikari_view *from, struct hikari_view *to)
 {
   assert(from != NULL);
-  assert(from->tile != NULL);
   assert(to != NULL);
+
+  if (hikari_view_is_dirty(from) || hikari_view_is_dirty(to)) {
+    return;
+  }
+
+  assert(from->tile != NULL);
   assert(to->tile != NULL);
   assert(to->tile->view->sheet == from->tile->view->sheet);
-  assert(!hikari_view_is_dirty(from));
-  assert(!hikari_view_is_dirty(to));
 
   struct hikari_layout *layout = from->sheet->workspace->sheet->layout;
 

@@ -899,8 +899,7 @@ hikari_workspace_reset_view_geometry(struct hikari_workspace *workspace)
     struct hikari_layout *layout = workspace->sheet->layout;                   \
                                                                                \
     if (focus_view == NULL || layout == NULL ||                                \
-        !hikari_view_is_tiled(focus_view) ||                                   \
-        hikari_view_is_dirty(focus_view)) {                                    \
+        !hikari_view_is_tiled(focus_view)) {                                   \
       return;                                                                  \
     }                                                                          \
                                                                                \
@@ -908,7 +907,7 @@ hikari_workspace_reset_view_geometry(struct hikari_workspace *workspace)
                                                                                \
     assert(!hikari_view_is_hidden(link));                                      \
                                                                                \
-    if (focus_view == link || hikari_view_is_dirty(link)) {                    \
+    if (focus_view == link) {                                                  \
       return;                                                                  \
     }                                                                          \
                                                                                \

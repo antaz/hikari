@@ -310,7 +310,8 @@ hikari_view_is_tiled(struct hikari_view *view)
 static inline bool
 hikari_view_is_tileable(struct hikari_view *view)
 {
-  return !hikari_view_is_floating(view) && !hikari_view_is_iconified(view);
+  return !hikari_view_is_floating(view) && !hikari_view_is_iconified(view) &&
+         !hikari_view_is_dirty(view);
 }
 
 static inline bool
@@ -330,6 +331,13 @@ static inline bool
 hikari_view_is_unmanaged(struct hikari_view *view)
 {
   return view->sheet == NULL;
+}
+
+static inline bool
+hikari_view_is_tiling(struct hikari_view *view)
+{
+  return hikari_view_is_dirty(view) &&
+         view->pending_operation.type == HIKARI_OPERATION_TYPE_TILE;
 }
 
 #endif
