@@ -96,7 +96,14 @@ can be found under `share/exampes/hikari.conf`.
 
 #### Building on FreeBSD
 
-Simply run `make`.
+Simply run `make`. Installation needs `PREFIX` and `ETC_PREFIX` to be defined.
+To install everything in `/usr/local` run
+
+```
+make PREFIX=/usr/local ETC_PREFIX=/usr/local/etc install
+```
+
+`uninstall` requires the same values for `PREFIX` and `ETC_PREFIX`.
 
 #### Building on Linux
 
@@ -105,6 +112,18 @@ On Linux `bmake` is required which needs to be run like so:
 ```
 bmake WITH_POSIX_C_SOURCE=YES
 ```
+
+Installation needs `PREFIX` and `ETC_PREFIX` to be defined. To install
+everything in `/usr/local` run.
+
+```
+bmake PREFIX=/usr/local ETC_PREFIX=/etc install
+```
+
+`pam.d` files should be installed in `/etc` or `/usr/lib/pam.d` depending on
+your distribution.
+
+`uninstall` requires the same values for `PREFIX` and `ETC_PREFIX`.
 
 #### Building with XWayland support
 

@@ -4,6 +4,20 @@
 .endif
 .endif
 
+.ifmake install || uninstall
+.ifndef PREFIX
+.error please specify PREFIX
+.endif
+OS = `uname`
+INSTALL_GROUP = `id -gn`
+.endif
+
+.ifmake install || uninstall
+.ifndef ETC_PREFIX
+.error please specify ETC_PREFIX
+.endif
+.endif
+
 OBJS = \
 	action_config.o \
 	border.o \
@@ -53,7 +67,7 @@ OBJS = \
 
 WAYLAND_PROTOCOLS ?= `pkg-config --variable pkgdatadir wayland-protocols`
 
-.PHONY: clean doc dist
+.PHONY: clean clean-doc doc dist install uninstall
 .PATH: src
 
 .ifdef DEBUG
@@ -142,9 +156,11 @@ xdg-shell-protocol.h:
 hikari-unlocker: hikari_unlocker.c
 	${CC} -lpam hikari_unlocker.c -o hikari-unlocker
 
-clean:
+clean-doc:
 	@test -e _darcs && echo "cleaning manpage" ||:
 	@test -e _darcs && rm share/man/man1/hikari.1 2> /dev/null ||:
+
+clean: clean-doc
 	@echo "cleaning headers"
 	@rm xdg-shell-protocol.h 2> /dev/null ||:
 	@echo "cleaning object files"
@@ -153,9 +169,7 @@ clean:
 	@rm hikari 2> /dev/null ||:
 	@rm hikari-unlocker 2> /dev/null ||:
 
-debug: hikari hikari-unlocker
-
-share/man/man1/hikari.1!
+share/man/man1/hikari.1:
 	@pandoc -M title:"HIKARI(1) ${VERSION} | hikari - Wayland Compositor" -s \
 		--to man -o share/man/man1/hikari.1 share/man/man1/hikari.md
 
@@ -178,3 +192,21 @@ hikari-${VERSION}.tar.gz: share/man/man1/hikari.1
 		pam.d/hikari-unlocker.linux
 
 dist: hikari-${VERSION}.tar.gz
+
+install: hikari hikari-unlocker share/man/man1/hikari.1
+	mkdir -p ${PREFIX}/bin
+	mkdir -p ${PREFIX}/share/man/man1
+	mkdir -p ${PREFIX}/share/examples/hikari
+	mkdir -p ${ETC_PREFIX}/pam.d
+	install -m 4555 -g ${INSTALL_GROUP} hikari hikari-unlocker ${PREFIX}/bin
+	install -m 644 -g ${INSTALL_GROUP} share/man/man1/hikari.1 ${PREFIX}/share/man/man1
+	install -m 644 -g ${INSTALL_GROUP} share/examples/hikari.conf ${PREFIX}/share/examples/hikari
+	install -m 644 -g ${INSTALL_GROUP} pam.d/hikari-unlocker.${OS} ${ETC_PREFIX}/pam.d/hikari-unlocker
+
+uninstall:
+	-rm ${PREFIX}/bin/hikari
+	-rm ${PREFIX}/bin/hikari-unlocker
+	-rm ${PREFIX}/share/examples/hikari/hikari.conf
+	-rmdir ${PREFIX}/share/examples/hikari
+	-rm ${PREFIX}/share/man/man1/hikari.1
+	-rm ${ETC_PREFIX}/pam.d/hikari-unlocker
