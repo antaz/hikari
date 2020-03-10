@@ -891,7 +891,7 @@ hikari_server_enter_sheet_assign_mode(void *arg)
       workspace->output,
       focus_view->sheet,
       hikari_configuration->indicator_insert,
-      hikari_view_is_iconified(focus_view),
+      hikari_view_is_invisible(focus_view),
       hikari_view_is_floating(focus_view));
 
   hikari_server.sheet_assign_mode.sheet = focus_view->sheet;

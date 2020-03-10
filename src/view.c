@@ -1231,15 +1231,15 @@ hikari_view_bottom_right_cursor(struct hikari_view *view)
 }
 
 void
-hikari_view_toggle_iconified(struct hikari_view *view)
+hikari_view_toggle_invisible(struct hikari_view *view)
 {
-  if (hikari_view_is_iconified(view)) {
-    hikari_view_unset_iconified(view);
+  if (hikari_view_is_invisible(view)) {
+    hikari_view_unset_invisible(view);
   } else {
     if (hikari_view_is_tiled(view)) {
       hikari_view_reset_geometry(view);
     }
-    hikari_view_set_iconified(view);
+    hikari_view_set_invisible(view);
   }
 }
 

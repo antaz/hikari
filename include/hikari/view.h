@@ -131,7 +131,7 @@ hikari_view_subsurface_fini(struct hikari_view_subsurface *view_subsurface);
   }
 
 FLAG(hidden, 0UL)
-FLAG(iconified, 1UL)
+FLAG(invisible, 1UL)
 FLAG(floating, 2UL)
 #undef FLAG
 
@@ -166,7 +166,7 @@ VIEW_ACTION(damage_whole)
 VIEW_ACTION(top_left_cursor)
 VIEW_ACTION(bottom_right_cursor)
 VIEW_ACTION(center_cursor)
-VIEW_ACTION(toggle_iconified)
+VIEW_ACTION(toggle_invisible)
 VIEW_ACTION(reset_geometry)
 #undef VIEW_ACTION
 
@@ -310,7 +310,7 @@ hikari_view_is_tiled(struct hikari_view *view)
 static inline bool
 hikari_view_is_tileable(struct hikari_view *view)
 {
-  return !hikari_view_is_floating(view) && !hikari_view_is_iconified(view) &&
+  return !hikari_view_is_floating(view) && !hikari_view_is_invisible(view) &&
          !hikari_view_is_dirty(view);
 }
 

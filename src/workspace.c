@@ -141,7 +141,7 @@ display_sheet(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
   struct hikari_sheet *sheets = workspace->sheets;
 
   wl_list_for_each_reverse (view, &sheets[0].views, sheet_views) {
-    if (!hikari_view_is_iconified(view)) {
+    if (!hikari_view_is_invisible(view)) {
       hikari_view_show(view);
     }
   }
@@ -149,7 +149,7 @@ display_sheet(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
   if (sheet->nr != 0) {
     view = NULL;
     wl_list_for_each_reverse (view, &sheet->views, sheet_views) {
-      if (!hikari_view_is_iconified(view)) {
+      if (!hikari_view_is_invisible(view)) {
         hikari_view_show(view);
       }
     }
@@ -771,7 +771,7 @@ pin_to_sheet(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
         output,
         focus_view->sheet,
         hikari_configuration->indicator_selected,
-        hikari_view_is_iconified(focus_view),
+        hikari_view_is_invisible(focus_view),
         hikari_view_is_floating(focus_view));
   }
 
@@ -816,11 +816,11 @@ MAXIMIZE(horizontal)
 #undef MAXIMIZE
 
 void
-hikari_workspace_toggle_view_iconified(struct hikari_workspace *workspace)
+hikari_workspace_toggle_view_invisible(struct hikari_workspace *workspace)
 {
   FOCUS_GUARD(workspace, focus_view)
 
-  hikari_view_toggle_iconified(focus_view);
+  hikari_view_toggle_invisible(focus_view);
 
   struct wlr_box *geometry = hikari_view_geometry(focus_view);
   struct hikari_output *output = workspace->output;
@@ -830,7 +830,7 @@ hikari_workspace_toggle_view_iconified(struct hikari_workspace *workspace)
       output,
       focus_view->sheet,
       hikari_configuration->indicator_selected,
-      hikari_view_is_iconified(focus_view),
+      hikari_view_is_invisible(focus_view),
       hikari_view_is_floating(focus_view));
 }
 
@@ -849,18 +849,18 @@ hikari_workspace_toggle_view_floating(struct hikari_workspace *workspace)
       output,
       focus_view->sheet,
       hikari_configuration->indicator_selected,
-      hikari_view_is_iconified(focus_view),
+      hikari_view_is_invisible(focus_view),
       hikari_view_is_floating(focus_view));
 }
 
 void
-hikari_workspace_show_iconified_sheet_views(struct hikari_workspace *workspace)
+hikari_workspace_show_invisible_sheet_views(struct hikari_workspace *workspace)
 {
   hikari_workspace_clear(workspace);
 
   struct hikari_view *view = NULL;
   wl_list_for_each_reverse (view, &workspace->sheet->views, sheet_views) {
-    if (hikari_view_is_iconified(view)) {
+    if (hikari_view_is_invisible(view)) {
       hikari_view_show(view);
     }
   }
@@ -869,13 +869,13 @@ hikari_workspace_show_iconified_sheet_views(struct hikari_workspace *workspace)
 }
 
 void
-hikari_workspace_show_all_iconified_views(struct hikari_workspace *workspace)
+hikari_workspace_show_all_invisible_views(struct hikari_workspace *workspace)
 {
   hikari_workspace_clear(workspace);
 
   struct hikari_view *view = NULL;
   wl_list_for_each_reverse (view, &workspace->output->views, output_views) {
-    if (hikari_view_is_iconified(view)) {
+    if (hikari_view_is_invisible(view)) {
       hikari_view_show(view);
     }
   }

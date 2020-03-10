@@ -36,12 +36,12 @@ several states.
 
   *Floating* _views_ can never become part of a layout.
 
-* **iconified**
+* **invisible**
 
-  When a _view_ is set into *iconified* state it will not be displayed when
+  When a _view_ is set into *invisible* state it will not be displayed when
   switching to the containing sheet and stay hidden until it is explicitly
   requested to be shown. This can be used to keep long running _views_ from
-  cluttering the workspace. An *iconified* _view_ can never be *tiled*.
+  cluttering the workspace. An *invisible* _view_ can never be *tiled*.
 
 * **maximized** (horizontal, vertical and full)
 
@@ -300,11 +300,11 @@ Sheet actions
 * **sheet-show-all**
 
   Clears the current workspace and populates it with all views that are a member
-  of its current sheet. This includes **iconified** views as well.
+  of its current sheet. This includes **invisible** views as well.
 
-* **sheet-show-iconified**
+* **sheet-show-invisible**
 
-  Clears the current workspace and populates it with all **iconified** views
+  Clears the current workspace and populates it with all **invisible** views
   that are a member of its current sheet.
 
 View actions
@@ -373,13 +373,13 @@ View actions
   part of a layout. If a view that is already tiled is set to floating state it
   will be taken out of the layout and reset its geometry.
 
-* **view-toggle-iconified**
+* **view-toggle-invisible**
 
-  Toggles the iconified state of the focused view. A view in iconified state is
+  Toggles the invisible state of the focused view. A view in invisible state is
   not displayed if a user switches to the sheet containing this view. They need
   to be shown explicitly, either by using marks or by issuing actions showing
   views in this state. Iconified views can not be part of a layout. If a view
-  that is already tiled is set to iconified state it will be taken out of the
+  that is already tiled is set to invisible state it will be taken out of the
   layout and reset its geometry.
 
 * **view-toggle-maximize-[full|horizontal|vertical]**
@@ -403,7 +403,7 @@ Workspace actions
   workspace to this very sheet. Views that are a member of sheet **0** will also
   be displayed on the bottom of the stacking order. Switching to the current
   sheet will reset the state of the sheet e.g. hiding borrowed views, showing
-  views that have previously been hidden and hiding views that are in iconified
+  views that have previously been hidden and hiding views that are in invisible
   state.
 
 * **workspace-switch-to-sheet-[next|prev]-inhabited**
@@ -542,10 +542,10 @@ an existing layout the user has to issue a tiling action. This way opening a new
 view does not scramble an existing layout and the user can actively decide when
 to incorporate a view into a layout.
 
-A layout is bound to a sheet, each sheet can have at most one layout and
-laying out a sheet will incorporate all of its views unless they are **iconifed**
-or **floating**. Resetting a layout will reset the geometry of all of the
-laid out views to its original geometry (also resetting maximization).
+A layout is bound to a sheet, each sheet can have at most one layout and laying
+out a sheet will incorporate all of its views unless they are **invisible** or
+**floating**. Resetting a layout will reset the geometry of all of the laid out
+views to its original geometry (also resetting maximization).
 
 Configuring layouts happens in the _layouts_ section in the configuration file.
 Layouts are assigned to layout registers from **a** to **z**. A layout itself is

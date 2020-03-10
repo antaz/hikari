@@ -1172,8 +1172,8 @@ parse_binding(struct hikari_configuration *configuration,
   } else if (!strcmp(str, "view-toggle-floating")) {
     *action = hikari_server_toggle_view_floating;
     *arg = NULL;
-  } else if (!strcmp(str, "view-toggle-iconified")) {
-    *action = hikari_server_toggle_view_iconified;
+  } else if (!strcmp(str, "view-toggle-invisible")) {
+    *action = hikari_server_toggle_view_invisible;
     *arg = NULL;
 
   } else if (!strcmp(str, "view-raise")) {
@@ -1266,8 +1266,8 @@ parse_binding(struct hikari_configuration *configuration,
     *action = hikari_server_switch_to_prev_inhabited_sheet;
     *arg = NULL;
 
-  } else if (!strcmp(str, "sheet-show-iconified")) {
-    *action = hikari_server_show_iconified_sheet_views;
+  } else if (!strcmp(str, "sheet-show-invisible")) {
+    *action = hikari_server_show_invisible_sheet_views;
     *arg = NULL;
   } else if (!strcmp(str, "sheet-show-all")) {
     *action = hikari_server_show_all_sheet_views;

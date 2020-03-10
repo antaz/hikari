@@ -54,7 +54,7 @@ hikari_indicator_update(struct hikari_indicator *indicator,
       output,
       view->sheet,
       background,
-      hikari_view_is_iconified(view),
+      hikari_view_is_invisible(view),
       hikari_view_is_floating(view));
 
   if (view->sheet->group != view->group) {
@@ -108,7 +108,7 @@ hikari_indicator_update_sheet(struct hikari_indicator *indicator,
     struct hikari_output *output,
     struct hikari_sheet *sheet,
     float background[static 4],
-    bool iconified,
+    bool invisible,
     bool floating)
 {
   char *output_name = sheet->workspace->output->output->name;
@@ -119,7 +119,7 @@ hikari_indicator_update_sheet(struct hikari_indicator *indicator,
     text[i++] = '~';
   }
 
-  if (iconified) {
+  if (invisible) {
     text[i++] = '[';
     text[i++] = sheet->group->name[0];
     text[i++] = ']';

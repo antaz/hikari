@@ -123,7 +123,7 @@ confirm_sheet_assign(struct hikari_workspace *workspace)
       workspace->output,
       sheet,
       hikari_configuration->indicator_selected,
-      hikari_view_is_iconified(focus_view),
+      hikari_view_is_invisible(focus_view),
       hikari_view_is_floating(focus_view));
 
   hikari_view_pin_to_sheet(focus_view, sheet);
@@ -144,7 +144,7 @@ cancel_sheet_assign(struct hikari_workspace *workspace)
       workspace->output,
       focus_view->sheet,
       hikari_configuration->indicator_selected,
-      hikari_view_is_iconified(focus_view),
+      hikari_view_is_invisible(focus_view),
       hikari_view_is_floating(focus_view));
 
   hikari_server_enter_normal_mode(NULL);
@@ -171,7 +171,7 @@ update_state(struct hikari_workspace *workspace,
       workspace->output,
       sheet,
       hikari_configuration->indicator_insert,
-      hikari_view_is_iconified(focus_view),
+      hikari_view_is_invisible(focus_view),
       hikari_view_is_floating(focus_view));
 
   mode->sheet = sheet;
