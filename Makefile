@@ -190,7 +190,7 @@ hikari-${VERSION}.tar.gz: share/man/man1/hikari.1
 		share/examples/hikari.conf \
 		pam.d/hikari-unlocker.*
 
-dist: hikari-${VERSION}.tar.gz
+dist: clean-doc hikari-${VERSION}.tar.gz
 
 install: hikari hikari-unlocker share/man/man1/hikari.1
 	mkdir -p ${PREFIX}/bin
