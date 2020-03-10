@@ -8,8 +8,8 @@
 .ifndef PREFIX
 .error please specify PREFIX
 .endif
-OS = `uname`
-INSTALL_GROUP = `id -gn`
+OS != uname
+INSTALL_GROUP != id -gn
 .endif
 
 .ifmake install || uninstall
@@ -65,7 +65,7 @@ OBJS = \
 	xwayland_unmanaged_view.o \
 	xwayland_view.o
 
-WAYLAND_PROTOCOLS ?= `pkg-config --variable pkgdatadir wayland-protocols`
+WAYLAND_PROTOCOLS != pkg-config --variable pkgdatadir wayland-protocols
 
 .PHONY: clean clean-doc doc dist install uninstall
 .PATH: src
@@ -94,34 +94,34 @@ CFLAGS += -DHAVE_SCREENCOPY=1
 
 CFLAGS += -Wall -I. -Iinclude
 
-WLROOTS_CFLAGS ?= `pkg-config --cflags wlroots`
-WLROOTS_LIBS ?= `pkg-config --libs wlroots`
+WLROOTS_CFLAGS != pkg-config --cflags wlroots
+WLROOTS_LIBS != pkg-config --libs wlroots
 
 WLROOTS_CFLAGS += -DWLR_USE_UNSTABLE=1
 
-PANGO_CFLAGS ?= `pkg-config --cflags pangocairo`
-PANGO_LIBS ?= `pkg-config --libs pangocairo`
+PANGO_CFLAGS != pkg-config --cflags pangocairo
+PANGO_LIBS != pkg-config --libs pangocairo
 
-CAIRO_CFLAGS ?= `pkg-config --cflags cairo`
-CAIRO_LIBS ?= `pkg-config --libs cairo`
+CAIRO_CFLAGS != pkg-config --cflags cairo
+CAIRO_LIBS != pkg-config --libs cairo
 
-GLIB_CFLAGS ?= `pkg-config --cflags glib-2.0`
-GLIB_LIBS ?= `pkg-config --libs glib-2.0`
+GLIB_CFLAGS != pkg-config --cflags glib-2.0
+GLIB_LIBS != pkg-config --libs glib-2.0
 
-PIXMAN_CFLAGS ?= `pkg-config --cflags pixman-1`
-PIXMAN_LIBS ?= `pkg-config --libs pixman-1`
+PIXMAN_CFLAGS != pkg-config --cflags pixman-1
+PIXMAN_LIBS != pkg-config --libs pixman-1
 
-XKBCOMMON_CFLAGS ?= `pkg-config --cflags xkbcommon`
-XKBCOMMON_LIBS ?= `pkg-config --libs xkbcommon`
+XKBCOMMON_CFLAGS != pkg-config --cflags xkbcommon
+XKBCOMMON_LIBS != pkg-config --libs xkbcommon
 
-WAYLAND_CFLAGS ?= `pkg-config --cflags wayland-server`
-WAYLAND_LIBS ?= `pkg-config --libs wayland-server`
+WAYLAND_CFLAGS != pkg-config --cflags wayland-server
+WAYLAND_LIBS != pkg-config --libs wayland-server
 
-LIBINPUT_CFLAGS ?= `pkg-config --cflags libinput`
-LIBINPUT_LIBS ?= `pkg-config --libs libinput`
+LIBINPUT_CFLAGS != pkg-config --cflags libinput
+LIBINPUT_LIBS != pkg-config --libs libinput
 
-UCL_CFLAGS ?= `pkg-config --cflags libucl`
-UCL_LIBS ?= `pkg-config --libs libucl`
+UCL_CFLAGS != pkg-config --cflags libucl
+UCL_LIBS != pkg-config --libs libucl
 
 CFLAGS += \
 	${WLROOTS_CFLAGS} \
@@ -170,7 +170,7 @@ clean: clean-doc
 	@rm hikari-unlocker 2> /dev/null ||:
 
 share/man/man1/hikari.1:
-	@pandoc -M title:"HIKARI(1) ${VERSION} | hikari - Wayland Compositor" -s \
+	pandoc -M title:"HIKARI(1) ${VERSION} | hikari - Wayland Compositor" -s \
 		--to man -o share/man/man1/hikari.1 share/man/man1/hikari.md
 
 doc: share/man/man1/hikari.1
