@@ -188,8 +188,7 @@ hikari-${VERSION}.tar.gz: share/man/man1/hikari.1
 		share/man/man1/hikari.md \
 		share/man/man1/hikari.1 \
 		share/examples/hikari.conf \
-		pam.d/hikari-unlocker.freebsd \
-		pam.d/hikari-unlocker.linux
+		pam.d/hikari-unlocker.*
 
 dist: hikari-${VERSION}.tar.gz
 
