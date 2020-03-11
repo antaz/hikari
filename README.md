@@ -162,7 +162,7 @@ number that will be spliced into the manpage.
 ## Community
 
 The `hikari` community gears to be inclusive and welcoming to everyone, this is
-why we chose to adere to the [Geekfeminism Code of
+why we chose to adhere to the [Geekfeminism Code of
 Conduct](https://geekfeminismdotorg.wordpress.com/about/code-of-conduct/).
 
 If you care to be a part of our community, please join our Matrix chat at
