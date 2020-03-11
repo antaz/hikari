@@ -128,7 +128,7 @@ void
 hikari_server_deactivate_cursor(void);
 
 void
-hikari_server_start(char *config_path);
+hikari_server_start(char *config_path, char *autostart);
 
 void
 hikari_server_stop();

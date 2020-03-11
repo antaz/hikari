@@ -8,10 +8,9 @@
 #include "version.h"
 
 static char *
-get_default_config_path(void)
+get_default_path(char *path)
 {
   char *config_home = getenv("HOME");
-  char *path = "/.config/hikari/hikari.conf";
   size_t len = strlen(config_home) + strlen(path);
 
   char *ret = malloc(len + 1);
@@ -24,11 +23,25 @@ get_default_config_path(void)
   return ret;
 }
 
+static char *
+get_default_autostart(void)
+{
+  return get_default_path("/.config/hikari/autostart");
+}
+
+static char *
+get_default_config_path(void)
+{
+  return get_default_path("/.config/hikari/hikari.conf");
+}
+
 const char *usage = "Usage: hikari [options]\n"
                     "\n"
-                    "  -c <config>  Specify a configuration file\n"
-                    "  -h           Show this message and quit.\n"
-                    "  -v           Show version and quit.\n"
+                    "Options: \n"
+                    "  -a <executable> Specify autostart executable.\n"
+                    "  -c <config>     Specify a configuration file.\n"
+                    "  -h              Show this message and quit.\n"
+                    "  -v              Show version and quit.\n"
                     "\n";
 
 int
@@ -38,10 +51,16 @@ main(int argc, char **argv)
   wlr_log_init(WLR_DEBUG, NULL);
 #endif
   char *config_path = NULL;
+  char *autostart = NULL;
 
   char flag;
-  while ((flag = getopt(argc, argv, "vhc:")) != -1) {
+  while ((flag = getopt(argc, argv, "vhc:a:")) != -1) {
     switch (flag) {
+      case 'a':
+        free(autostart);
+        autostart = strdup(optarg);
+        break;
+
       case 'c':
         free(config_path);
         config_path = strdup(optarg);
@@ -49,12 +68,14 @@ main(int argc, char **argv)
 
       case 'v':
         free(config_path);
+        free(autostart);
 
         printf("%s\n", HIKARI_VERSION);
         return EXIT_SUCCESS;
 
       case 'h':
         free(config_path);
+        free(autostart);
 
         printf("%s", usage);
         return EXIT_SUCCESS;
@@ -62,6 +83,7 @@ main(int argc, char **argv)
       case '?':
       default:
         free(config_path);
+        free(autostart);
 
         printf("%s", usage);
         return EXIT_FAILURE;
@@ -72,7 +94,11 @@ main(int argc, char **argv)
     config_path = get_default_config_path();
   }
 
-  hikari_server_start(config_path);
+  if (autostart == NULL) {
+    autostart = get_default_autostart();
+  }
+
+  hikari_server_start(config_path, autostart);
   hikari_server_stop();
 
   return EXIT_SUCCESS;
