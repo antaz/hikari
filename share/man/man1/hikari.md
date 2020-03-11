@@ -4,7 +4,7 @@ hikari - _hikari_ Wayland Compositor
 
 SYNTAX
 ======
-**hikari** [-vh]
+**hikari** [-vh] [-c <config>]
 
 DESCRIPTION
 ===========
@@ -15,8 +15,9 @@ are views, workspaces, sheets and groups.
 
 The following options are available:
 
-  -h  Show this message and quit.
-  -v  Show version and quit.
+  **-c** <config>  Specify a configuration file
+  **-h**           Show this message and quit.
+  **-v**           Show version and quit.
 
 CONCEPTS
 ========

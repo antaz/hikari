@@ -31,6 +31,7 @@ struct hikari_server {
 #endif
 
   const char *socket;
+  char *config_path;
 
   struct hikari_indicator indicator;
 
@@ -127,7 +128,7 @@ void
 hikari_server_deactivate_cursor(void);
 
 void
-hikari_server_start(void);
+hikari_server_start(char *config_path);
 
 void
 hikari_server_stop();

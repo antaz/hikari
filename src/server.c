@@ -572,17 +572,18 @@ output_layout_change_handler(struct wl_listener *listener, void *data)
 }
 
 static void
-server_init(struct hikari_server *server)
+server_init(struct hikari_server *server, char *config_path)
 {
 #ifndef NDEBUG
   server->track_damage = false;
 #endif
+  server->config_path = config_path;
 
   hikari_configuration = hikari_malloc(sizeof(struct hikari_configuration));
 
   hikari_configuration_init(hikari_configuration);
 
-  if (!hikari_configuration_load(hikari_configuration)) {
+  if (!hikari_configuration_load(hikari_configuration, config_path)) {
     hikari_configuration_fini(hikari_configuration);
     hikari_free(hikari_configuration);
 
@@ -711,9 +712,9 @@ get_autostart_path(void)
 }
 
 void
-hikari_server_start(void)
+hikari_server_start(char *config_path)
 {
-  server_init(&hikari_server);
+  server_init(&hikari_server, config_path);
   signal(SIGTERM, sig_handler);
   wlr_backend_start(hikari_server.backend);
 
@@ -760,6 +761,8 @@ hikari_server_stop(void)
   hikari_configuration_fini(hikari_configuration);
   hikari_free(hikari_configuration);
   hikari_marks_fini();
+
+  free(hikari_server.config_path);
 }
 
 struct hikari_group *
@@ -813,7 +816,7 @@ hikari_server_lock(void *arg)
 void
 hikari_server_reload(void *arg)
 {
-  hikari_configuration_reload();
+  hikari_configuration_reload(hikari_server.config_path);
 }
 
 void

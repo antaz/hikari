@@ -57,10 +57,11 @@ void
 hikari_configuration_fini(struct hikari_configuration *configuration);
 
 bool
-hikari_configuration_load(struct hikari_configuration *configuration);
+hikari_configuration_load(
+    struct hikari_configuration *configuration, char *config_path);
 
 bool
-hikari_configuration_reload(void);
+hikari_configuration_reload(char *config_path);
 
 void
 hikari_configuration_resolve_view_autoconf(

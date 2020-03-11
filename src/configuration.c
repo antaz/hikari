@@ -1932,28 +1932,11 @@ parse_font(
   return true;
 }
 
-static char *
-get_config_path(void)
-{
-  char *config_home = getenv("HOME");
-  char *path = "/.config/hikari/hikari.conf";
-  size_t len = strlen(config_home) + strlen(path);
-
-  char *ret = malloc(len + 1);
-
-  memset(ret, 0, len + 1);
-
-  strcat(ret, config_home);
-  strcat(ret, path);
-
-  return ret;
-}
-
 bool
-hikari_configuration_load(struct hikari_configuration *configuration)
+hikari_configuration_load(
+    struct hikari_configuration *configuration, char *config_path)
 {
   struct ucl_parser *parser = ucl_parser_new(0);
-  char *config_path = get_config_path();
   bool success = false;
   const ucl_object_t *cur;
 
@@ -2038,20 +2021,18 @@ done:
   ucl_object_unref(configuration_obj);
   ucl_parser_free(parser);
 
-  free(config_path);
-
   return success;
 }
 
 bool
-hikari_configuration_reload(void)
+hikari_configuration_reload(char *config_path)
 {
   struct hikari_configuration *configuration =
       hikari_malloc(sizeof(struct hikari_configuration));
 
   hikari_configuration_init(configuration);
 
-  bool success = hikari_configuration_load(configuration);
+  bool success = hikari_configuration_load(configuration, config_path);
 
   if (success) {
     hikari_configuration_fini(hikari_configuration);
