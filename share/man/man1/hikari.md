@@ -4,7 +4,7 @@ hikari - _hikari_ Wayland Compositor
 
 SYNTAX
 ======
-**hikari**
+**hikari** [-vh]
 
 DESCRIPTION
 ===========
@@ -12,6 +12,11 @@ DESCRIPTION
 **hikari** is a stacking Wayland compositor with additional tiling capabilities,
 it is heavily inspired by the Calm Window manager (cwm(1)). Its core concepts
 are views, workspaces, sheets and groups.
+
+The following options are available:
+
+  -h  Show this message and quit.
+  -v  Show version and quit.
 
 CONCEPTS
 ========

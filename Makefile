@@ -4,6 +4,8 @@
 .endif
 .endif
 
+VERSION ?= "darcs"
+
 .ifmake install || uninstall
 .ifndef PREFIX
 .error please specify PREFIX
@@ -67,7 +69,7 @@ OBJS = \
 
 WAYLAND_PROTOCOLS != pkg-config --variable pkgdatadir wayland-protocols
 
-.PHONY: clean clean-doc doc dist install uninstall
+.PHONY: distclean clean clean-doc doc dist install uninstall
 .PATH: src
 
 .ifdef DEBUG
@@ -147,7 +149,10 @@ LIBS = \
 
 all: hikari hikari-unlocker
 
-hikari: xdg-shell-protocol.h ${OBJS}
+version.h:
+	echo "#define HIKARI_VERSION \"${VERSION}\"" >> version.h
+
+hikari: version.h xdg-shell-protocol.h ${OBJS}
 	${CC} ${LDFLAGS} ${CFLAGS} ${INCLUDES} ${LIBS} ${OBJS} -o ${.TARGET}
 
 xdg-shell-protocol.h:
@@ -162,6 +167,7 @@ clean-doc:
 
 clean: clean-doc
 	@echo "cleaning headers"
+	@test -e _darcs && rm version.h ||:
 	@rm xdg-shell-protocol.h 2> /dev/null ||:
 	@echo "cleaning object files"
 	@rm ${OBJS} 2> /dev/null ||:
@@ -175,9 +181,10 @@ share/man/man1/hikari.1:
 
 doc: share/man/man1/hikari.1
 
-hikari-${VERSION}.tar.gz: share/man/man1/hikari.1
+hikari-${VERSION}.tar.gz: version.h share/man/man1/hikari.1
 	@darcs revert
 	@tar -s "#^#hikari-${VERSION}/#" -czf hikari-${VERSION}.tar.gz \
+		version.h \
 		main.c \
 		hikari_unlocker.c \
 		include/hikari/*.h \
@@ -190,7 +197,11 @@ hikari-${VERSION}.tar.gz: share/man/man1/hikari.1
 		share/examples/hikari.conf \
 		pam.d/hikari-unlocker.*
 
-dist: clean-doc hikari-${VERSION}.tar.gz
+distclean: clean-doc
+	@test -e _darcs && echo "cleaning version.h" ||:
+	@test -e _darcs && rm version.h ||:
+
+dist: distclean hikari-${VERSION}.tar.gz
 
 install: hikari hikari-unlocker share/man/man1/hikari.1
 	mkdir -p ${PREFIX}/bin
