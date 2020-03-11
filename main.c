@@ -38,7 +38,7 @@ get_default_config_path(void)
 const char *usage = "Usage: hikari [options]\n"
                     "\n"
                     "Options: \n"
-                    "  -a <executable> Specify autostart executable.\n"
+                    "  -a <executable> Specify an autostart executable.\n"
                     "  -c <config>     Specify a configuration file.\n"
                     "  -h              Show this message and quit.\n"
                     "  -v              Show version and quit.\n"
