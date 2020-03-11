@@ -909,21 +909,21 @@ parse_key(struct xkb_state *state,
 static bool
 parse_mouse_button(const char *str, uint32_t *keycode)
 {
-  if (!strcasecmp(str, "left")) {
+  if (!strcmp(str, "left")) {
     *keycode = BTN_LEFT;
-  } else if (!strcasecmp(str, "right")) {
+  } else if (!strcmp(str, "right")) {
     *keycode = BTN_RIGHT;
-  } else if (!strcasecmp(str, "middle")) {
+  } else if (!strcmp(str, "middle")) {
     *keycode = BTN_MIDDLE;
-  } else if (!strcasecmp(str, "side")) {
+  } else if (!strcmp(str, "side")) {
     *keycode = BTN_SIDE;
-  } else if (!strcasecmp(str, "extra")) {
+  } else if (!strcmp(str, "extra")) {
     *keycode = BTN_EXTRA;
-  } else if (!strcasecmp(str, "forward")) {
+  } else if (!strcmp(str, "forward")) {
     *keycode = BTN_FORWARD;
-  } else if (!strcasecmp(str, "back")) {
+  } else if (!strcmp(str, "back")) {
     *keycode = BTN_BACK;
-  } else if (!strcasecmp(str, "task")) {
+  } else if (!strcmp(str, "task")) {
     *keycode = BTN_TASK;
   } else {
     fprintf(stderr, "configuration error: unknown mouse button \"%s\"\n", str);
