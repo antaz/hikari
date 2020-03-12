@@ -1,7 +1,8 @@
-#include <hikari/keyboard_grab_mode.h>
+#include <hikari/input_grab_mode.h>
 
 #include <assert.h>
 
+#include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_seat.h>
 
@@ -17,7 +18,7 @@
 #include <hikari/workspace.h>
 
 static void
-keyboard_grab_key_handler(struct hikari_workspace *workspace,
+input_grab_key_handler(struct hikari_workspace *workspace,
     struct wlr_event_keyboard_key *event,
     struct hikari_keyboard *keyboard)
 {
@@ -81,7 +82,7 @@ key_handler(struct wl_listener *listener, void *data)
   struct wlr_event_keyboard_key *event = data;
   struct hikari_workspace *workspace = hikari_server.workspace;
 
-  keyboard_grab_key_handler(workspace, event, keyboard);
+  input_grab_key_handler(workspace, event, keyboard);
 }
 
 static void
@@ -90,20 +91,48 @@ cancel(void)
 
 static void
 button_handler(struct wl_listener *listener, void *data)
-{}
+{
+  struct wlr_event_pointer_button *event = data;
+
+  wlr_seat_pointer_notify_button(
+      hikari_server.seat, event->time_msec, event->button, event->state);
+}
 
 static void
 cursor_move(void)
-{}
+{
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+  assert(focus_view != NULL);
+  struct hikari_view_interface *view_interface =
+      (struct hikari_view_interface *)focus_view;
+  struct hikari_output *output = focus_view->output;
+  assert(output != NULL);
+
+  double lx = hikari_server.cursor->x;
+  double ly = hikari_server.cursor->y;
+  double ox = lx - output->geometry.x;
+  double oy = ly - output->geometry.y;
+
+  struct timespec now;
+  uint32_t time = (uint32_t)clock_gettime(CLOCK_MONOTONIC, &now);
+
+  double sx, sy;
+
+  struct wlr_surface *surface =
+      hikari_view_interface_surface_at(view_interface, ox, oy, &sx, &sy);
+
+  wlr_seat_pointer_notify_enter(hikari_server.seat, surface, sx, sy);
+  wlr_seat_pointer_notify_motion(hikari_server.seat, time, sx, sy);
+}
 
 void
-hikari_keyboard_grab_mode_init(
-    struct hikari_keyboard_grab_mode *keyboard_grab_mode)
+hikari_input_grab_mode_init(
+    struct hikari_input_grab_mode *input_grab_mode)
 {
-  keyboard_grab_mode->mode.key_handler = key_handler;
-  keyboard_grab_mode->mode.button_handler = button_handler;
-  keyboard_grab_mode->mode.modifier_handler = modifier_handler;
-  keyboard_grab_mode->mode.render = render;
-  keyboard_grab_mode->mode.cancel = cancel;
-  keyboard_grab_mode->mode.cursor_move = cursor_move;
+  input_grab_mode->mode.key_handler = key_handler;
+  input_grab_mode->mode.button_handler = button_handler;
+  input_grab_mode->mode.modifier_handler = modifier_handler;
+  input_grab_mode->mode.render = render;
+  input_grab_mode->mode.cancel = cancel;
+  input_grab_mode->mode.cursor_move = cursor_move;
 }

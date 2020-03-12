@@ -139,7 +139,7 @@ Mode
 ----
 _hikari_ is a modal Wayland compositor and therefore offers several _modes_ for
 actions like changing a views group, mark or sheet as well a jumping to marks or
-grabbing keyboard events and layout selection.
+grabbing input events and layout selection.
 
 CONFIGURATION
 =============
@@ -250,12 +250,12 @@ Mode actions
   become empty get destroyed. Groups are not allowed to start with a digit
   unless they are automatically created as sheet groups.
 
-* **mode-enter-keyboard-grab**
+* **mode-enter-input-grab**
 
-  Redirect all keyboard events directly to the focused view without the
-  compositor interfering. Focus will not leave this view anymore until the mode
-  exits or the view closes. To exit this mode reissue the some key binding that
-  started this mode.
+  Redirect all input events directly to the focused view without the compositor
+  interfering. Focus will not leave this view anymore until the mode exits or
+  the view closes. To exit this mode reissue the some key binding that started
+  this mode.
 
 * **mode-enter-layout**
 
@@ -746,7 +746,7 @@ are specified using hexadecimal RGB values (e.g. 0xE6DB74).
 * **insert**
 
   Indicates indicator bars that are in insert mode (e.g. assigning a view to a
-  group) or views that have a keyboard grab using *mode-enter-keyboard-grab*.
+  group) or views that have an input grab using *mode-enter-input-grab*.
 
 * **selected**
 

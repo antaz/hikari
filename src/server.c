@@ -675,7 +675,7 @@ server_init(struct hikari_server *server, char *config_path)
   wl_list_init(&server->pointers);
 
   hikari_group_assign_mode_init(&server->group_assign_mode);
-  hikari_keyboard_grab_mode_init(&server->keyboard_grab_mode);
+  hikari_input_grab_mode_init(&server->input_grab_mode);
   hikari_layout_select_mode_init(&server->layout_select_mode);
   hikari_mark_assign_mode_init(&server->mark_assign_mode);
   hikari_mark_select_mode_init(&server->mark_select_mode);
@@ -966,7 +966,7 @@ hikari_server_enter_group_assign_mode(void *arg)
 }
 
 void
-hikari_server_enter_keyboard_grab_mode(void *arg)
+hikari_server_enter_input_grab_mode(void *arg)
 {
   struct hikari_workspace *workspace = hikari_server.workspace;
 
@@ -976,7 +976,7 @@ hikari_server_enter_keyboard_grab_mode(void *arg)
     return;
   }
 
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.keyboard_grab_mode;
+  hikari_server.mode = (struct hikari_mode *)&hikari_server.input_grab_mode;
 
   hikari_server_refresh_indication();
 }

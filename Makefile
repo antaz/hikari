@@ -35,8 +35,8 @@ OBJS = \
 	indicator_bar.o \
 	indicator_frame.o \
 	input_buffer.o \
+	input_grab_mode.o \
 	keyboard.o \
-	keyboard_grab_mode.o \
 	layout.o \
 	layout_config.o \
 	layout_select_mode.o \

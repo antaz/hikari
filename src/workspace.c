@@ -16,7 +16,7 @@
 #include <hikari/group_assign_mode.h>
 #include <hikari/indicator.h>
 #include <hikari/indicator_frame.h>
-#include <hikari/keyboard_grab_mode.h>
+#include <hikari/input_grab_mode.h>
 #include <hikari/layout.h>
 #include <hikari/mark_assign_mode.h>
 #include <hikari/mark_select_mode.h>

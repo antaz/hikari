@@ -1301,8 +1301,8 @@ parse_binding(struct hikari_configuration *configuration,
   } else if (!strcmp(str, "mode-enter-group-assign")) {
     *action = hikari_server_enter_group_assign_mode;
     *arg = NULL;
-  } else if (!strcmp(str, "mode-enter-keyboard-grab")) {
-    *action = hikari_server_enter_keyboard_grab_mode;
+  } else if (!strcmp(str, "mode-enter-input-grab")) {
+    *action = hikari_server_enter_input_grab_mode;
     *arg = NULL;
   } else if (!strcmp(str, "mode-enter-mark-assign")) {
     *action = hikari_server_enter_mark_assign_mode;

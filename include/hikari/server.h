@@ -6,7 +6,7 @@
 
 #include <hikari/group_assign_mode.h>
 #include <hikari/indicator.h>
-#include <hikari/keyboard_grab_mode.h>
+#include <hikari/input_grab_mode.h>
 #include <hikari/layout_select_mode.h>
 #include <hikari/mark_assign_mode.h>
 #include <hikari/mark_select_mode.h>
@@ -83,7 +83,7 @@ struct hikari_server {
   struct hikari_mode *mode;
 
   struct hikari_group_assign_mode group_assign_mode;
-  struct hikari_keyboard_grab_mode keyboard_grab_mode;
+  struct hikari_input_grab_mode input_grab_mode;
   struct hikari_layout_select_mode layout_select_mode;
   struct hikari_mark_assign_mode mark_assign_mode;
   struct hikari_mark_select_mode mark_select_mode;
@@ -276,7 +276,7 @@ hikari_server_clear_workspace(void *arg)
   }
 
 MODE(group_assign)
-MODE(keyboard_grab)
+MODE(input_grab)
 MODE(layout_select)
 MODE(mark_assign)
 MODE(mark_select)
