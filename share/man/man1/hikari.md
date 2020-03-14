@@ -813,10 +813,13 @@ Keyboards are configured using *XKB* environment variables.
 OUTPUTS
 =======
 
-The *outputs* section allows users to define background for outputs using their
-name using the *background* attribute which can be either the path to the
-background image, or an object which enables the user to define additional
-attributes for the background image. Background file format has to be *PNG*.
+The *outputs* section allows users to define the background and position for a
+output using its name.
+
+Backgrounds are configured via the *background* attribute which can be either
+the path to the background image, or an object which enables the user to define
+additional attributes for the background image. Background file format has to be
+*PNG*.
 
 When defining a *background* object the following attributes are available.
 
@@ -841,6 +844,25 @@ outputs {
       path = "/path/to/wallpaper"
       fit = center
     }
+  }
+}
+```
+
+Output position can be given explicitly using the *position* attribute. If none
+is given during startup **hikari** will automatically configure the output.
+
+```
+"eDP-1" = {
+  position = {
+    x = 1680
+    y = 0
+  }
+}
+
+"HDMI-A-1" = {
+  position = {
+    x = 0
+    y = 0
   }
 }
 ```

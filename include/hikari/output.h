@@ -59,6 +59,9 @@ hikari_output_load_background(struct hikari_output *output,
     const char *path,
     enum hikari_background_fit background_fit);
 
+void
+hikari_output_move(struct hikari_output *output, double lx, double ly);
+
 static inline void
 hikari_output_add_damage(struct hikari_output *output, struct wlr_box *region)
 {

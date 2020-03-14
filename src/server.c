@@ -562,12 +562,23 @@ output_layout_change_handler(struct wl_listener *listener, void *data)
 
   struct hikari_output *output = NULL;
   wl_list_for_each (output, &server->outputs, server_outputs) {
+    struct wlr_output *wlr_output = output->output;
     struct wlr_box *output_box =
-        wlr_output_layout_get_box(hikari_server.output_layout, output->output);
+        wlr_output_layout_get_box(hikari_server.output_layout, wlr_output);
+
     output->geometry.x = output_box->x;
     output->geometry.y = output_box->y;
     output->geometry.width = output_box->width;
     output->geometry.height = output_box->height;
+
+    struct hikari_output_config *output_config =
+        hikari_configuration_resolve_output(
+            hikari_configuration, wlr_output->name);
+
+    if (output_config != NULL) {
+      hikari_output_load_background(
+          output, output_config->background, output_config->background_fit);
+    }
   }
 }
 

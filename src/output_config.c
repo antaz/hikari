@@ -11,7 +11,10 @@ void
 hikari_output_config_init(struct hikari_output_config *output_config,
     const char *output_name,
     char *background,
-    enum hikari_background_fit background_fit)
+    enum hikari_background_fit background_fit,
+    bool explicit_position,
+    int lx,
+    int ly)
 {
   size_t output_name_len = strlen(output_name);
   output_config->output_name = hikari_malloc(output_name_len + 1);
@@ -19,6 +22,10 @@ hikari_output_config_init(struct hikari_output_config *output_config,
   strcpy(output_config->output_name, output_name);
   output_config->background = background;
   output_config->background_fit = background_fit;
+
+  output_config->explicit_position = explicit_position;
+  output_config->lx = lx;
+  output_config->ly = ly;
 }
 
 void

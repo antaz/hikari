@@ -656,28 +656,31 @@ parse_position(const ucl_object_t *position_obj, int *x, int *y)
   bool success = false;
   ucl_object_iter_t it = ucl_object_iterate_new(position_obj);
 
+  int64_t ret_x = 0;
+  int64_t ret_y = 0;
+  bool parsed_x = false;
+  bool parsed_y = false;
+
   const ucl_object_t *cur;
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
     if (!strcmp(key, "x")) {
-      int64_t ret_x;
       if (!ucl_object_toint_safe(cur, &ret_x)) {
         fprintf(stderr,
             "configuration error: expected integer for \"x\"-coordinate\n");
         goto done;
       }
 
-      *x = ret_x;
+      parsed_x = true;
     } else if (!strcmp(key, "y")) {
-      int64_t ret_y;
       if (!ucl_object_toint_safe(cur, &ret_y)) {
         fprintf(stderr,
             "configuration error: expected integer for \"y\"-coordinate\n");
         goto done;
       }
 
-      *y = ret_y;
+      parsed_y = true;
     } else {
       fprintf(stderr,
           "configuration error: unknown \"position\" key \"%s\"\n",
@@ -686,19 +689,22 @@ parse_position(const ucl_object_t *position_obj, int *x, int *y)
     }
   }
 
-  if (*x == -1) {
+  if (!parsed_x) {
     fprintf(stderr,
         "configuration error: missing \"x\"-coordinate in \"position\2\n");
     goto done;
   }
 
-  if (*y == -1) {
+  if (!parsed_y) {
     fprintf(stderr,
         "configuration error: missing \"y\"-coordinate in \"position\"\n");
     goto done;
   }
 
   success = true;
+
+  *x = ret_x;
+  *y = ret_y;
 
 done:
   ucl_object_iterate_free(it);
@@ -1811,6 +1817,8 @@ parse_output_config(struct hikari_configuration *configuration,
   ucl_object_iter_t it = ucl_object_iterate_new(output_config_obj);
   const char *output_name = ucl_object_key(output_config_obj);
   char *background = NULL;
+  int lx = -1, ly = -1;
+  bool explicit_position = false;
   enum hikari_background_fit background_fit = HIKARI_BACKGROUND_STRETCH;
 
   const ucl_object_t *cur;
@@ -1838,6 +1846,14 @@ parse_output_config(struct hikari_configuration *configuration,
             "\"background\"\n");
         goto done;
       }
+    } else if (!strcmp(key, "position")) {
+      if (!parse_position(cur, &lx, &ly)) {
+        fprintf(stderr,
+            "configuration error: failed to parse output \"position\"\n");
+        goto done;
+      }
+
+      explicit_position = true;
     } else {
       fprintf(stderr,
           "configuration error: unknown \"outputs\" configuration key \"%s\"\n",
@@ -1847,8 +1863,13 @@ parse_output_config(struct hikari_configuration *configuration,
 
   struct hikari_output_config *output_config =
       hikari_malloc(sizeof(struct hikari_output_config));
-  hikari_output_config_init(
-      output_config, output_name, background, background_fit);
+  hikari_output_config_init(output_config,
+      output_name,
+      background,
+      background_fit,
+      explicit_position,
+      lx,
+      ly);
 
   wl_list_insert(&configuration->output_configs, &output_config->link);
 
@@ -2064,13 +2085,21 @@ hikari_configuration_reload(char *config_path)
 
     struct hikari_output *output;
     wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
-      const struct hikari_output_config *output_config =
+      struct hikari_output_config *output_config =
           hikari_configuration_resolve_output(
               hikari_configuration, output->output->name);
 
       if (output_config != NULL) {
-        hikari_output_load_background(
-            output, output_config->background, output_config->background_fit);
+        if (output_config->explicit_position &&
+            (output->geometry.x != output_config->lx ||
+                output->geometry.y != output_config->ly)) {
+          hikari_output_move(output, output_config->lx, output_config->ly);
+        }
+
+        if (output_config->background != NULL) {
+          hikari_output_load_background(
+              output, output_config->background, output_config->background_fit);
+        }
       }
     }
   } else {

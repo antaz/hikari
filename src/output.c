@@ -486,27 +486,27 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
   output->damage = wlr_output_damage_create(wlr_output);
   output->background = NULL;
   output->enabled = false;
+  output->workspace = hikari_malloc(sizeof(struct hikari_workspace));
 
 #ifdef HAVE_XWAYLAND
   wl_list_init(&output->unmanaged_xwayland_views);
 #endif
   wl_list_init(&output->views);
 
+  hikari_workspace_init(output->workspace, output);
+
+  wlr_output->data = output;
+
+  wl_list_insert(&hikari_server.outputs, &output->server_outputs);
+
   /* output->mode.notify = mode_handler; */
   /* wl_signal_add(&wlr_output->events.mode, &output->mode); */
+
   output->destroy.notify = destroy_handler;
   wl_signal_add(&wlr_output->events.destroy, &output->destroy);
 
   output->damage_destroy.notify = damage_destroy_handler;
   wl_signal_add(&output->damage->events.destroy, &output->damage_destroy);
-
-  wlr_output_layout_add_auto(hikari_server.output_layout, wlr_output);
-  wlr_output_create_global(wlr_output);
-
-  output->workspace = hikari_malloc(sizeof(struct hikari_workspace));
-  hikari_workspace_init(output->workspace, output);
-
-  wl_list_insert(&hikari_server.outputs, &output->server_outputs);
 
   if (!wl_list_empty(&wlr_output->modes)) {
     struct wlr_output_mode *mode =
@@ -514,21 +514,24 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
     wlr_output_set_mode(wlr_output, mode);
   }
 
-  wlr_output->data = output;
-
-  output_geometry(output);
-
   if (!hikari_server.locked) {
     hikari_output_enable(output);
   }
 
-  const struct hikari_output_config *output_config =
+  struct hikari_output_config *output_config =
       hikari_configuration_resolve_output(
           hikari_configuration, wlr_output->name);
-  if (output_config != NULL) {
-    hikari_output_load_background(
-        output, output_config->background, output_config->background_fit);
+
+  if (output_config != NULL && output_config->explicit_position) {
+    wlr_output_layout_add(hikari_server.output_layout,
+        wlr_output,
+        output_config->lx,
+        output_config->ly);
+  } else {
+    wlr_output_layout_add_auto(hikari_server.output_layout, wlr_output);
   }
+
+  output_geometry(output);
 }
 
 void
@@ -565,4 +568,10 @@ hikari_output_fini(struct hikari_output *output)
 
   hikari_workspace_fini(output->workspace);
   hikari_free(output->workspace);
+}
+
+void
+hikari_output_move(struct hikari_output *output, double lx, double ly)
+{
+  wlr_output_layout_move(hikari_server.output_layout, output->output, lx, ly);
 }
