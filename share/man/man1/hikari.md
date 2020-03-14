@@ -15,13 +15,13 @@ are views, workspaces, sheets and groups.
 
 The following options are available:
 
-**-a \<executable\>** Specify autostart executable.
+-a *\<executable\>* Specify autostart executable.
 
-**-c \<config\>** Specify a configuration file.
+-c *\<config\>* Specify a configuration file.
 
-**-h** Show this message and quit.
+-h Show this message and quit.
 
-**-v** Show version and quit.
+-v Show version and quit.
 
 CONCEPTS
 ========
