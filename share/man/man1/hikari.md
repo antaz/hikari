@@ -1,6 +1,6 @@
 NAME
 ====
-hikari - _hikari_ Wayland Compositor
+**hikari** - Wayland Compositor
 
 SYNTAX
 ======
@@ -79,7 +79,7 @@ is one below. This order can be changed by raising or lowering views
 individually via actions. Selecting a view via cycling actions automatically
 raises this view to the top of the stacking order.
 
-*hikari* provides multiple ways to *cycle* the views on a _workspace_. Cycling
+**hikari** provides multiple ways to *cycle* the views on a _workspace_. Cycling
 is a way to navigate to a view using key bindings.
 
 Sheet
@@ -137,18 +137,18 @@ used to start an application that binds itself to this _mark_.
 
 Mode
 ----
-_hikari_ is a modal Wayland compositor and therefore offers several _modes_ for
+**hikari** is a modal Wayland compositor and therefore offers several _modes_ for
 actions like changing a views group, mark or sheet as well a jumping to marks or
 grabbing input events and layout selection.
 
 CONFIGURATION
 =============
 
-_hikari_ is configured using libucl(3) as a configuration file format. The
+**hikari** is configured using libucl(3) as a configuration file format. The
 configuration is located under _$HOME/.config/hikari/hikari.conf_. An example
 can be found under _share/examples/hikari.conf_.
 
-On startup _hikari_ attempts to execute _$HOME/.config/hikari/autostart_ to
+On startup **hikari** attempts to execute _$HOME/.config/hikari/autostart_ to
 autostart applications.
 
 ACTIONS
@@ -158,7 +158,7 @@ General actions
 ---------------
 * **lock**
 
-  Lock _hikari_ and turn off all outputs. To unlock you need to enter your
+  Lock **hikari** and turn off all outputs. To unlock you need to enter your
   password and press enter. Being able to unlock requires _hikari-unlocker_ to
   be in the **PATH** and running with setuid(2) root privileges (those are
   required to check if the entered password is correct). _hikari-unlocker_ also
@@ -167,7 +167,7 @@ General actions
 
 * **quit**
 
-  Quit _hikari_.
+  Quit **hikari**.
 
 * **reload**
 
@@ -273,9 +273,9 @@ Mode actions
 * **mode-enter-mark-select**
 
   Mark selection allows to bring forward a view bound to a mark by selecting
-  that mark. When entering this mode _hikari_ awaits the name of the mark to be
-  issued. If that mark is bound to a view that view is shown, in the case that
-  this view is not a member of the **current sheet** it is considered
+  that mark. When entering this mode **hikari** awaits the name of the mark to
+  be issued. If that mark is bound to a view that view is shown, in the case
+  that this view is not a member of the **current sheet** it is considered
   **borrowed**. If no view is bound to this mark and the mark has been
   configured to execute a command when empty, this command gets executed.
 
@@ -496,10 +496,10 @@ marks {
 VIEW CONFIGURATION
 ==================
 
-When an application start its views can be automatically configured by _hikari_.
-Each view has a property called *app_id* (*class* for X applications), in the
-*views* section this can be used to specify certain properties you want for that
-view to apply.
+When an application start its views can be automatically configured by
+**hikari**. Each view has a property called *app_id* (*class* for X
+applications), in the *views* section this can be used to specify certain
+properties you want for that view to apply.
 
 
 * **focus**
@@ -543,9 +543,9 @@ systat = {
 LAYOUTS
 =======
 
-_hikari_ is not a tiling compositor so naturally some things will behave a bit
+**hikari** is not a tiling compositor so naturally some things will behave a bit
 differently compared to traditional tiling approaches. First and foremost,
-_hikari_ tries to minimize operations that will affect a lot of views at the
+**hikari** tries to minimize operations that will affect a lot of views at the
 same time e.g. opening a new view will not automatically insert a view into an
 existing layout and resize all of the already tiled views. To insert a view into
 an existing layout the user has to issue a tiling action. This way opening a new
@@ -677,7 +677,7 @@ Just stating the tiling algorithm is a short-hand for a layout object with where
 THEMING
 =======
 Getting everything to look like is an important aspect of feeling "at home".
-_hikari_ offers a couple of options to tweak visuals to the users content.
+**hikari** offers a couple of options to tweak visuals to the users content.
 
 * **border**
 
@@ -707,9 +707,9 @@ font = "DejaVu Sans Mono 10"
 
 Colorschemes
 ------------
-_hikari_ uses color to indicate different states of views and their indicator
-bars. By specifying a *colorscheme* section the user can control these colors.
-A colorscheme is a number of properties that can be changed individually. Colors
+**hikari** uses color to indicate different states of views and their indicator
+bars. By specifying a *colorscheme* section the user can control these colors. A
+colorscheme is a number of properties that can be changed individually. Colors
 are specified using hexadecimal RGB values (e.g. 0xE6DB74).
 
 * **active**
@@ -752,7 +752,7 @@ are specified using hexadecimal RGB values (e.g. 0xE6DB74).
 
   This color is used to indicate that a view is selected.
 
-These are the default settings for the _hikari_ colorscheme.
+These are the default settings for the **hikari** colorscheme.
 
 ```
 colorscheme {
