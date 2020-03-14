@@ -126,8 +126,7 @@ cursor_move(void)
 }
 
 void
-hikari_input_grab_mode_init(
-    struct hikari_input_grab_mode *input_grab_mode)
+hikari_input_grab_mode_init(struct hikari_input_grab_mode *input_grab_mode)
 {
   input_grab_mode->mode.key_handler = key_handler;
   input_grab_mode->mode.button_handler = button_handler;

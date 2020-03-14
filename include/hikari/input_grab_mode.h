@@ -8,7 +8,6 @@ struct hikari_input_grab_mode {
 };
 
 void
-hikari_input_grab_mode_init(
-    struct hikari_input_grab_mode *input_grab_mode);
+hikari_input_grab_mode_init(struct hikari_input_grab_mode *input_grab_mode);
 
 #endif
