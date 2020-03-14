@@ -194,7 +194,7 @@ hikari-${VERSION}.tar.gz: version.h share/man/man1/hikari.1
 		README.md \
 		share/man/man1/hikari.md \
 		share/man/man1/hikari.1 \
-		share/examples/hikari.conf \
+		share/examples/hikari/hikari.conf \
 		pam.d/hikari-unlocker.*
 
 distclean: clean-doc
@@ -210,7 +210,7 @@ install: hikari hikari-unlocker share/man/man1/hikari.1
 	mkdir -p ${ETC_PREFIX}/pam.d
 	install -m 4555 -g ${INSTALL_GROUP} hikari hikari-unlocker ${PREFIX}/bin
 	install -m 644 -g ${INSTALL_GROUP} share/man/man1/hikari.1 ${PREFIX}/share/man/man1
-	install -m 644 -g ${INSTALL_GROUP} share/examples/hikari.conf ${PREFIX}/share/examples/hikari
+	install -m 644 -g ${INSTALL_GROUP} share/examples/hikari/hikari.conf ${PREFIX}/share/examples/hikari
 	install -m 644 -g ${INSTALL_GROUP} pam.d/hikari-unlocker.${OS} ${ETC_PREFIX}/pam.d/hikari-unlocker
 
 uninstall:
