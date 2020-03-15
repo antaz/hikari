@@ -92,7 +92,7 @@ latter one is used to check credentials for unlocking the screen. Both need to
 be installed with root setuid in your `PATH`.
 
 `hikari` can be configured via `$HOME/.config/hikari/hikari.conf`, an example
-can be found under `share/exampes/hikari.conf`.
+can be found under `share/exampes/hikari/hikari.conf`.
 
 #### Building on FreeBSD
 
