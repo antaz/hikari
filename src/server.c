@@ -481,6 +481,10 @@ server_decoration_handler(struct wl_listener *listener, void *data)
       wlr_xdg_surface_from_wlr_surface(wlr_decoration->surface);
   struct hikari_xdg_view *xdg_view = xdg_surface->data;
 
+  if (xdg_view == NULL) {
+    return;
+  }
+
   wl_signal_add(&wlr_decoration->events.mode, &xdg_view->view.decoration.mode);
   xdg_view->view.decoration.mode.notify = server_decoration_mode_handler;
 
