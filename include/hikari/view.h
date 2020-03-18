@@ -156,7 +156,6 @@ hikari_view_set_title(struct hikari_view *view, const char *title);
 VIEW_ACTION(show)
 VIEW_ACTION(hide)
 VIEW_ACTION(raise)
-VIEW_ACTION(raise_hidden)
 VIEW_ACTION(lower)
 VIEW_ACTION(toggle_full_maximize)
 VIEW_ACTION(toggle_vertical_maximize)

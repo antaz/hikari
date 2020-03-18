@@ -825,15 +825,6 @@ hikari_view_raise(struct hikari_view *view)
 }
 
 void
-hikari_view_raise_hidden(struct hikari_view *view)
-{
-  assert(view != NULL);
-  assert(hikari_view_is_hidden(view));
-
-  move_to_top(view);
-}
-
-void
 hikari_view_lower(struct hikari_view *view)
 {
   assert(view != NULL);
