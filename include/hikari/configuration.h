@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <wayland-util.h>
 
+#include <hikari/bindings.h>
 #include <hikari/exec.h>
 #include <hikari/font.h>
 #include <hikari/mark.h>
@@ -31,13 +32,7 @@ struct hikari_configuration {
   int border;
   int gap;
 
-  struct {
-    uint8_t nkeybindings[256];
-    struct hikari_keybinding *keybindings[256];
-
-    uint8_t nmousebindings[256];
-    struct hikari_keybinding *mousebindings[256];
-  } bindings;
+  struct hikari_bindings bindings;
 
   struct hikari_exec execs[HIKARI_NR_OF_EXECS];
 

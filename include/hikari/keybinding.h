@@ -5,7 +5,6 @@
 
 struct hikari_keybinding {
   uint32_t keycode;
-  uint32_t modifiers;
 
   void (*action)(void *);
   void *arg;

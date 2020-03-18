@@ -32,6 +32,23 @@
 
 struct hikari_configuration *hikari_configuration = NULL;
 
+static void
+parse_event_type(const char *str, bool *pressed, const char **remaining)
+{
+  int pos = 0;
+
+  if (str[0] == '^') {
+    *pressed = false;
+    pos++;
+  } else {
+    *pressed = true;
+  }
+
+  if (remaining != NULL) {
+    *remaining = str + pos;
+  }
+}
+
 static bool
 parse_modifier_mask(const char *str, uint8_t *result, const char **remaining)
 {
@@ -871,10 +888,7 @@ match_keycode(struct xkb_keymap *keymap, xkb_keycode_t key, void *data)
 }
 
 static bool
-parse_key(struct xkb_state *state,
-    const char *str,
-    uint32_t *keycode,
-    uint32_t *modifiers)
+parse_key(struct xkb_state *state, const char *str, uint32_t *keycode)
 {
   uint8_t mods = 0;
   const char *remaining;
@@ -908,7 +922,6 @@ parse_key(struct xkb_state *state,
         xkb_state_get_keymap(state), match_keycode, &matcher_state);
   }
 
-  *modifiers = mods;
   return true;
 }
 
@@ -940,10 +953,7 @@ parse_mouse_button(const char *str, uint32_t *keycode)
 }
 
 static bool
-parse_pointer(struct xkb_state *ignored,
-    const char *str,
-    uint32_t *keycode,
-    uint32_t *modifiers)
+parse_pointer(struct xkb_state *ignored, const char *str, uint32_t *keycode)
 {
   uint8_t mods = 0;
   const char *remaining;
@@ -967,7 +977,7 @@ parse_pointer(struct xkb_state *ignored,
       return false;
     }
   }
-  *modifiers = mods;
+
   return true;
 }
 
@@ -1481,21 +1491,19 @@ done:
   return success;
 }
 
-static bool
-parse_input_bindings(bool (*binding_parser)(struct xkb_state *xkb_state,
-                         const char *str,
-                         uint32_t *keysym,
-                         uint32_t *modifiers),
-    struct xkb_state *xkb_state,
+typedef bool (*binding_parser_t)(
+    struct xkb_state *xkb_state, const char *str, uint32_t *keysym);
 
+static bool
+parse_input_bindings(binding_parser_t binding_parser,
+    struct xkb_state *xkb_state,
     struct hikari_configuration *configuration,
-    const ucl_object_t *actions,
-    const ucl_object_t *layouts,
-    uint8_t *nbindings,
-    struct hikari_keybinding **bindings,
+    struct hikari_modifier_bindings *modifier_pressed_bindings,
+    struct hikari_modifier_bindings *modifier_released_bindings,
     const ucl_object_t *bindings_keysym)
 {
-  int n[256] = { 0 };
+  int n_pressed[256] = { 0 };
+  int n_released[256] = { 0 };
   uint8_t mask = 0;
   const ucl_object_t *cur;
   bool success = false;
@@ -1504,38 +1512,63 @@ parse_input_bindings(bool (*binding_parser)(struct xkb_state *xkb_state,
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
+    bool pressed;
+    parse_event_type(key, &pressed, &key);
+
     if (!parse_modifier_mask(key, &mask, NULL)) {
       goto done;
     }
-    n[mask]++;
+
+    if (pressed) {
+      n_pressed[mask]++;
+    } else {
+      n_released[mask]++;
+    }
   }
   ucl_object_iterate_free(it);
 
   for (int i = 0; i < 256; i++) {
-    if (n[i] > 0) {
-      nbindings[i] = n[i];
-      bindings[i] = hikari_calloc(n[i], sizeof(struct hikari_keybinding));
+    if (n_pressed[i] > 0) {
+      modifier_pressed_bindings[i].nbindings = n_pressed[i];
+      modifier_pressed_bindings[i].bindings =
+          hikari_calloc(n_pressed[i], sizeof(struct hikari_keybinding));
     }
 
-    n[i] = 0;
+    n_pressed[i] = 0;
+
+    if (n_released[i] > 0) {
+      modifier_released_bindings[i].nbindings = n_released[i];
+      modifier_released_bindings[i].bindings =
+          hikari_calloc(n_released[i], sizeof(struct hikari_keybinding));
+    }
+
+    n_released[i] = 0;
   }
 
   it = ucl_object_iterate_new(bindings_keysym);
   while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
     const char *key = ucl_object_key(cur);
 
+    bool pressed;
+    parse_event_type(key, &pressed, &key);
+
     if (!parse_modifier_mask(key, &mask, NULL)) {
       goto done;
     }
 
-    struct hikari_keybinding *binding = &bindings[mask][n[mask]];
+    struct hikari_keybinding *binding;
+    if (pressed) {
+      binding = &modifier_pressed_bindings[mask].bindings[n_pressed[mask]];
+      n_pressed[mask]++;
+    } else {
+      binding = &modifier_released_bindings[mask].bindings[n_released[mask]];
+      n_released[mask]++;
+    }
 
-    if (!binding_parser(
-            xkb_state, key, &binding->keycode, &binding->modifiers) ||
+    if (!binding_parser(xkb_state, key, &binding->keycode) ||
         !parse_binding(configuration, cur, &binding->action, &binding->arg)) {
       goto done;
     }
-    n[mask]++;
   }
 
   success = true;
@@ -1548,8 +1581,6 @@ done:
 
 static bool
 parse_bindings(struct hikari_configuration *configuration,
-    const ucl_object_t *actions,
-    const ucl_object_t *layouts,
     const ucl_object_t *bindings_obj)
 {
   bool success = false;
@@ -1567,10 +1598,8 @@ parse_bindings(struct hikari_configuration *configuration,
       if (!parse_input_bindings(parse_key,
               state,
               configuration,
-              actions,
-              layouts,
-              configuration->bindings.nkeybindings,
-              configuration->bindings.keybindings,
+              configuration->bindings.keyboard.pressed,
+              configuration->bindings.keyboard.released,
               cur)) {
         goto done;
       }
@@ -1578,10 +1607,8 @@ parse_bindings(struct hikari_configuration *configuration,
       if (!parse_input_bindings(parse_pointer,
               state,
               configuration,
-              actions,
-              layouts,
-              configuration->bindings.nmousebindings,
-              configuration->bindings.mousebindings,
+              configuration->bindings.mouse.pressed,
+              configuration->bindings.mouse.released,
               cur)) {
         goto done;
       }
@@ -2003,7 +2030,7 @@ hikari_configuration_load(
         goto done;
       }
 
-      if (!parse_bindings(configuration, actions_obj, layouts_obj, cur)) {
+      if (!parse_bindings(configuration, cur)) {
         goto done;
       }
     } else if (!strcmp(key, "outputs")) {
@@ -2131,12 +2158,7 @@ hikari_configuration_init(struct hikari_configuration *configuration)
 
   hikari_font_init(&configuration->font, "DejaVu Sans Mono 10");
 
-  for (int i = 0; i < 256; i++) {
-    configuration->bindings.nkeybindings[i] = 0;
-    configuration->bindings.keybindings[i] = NULL;
-    configuration->bindings.nmousebindings[i] = 0;
-    configuration->bindings.mousebindings[i] = NULL;
-  }
+  hikari_bindings_init(&configuration->bindings);
 
   configuration->border = 1;
   configuration->gap = 5;
@@ -2146,24 +2168,10 @@ hikari_configuration_init(struct hikari_configuration *configuration)
   }
 }
 
-static void
-cleanup_bindings(struct hikari_keybinding **bindings, uint8_t *n)
-{
-  for (int i = 0; i < 256; i++) {
-    struct hikari_keybinding *mod_bindings = bindings[i];
-
-    hikari_free(mod_bindings);
-  }
-}
-
 void
 hikari_configuration_fini(struct hikari_configuration *configuration)
 {
-  cleanup_bindings(configuration->bindings.keybindings,
-      configuration->bindings.nkeybindings);
-
-  cleanup_bindings(configuration->bindings.mousebindings,
-      configuration->bindings.nmousebindings);
+  hikari_bindings_fini(&configuration->bindings);
 
   struct hikari_view_autoconf *autoconf, *autoconf_temp;
   wl_list_for_each_safe (

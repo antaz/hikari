@@ -22,6 +22,7 @@ INSTALL_GROUP != id -gn
 
 OBJS = \
 	action_config.o \
+	bindings.o \
 	border.o \
 	command.o \
 	completion.o \
