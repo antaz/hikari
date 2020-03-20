@@ -641,18 +641,7 @@ refresh_geometry(struct hikari_view *view)
 }
 
 static void
-queue_resize(struct hikari_view *view, struct hikari_operation *op)
-{
-  uint32_t serial = view->resize(view, op->geometry.width, op->geometry.height);
-
-  op->type = HIKARI_OPERATION_TYPE_RESIZE;
-  op->serial = serial;
-
-  hikari_view_set_dirty(view);
-}
-
-static void
-resize(struct hikari_view *view,
+queue_resize(struct hikari_view *view,
     int requested_width,
     int requested_height,
     bool center)
@@ -690,13 +679,17 @@ resize(struct hikari_view *view,
     return;
   }
 
+  uint32_t serial = view->resize(view, new_width, new_height);
+
+  op->type = HIKARI_OPERATION_TYPE_RESIZE;
   op->geometry.x = geometry->x;
   op->geometry.y = geometry->y;
   op->geometry.width = new_width;
   op->geometry.height = new_height;
   op->center = center;
+  op->serial = serial;
 
-  queue_resize(view, op);
+  hikari_view_set_dirty(view);
 }
 
 void
@@ -710,7 +703,7 @@ hikari_view_resize_absolute(struct hikari_view *view, int width, int height)
     return;
   }
 
-  resize(view, width, height, false);
+  queue_resize(view, width, height, false);
 }
 
 void
@@ -729,7 +722,7 @@ hikari_view_resize(struct hikari_view *view, int width, int height)
   int requested_width = geometry->width + width;
   int requested_height = geometry->height + height;
 
-  resize(view, requested_width, requested_height, true);
+  queue_resize(view, requested_width, requested_height, true);
 }
 
 void
@@ -869,6 +862,7 @@ queue_tile(struct hikari_view *view,
   op->type = HIKARI_OPERATION_TYPE_TILE;
   op->tile = tile;
   op->geometry = tile->view_geometry;
+  op->center = false;
 
   hikari_view_set_dirty(view);
 
@@ -921,6 +915,7 @@ queue_full_maximize(struct hikari_view *view)
   op->geometry.y = 0;
   op->geometry.width = width;
   op->geometry.height = height;
+  op->center = true;
 
   if (view->move_resize != NULL) {
     op->serial = 0;
@@ -948,6 +943,7 @@ queue_unmaximize(struct hikari_view *view)
   } else {
     op->geometry = view->geometry;
   }
+  op->center = true;
 
   if (view->move_resize != NULL) {
     op->serial = 0;
@@ -998,6 +994,7 @@ queue_horizontal_maximize(struct hikari_view *view)
   op->geometry.y = geometry->y;
   op->geometry.height = geometry->height;
   op->geometry.width = width;
+  op->center = true;
 
   if (view->move_resize != NULL) {
     op->serial = 0;
@@ -1029,6 +1026,7 @@ queue_vertical_maximize(struct hikari_view *view)
   op->geometry.y = 0;
   op->geometry.height = height;
   op->geometry.width = geometry->width;
+  op->center = true;
 
   if (view->move_resize != NULL) {
     op->serial = 0;
@@ -1440,10 +1438,31 @@ commit_pending_geometry(struct hikari_view *view,
     struct wlr_box *geometry_before)
 {
   struct hikari_output *output = view->output;
+
+  hikari_indicator_damage(&hikari_server.indicator, view);
   hikari_view_refresh_geometry(view, pending_geometry);
+  hikari_indicator_damage(&hikari_server.indicator, view);
 
   hikari_output_add_damage(output, geometry_before);
   hikari_view_damage_whole(view);
+}
+
+static void
+commit_pending_operation(struct hikari_view *view,
+    struct hikari_operation *operation,
+    struct wlr_box *geometry_before)
+{
+  if (!hikari_view_is_hidden(view)) {
+    raise_view(view);
+    commit_pending_geometry(view, &operation->geometry, geometry_before);
+    if (operation->center) {
+      hikari_view_center_cursor(view);
+      hikari_server_cursor_focus();
+    }
+  } else {
+    hikari_view_refresh_geometry(view, &operation->geometry);
+    move_to_top(view);
+  }
 }
 
 static void
@@ -1451,12 +1470,7 @@ commit_resize(struct hikari_view *view,
     struct hikari_operation *operation,
     struct wlr_box *geometry_before)
 {
-  raise_view(view);
-  commit_pending_geometry(view, &operation->geometry, geometry_before);
-
-  if (operation->center) {
-    hikari_view_center_cursor(view);
-  }
+  commit_pending_operation(view, operation, geometry_before);
 }
 
 static void
@@ -1488,37 +1502,28 @@ commit_reset(struct hikari_view *view,
     struct hikari_sheet *sheet = view->sheet;
 
     hikari_output_add_damage(view->output, geometry_before);
-    hikari_view_refresh_geometry(view, &operation->geometry);
 
     struct wlr_box *geometry = hikari_view_geometry(view);
 
+    hikari_view_refresh_geometry(view, &operation->geometry);
     move_view(view, geometry, geometry->x, geometry->y);
 
     if (hikari_sheet_is_visible(sheet)) {
       if (hikari_view_is_hidden(view)) {
         hikari_view_show(view);
       }
+
       raise_view(view);
+
+      if (operation->center) {
+        hikari_view_center_cursor(view);
+        hikari_server_cursor_focus();
+      }
     } else {
       move_to_top(view);
-    }
-
-    if (operation->center) {
-      hikari_view_center_cursor(view);
-      hikari_server_cursor_focus();
     }
   } else {
-    if (hikari_view_is_hidden(view)) {
-      hikari_view_refresh_geometry(view, &operation->geometry);
-      move_to_top(view);
-    } else {
-      commit_pending_geometry(view, &operation->geometry, geometry_before);
-
-      hikari_view_raise(view);
-      hikari_indicator_damage(&hikari_server.indicator, view);
-
-      hikari_view_center_cursor(view);
-    }
+    commit_pending_operation(view, operation, geometry_before);
   }
 }
 
@@ -1534,12 +1539,7 @@ commit_unmaximize(struct hikari_view *view,
     view->border.state = HIKARI_BORDER_ACTIVE;
   }
 
-  raise_view(view);
-  hikari_indicator_damage(&hikari_server.indicator, view);
-  commit_pending_geometry(view, &operation->geometry, geometry_before);
-  hikari_indicator_damage(&hikari_server.indicator, view);
-
-  hikari_view_center_cursor(view);
+  commit_pending_operation(view, operation, geometry_before);
 }
 
 static void
@@ -1559,12 +1559,7 @@ commit_full_maximize(struct hikari_view *view,
     view->border.state = HIKARI_BORDER_NONE;
   }
 
-  raise_view(view);
-  hikari_indicator_damage(&hikari_server.indicator, view);
-  commit_pending_geometry(view, &operation->geometry, geometry_before);
-  hikari_indicator_damage(&hikari_server.indicator, view);
-
-  hikari_view_center_cursor(view);
+  commit_pending_operation(view, operation, geometry_before);
 }
 
 static void
@@ -1597,12 +1592,7 @@ commit_vertical_maximize(struct hikari_view *view,
       HIKARI_MAXIMIZATION_VERTICALLY_MAXIMIZED;
   view->maximized_state->geometry = operation->geometry;
 
-  raise_view(view);
-  hikari_indicator_damage(&hikari_server.indicator, view);
-  commit_pending_geometry(view, &operation->geometry, geometry_before);
-  hikari_indicator_damage(&hikari_server.indicator, view);
-
-  hikari_view_center_cursor(view);
+  commit_pending_operation(view, operation, geometry_before);
 }
 
 static void
@@ -1635,12 +1625,7 @@ commit_horizontal_maximize(struct hikari_view *view,
       HIKARI_MAXIMIZATION_HORIZONTALLY_MAXIMIZED;
   view->maximized_state->geometry = operation->geometry;
 
-  raise_view(view);
-  hikari_indicator_damage(&hikari_server.indicator, view);
-  commit_pending_geometry(view, &operation->geometry, geometry_before);
-  hikari_indicator_damage(&hikari_server.indicator, view);
-
-  hikari_view_center_cursor(view);
+  commit_pending_operation(view, operation, geometry_before);
 }
 
 static void
@@ -1669,9 +1654,11 @@ commit_tile(struct hikari_view *view,
   view->tile = operation->tile;
   operation->tile = NULL;
 
-  hikari_indicator_damage(&hikari_server.indicator, view);
-  commit_pending_geometry(view, &operation->geometry, geometry_before);
-  hikari_indicator_damage(&hikari_server.indicator, view);
+  if (!hikari_view_is_hidden(view)) {
+    commit_pending_geometry(view, &operation->geometry, geometry_before);
+  } else {
+    hikari_view_refresh_geometry(view, &operation->geometry);
+  }
 }
 
 static void
