@@ -111,6 +111,7 @@ hikari_workspace_quit_view(struct hikari_workspace *workspace)
   FOCUS_GUARD(workspace, focus_view)
 
   hikari_view_quit(focus_view);
+  hikari_server_cursor_focus();
 }
 
 void
@@ -429,9 +430,12 @@ hikari_workspace_focus_view(
   }
 
   struct hikari_workspace *current_workspace = hikari_server.workspace;
+  struct hikari_view *focus_view = current_workspace->focus_view;
 
-  if (current_workspace->focus_view != NULL) {
-    hikari_view_activate(current_workspace->focus_view, false);
+  if (focus_view != NULL) {
+    hikari_indicator_damage(&hikari_server.indicator, focus_view);
+
+    hikari_view_activate(focus_view, false);
     wlr_seat_keyboard_end_grab(seat);
   }
 
@@ -450,14 +454,14 @@ hikari_workspace_focus_view(
     hikari_indicator_update(&hikari_server.indicator,
         view,
         hikari_configuration->indicator_selected);
-
-    hikari_server_refresh_indication();
   } else {
     wlr_seat_keyboard_clear_focus(seat);
   }
 
   hikari_server.workspace = workspace;
   workspace->focus_view = view;
+
+  hikari_server_refresh_indication();
 }
 
 void
@@ -494,6 +498,8 @@ hikari_workspace_raise_group(struct hikari_workspace *workspace)
   }
 
   hikari_view_raise(focus_view);
+
+  hikari_server_refresh_indication();
 }
 
 void
@@ -526,6 +532,8 @@ hikari_workspace_lower_group(struct hikari_workspace *workspace)
       hikari_view_lower(view);
     }
   }
+
+  hikari_server_cursor_focus();
 }
 
 void
@@ -534,6 +542,7 @@ hikari_workspace_hide_view(struct hikari_workspace *workspace)
   FOCUS_GUARD(workspace, focus_view)
 
   hikari_view_hide(focus_view);
+
   hikari_server_cursor_focus();
 }
 
@@ -954,8 +963,6 @@ hikari_workspace_only_group(struct hikari_workspace *workspace)
       hikari_view_hide(view);
     }
   }
-
-  hikari_server_cursor_focus();
 }
 
 void
