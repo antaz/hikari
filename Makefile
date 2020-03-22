@@ -21,6 +21,7 @@ INSTALL_GROUP != id -gn
 .endif
 
 OBJS = \
+	action.o \
 	action_config.o \
 	bindings.o \
 	border.o \

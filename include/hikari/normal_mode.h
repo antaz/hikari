@@ -3,10 +3,11 @@
 
 #include <hikari/mode.h>
 
-struct hikari_keybinding;
+struct hikari_event_action;
 
 struct hikari_normal_mode {
   struct hikari_mode mode;
+  struct hikari_event_action *pending_action;
 };
 
 void

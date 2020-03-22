@@ -6,18 +6,13 @@
 struct hikari_keybinding;
 
 struct hikari_modifier_bindings {
-  uint8_t nbindings;
+  int nbindings;
   struct hikari_keybinding *bindings;
 };
 
-struct hikari_input_bindings {
-  struct hikari_modifier_bindings pressed[256];
-  struct hikari_modifier_bindings released[256];
-};
-
 struct hikari_bindings {
-  struct hikari_input_bindings keyboard;
-  struct hikari_input_bindings mouse;
+  struct hikari_modifier_bindings keyboard[256];
+  struct hikari_modifier_bindings mouse[256];
 };
 
 void

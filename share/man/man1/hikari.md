@@ -475,12 +475,15 @@ keyboard and mouse bindings.
 Valid values for mouse button names are *right*, *middle*, *left*, *side*,
 *extra*, *forward*, *back* and *task*.
 
-Prefixing a binding with *^* binds an action to the release event of the
-keyboard key or mouse button.
+Bindings can have a dedicated *end* action that gets triggered whenever a key is
+released or additional keys are pressed. It ensures that a *begin* action
+definitely is followed by the *end* action.
 
 ```
-"L+t"  = action-push-to-talk-start
-"^L+t" = action-push-to-talk-stop
+"L+t"  = {
+  begin = action-push-to-talk-start
+  end = action-push-to-talk-stop
+}
 ```
 
 MARK CONFIGURATION

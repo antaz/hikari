@@ -8,6 +8,7 @@
 #include <linux/input-event-codes.h>
 #include <wlr/types/wlr_cursor.h>
 
+#include <hikari/action.h>
 #include <hikari/action_config.h>
 #include <hikari/color.h>
 #include <hikari/command.h>
@@ -31,23 +32,6 @@
 #include <hikari/workspace.h>
 
 struct hikari_configuration *hikari_configuration = NULL;
-
-static void
-parse_event_type(const char *str, bool *pressed, const char **remaining)
-{
-  int pos = 0;
-
-  if (str[0] == '^') {
-    *pressed = false;
-    pos++;
-  } else {
-    *pressed = true;
-  }
-
-  if (remaining != NULL) {
-    *remaining = str + pos;
-  }
-}
 
 static bool
 parse_modifier_mask(const char *str, uint8_t *result, const char **remaining)
@@ -1498,12 +1482,10 @@ static bool
 parse_input_bindings(binding_parser_t binding_parser,
     struct xkb_state *xkb_state,
     struct hikari_configuration *configuration,
-    struct hikari_modifier_bindings *modifier_pressed_bindings,
-    struct hikari_modifier_bindings *modifier_released_bindings,
+    struct hikari_modifier_bindings *modifier_bindings,
     const ucl_object_t *bindings_keysym)
 {
-  int n_pressed[256] = { 0 };
-  int n_released[256] = { 0 };
+  int n[256] = { 0 };
   uint8_t mask = 0;
   const ucl_object_t *cur;
   bool success = false;
@@ -1512,62 +1494,82 @@ parse_input_bindings(binding_parser_t binding_parser,
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
-    bool pressed;
-    parse_event_type(key, &pressed, &key);
-
     if (!parse_modifier_mask(key, &mask, NULL)) {
       goto done;
     }
 
-    if (pressed) {
-      n_pressed[mask]++;
-    } else {
-      n_released[mask]++;
-    }
+    n[mask]++;
   }
+
   ucl_object_iterate_free(it);
 
   for (int i = 0; i < 256; i++) {
-    if (n_pressed[i] > 0) {
-      modifier_pressed_bindings[i].nbindings = n_pressed[i];
-      modifier_pressed_bindings[i].bindings =
-          hikari_calloc(n_pressed[i], sizeof(struct hikari_keybinding));
+    if (n[i] > 0) {
+      modifier_bindings[i].nbindings = n[i];
+      modifier_bindings[i].bindings =
+          hikari_calloc(n[i], sizeof(struct hikari_keybinding));
     }
 
-    n_pressed[i] = 0;
-
-    if (n_released[i] > 0) {
-      modifier_released_bindings[i].nbindings = n_released[i];
-      modifier_released_bindings[i].bindings =
-          hikari_calloc(n_released[i], sizeof(struct hikari_keybinding));
-    }
-
-    n_released[i] = 0;
+    n[i] = 0;
   }
 
   it = ucl_object_iterate_new(bindings_keysym);
   while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
     const char *key = ucl_object_key(cur);
-
-    bool pressed;
-    parse_event_type(key, &pressed, &key);
+    ucl_type_t type = ucl_object_type(cur);
 
     if (!parse_modifier_mask(key, &mask, NULL)) {
       goto done;
     }
 
-    struct hikari_keybinding *binding;
-    if (pressed) {
-      binding = &modifier_pressed_bindings[mask].bindings[n_pressed[mask]];
-      n_pressed[mask]++;
-    } else {
-      binding = &modifier_released_bindings[mask].bindings[n_released[mask]];
-      n_released[mask]++;
-    }
+    struct hikari_action *action = hikari_malloc(sizeof(struct hikari_action));
+    hikari_action_init(action);
 
-    if (!binding_parser(xkb_state, key, &binding->keycode) ||
-        !parse_binding(configuration, cur, &binding->action, &binding->arg)) {
-      goto done;
+    struct hikari_keybinding *binding;
+    if (type == UCL_OBJECT) {
+      const ucl_object_t *begin_obj = ucl_object_lookup(cur, "begin");
+      const ucl_object_t *end_obj = ucl_object_lookup(cur, "end");
+
+      binding = &modifier_bindings[mask].bindings[n[mask]];
+      binding->action = action;
+
+      struct hikari_event_action *begin = &binding->action->begin;
+      struct hikari_event_action *end = &binding->action->end;
+
+      if (!binding_parser(xkb_state, key, &binding->keycode)) {
+        goto done;
+      }
+
+      if (begin_obj != NULL) {
+        if (!parse_binding(
+                configuration, begin_obj, &begin->action, &begin->arg)) {
+          goto done;
+        }
+      }
+
+      if (end_obj != NULL) {
+        if (!parse_binding(configuration, end_obj, &end->action, &end->arg)) {
+          goto done;
+        }
+      }
+
+      n[mask]++;
+    } else if (type == UCL_STRING) {
+      binding = &modifier_bindings[mask].bindings[n[mask]];
+      binding->action = action;
+
+      if (!binding_parser(xkb_state, key, &binding->keycode)) {
+        goto done;
+      }
+
+      struct hikari_event_action *event_action = &binding->action->begin;
+
+      if (!parse_binding(
+              configuration, cur, &event_action->action, &event_action->arg)) {
+        goto done;
+      }
+
+      n[mask]++;
     }
   }
 
@@ -1598,8 +1600,7 @@ parse_bindings(struct hikari_configuration *configuration,
       if (!parse_input_bindings(parse_key,
               state,
               configuration,
-              configuration->bindings.keyboard.pressed,
-              configuration->bindings.keyboard.released,
+              configuration->bindings.keyboard,
               cur)) {
         goto done;
       }
@@ -1607,8 +1608,7 @@ parse_bindings(struct hikari_configuration *configuration,
       if (!parse_input_bindings(parse_pointer,
               state,
               configuration,
-              configuration->bindings.mouse.pressed,
-              configuration->bindings.mouse.released,
+              configuration->bindings.mouse,
               cur)) {
         goto done;
       }

@@ -2,6 +2,7 @@
 
 #include <wlr/types/wlr_seat.h>
 
+#include <hikari/action.h>
 #include <hikari/bindings.h>
 #include <hikari/configuration.h>
 #include <hikari/indicator.h>
@@ -18,31 +19,63 @@
 #include <hikari/workspace.h>
 #endif
 
+static bool
+handle_input(struct hikari_modifier_bindings *map, uint32_t code)
+{
+  int nbindings = map->nbindings;
+  struct hikari_keybinding *bindings = map->bindings;
+
+  for (int i = 0; i < nbindings; i++) {
+    struct hikari_keybinding *binding = &bindings[i];
+
+    if (binding->keycode == code) {
+      struct hikari_event_action *event_action;
+
+      if (binding->action->end.action != NULL) {
+        hikari_server.normal_mode.pending_action = &binding->action->end;
+      }
+
+      event_action = &binding->action->begin;
+      if (event_action->action != NULL) {
+        event_action->action(event_action->arg);
+      }
+      return true;
+    }
+  }
+
+  return false;
+}
+
+static bool
+handle_pending_action(void)
+{
+  struct hikari_event_action *pending_action =
+      hikari_server.normal_mode.pending_action;
+
+  if (pending_action != NULL) {
+    pending_action->action(pending_action->arg);
+    hikari_server.normal_mode.pending_action = NULL;
+    return true;
+  }
+
+  return false;
+}
+
 static void
 normal_mode_keyboard_handler(struct hikari_workspace *workspace,
     struct wlr_event_keyboard_key *event,
     struct hikari_keyboard *keyboard)
 {
-  uint32_t modifiers = hikari_server.keyboard_state.modifiers;
-
-  struct hikari_modifier_bindings *map;
-  switch (event->state) {
-    case WLR_KEY_PRESSED:
-      map = &hikari_configuration->bindings.keyboard.pressed[modifiers];
-      break;
-
-    case WLR_KEY_RELEASED:
-      map = &hikari_configuration->bindings.keyboard.released[modifiers];
-      break;
+  if (handle_pending_action()) {
+    return;
   }
 
-  int nbindings = map->nbindings;
-  struct hikari_keybinding *bindings = map->bindings;
-  for (int i = 0; i < nbindings; i++) {
-    struct hikari_keybinding *binding = &bindings[i];
+  if (event->state == WLR_KEY_PRESSED) {
+    uint32_t modifiers = hikari_server.keyboard_state.modifiers;
+    struct hikari_modifier_bindings *map =
+        &hikari_configuration->bindings.keyboard[modifiers];
 
-    if (binding->keycode == event->keycode) {
-      binding->action(binding->arg);
+    if (handle_input(map, event->keycode)) {
       return;
     }
   }
@@ -56,26 +89,16 @@ static void
 normal_mode_button_handler(
     struct hikari_workspace *workspace, struct wlr_event_pointer_button *event)
 {
-  uint32_t modifiers = hikari_server.keyboard_state.modifiers;
-
-  struct hikari_modifier_bindings *map;
-  switch (event->state) {
-    case WLR_BUTTON_PRESSED:
-      map = &hikari_configuration->bindings.mouse.pressed[modifiers];
-      break;
-
-    case WLR_BUTTON_RELEASED:
-      map = &hikari_configuration->bindings.mouse.released[modifiers];
-      break;
+  if (handle_pending_action()) {
+    return;
   }
 
-  int nbindings = map->nbindings;
-  struct hikari_keybinding *bindings = map->bindings;
-  for (int i = 0; i < nbindings; i++) {
-    struct hikari_keybinding *binding = &bindings[i];
+  if (event->state == WLR_KEY_PRESSED) {
+    uint32_t modifiers = hikari_server.keyboard_state.modifiers;
+    struct hikari_modifier_bindings *map =
+        &hikari_configuration->bindings.mouse[modifiers];
 
-    if (binding->keycode == event->button) {
-      binding->action(binding->arg);
+    if (handle_input(map, event->button)) {
       return;
     }
   }
@@ -248,4 +271,5 @@ hikari_normal_mode_init(struct hikari_normal_mode *normal_mode)
   normal_mode->mode.render = render;
   normal_mode->mode.cancel = cancel;
   normal_mode->mode.cursor_move = NULL;
+  normal_mode->pending_action = NULL;
 }
