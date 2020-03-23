@@ -5,6 +5,9 @@
 
 struct hikari_font {
   PangoFontDescription *desc;
+
+  int height;
+  int character_width;
 };
 
 void
@@ -12,9 +15,5 @@ hikari_font_init(struct hikari_font *font, const char *font_name);
 
 void
 hikari_font_fini(struct hikari_font *font);
-
-void
-hikari_font_metrics(
-    struct hikari_font *font, const char *text, int *width, int *height);
 
 #endif

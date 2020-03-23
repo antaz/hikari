@@ -12,18 +12,15 @@
 void
 hikari_indicator_init(struct hikari_indicator *indicator, float color[static 4])
 {
-  int width;
-  hikari_font_metrics(
-      &hikari_configuration->font, "", &width, &indicator->bar_height);
-  indicator->bar_height += 8;
+  int bar_height = hikari_configuration->font.height;
 
   int offset = 5;
   hikari_indicator_bar_init(&indicator->title, indicator, offset);
-  offset += indicator->bar_height + 5;
+  offset += bar_height + 5;
   hikari_indicator_bar_init(&indicator->sheet, indicator, offset);
-  offset += indicator->bar_height + 5;
+  offset += bar_height + 5;
   hikari_indicator_bar_init(&indicator->group, indicator, offset);
-  offset += indicator->bar_height + 5;
+  offset += bar_height + 5;
   hikari_indicator_bar_init(&indicator->mark, indicator, offset);
 }
 
@@ -87,16 +84,18 @@ hikari_indicator_render(
   geometry.y += 5;
   hikari_indicator_bar_render(title_bar, render_data);
 
+  int bar_height = hikari_configuration->font.height;
+
   struct hikari_indicator_bar *sheet_bar = &indicator->sheet;
-  geometry.y += indicator->bar_height + 5;
+  geometry.y += bar_height + 5;
   hikari_indicator_bar_render(sheet_bar, render_data);
 
   struct hikari_indicator_bar *group_bar = &indicator->group;
-  geometry.y += indicator->bar_height + 5;
+  geometry.y += bar_height + 5;
   hikari_indicator_bar_render(group_bar, render_data);
 
   struct hikari_indicator_bar *mark_bar = &indicator->mark;
-  geometry.y += indicator->bar_height + 5;
+  geometry.y += bar_height + 5;
   hikari_indicator_bar_render(mark_bar, render_data);
 
   render_data->geometry = border_geometry;

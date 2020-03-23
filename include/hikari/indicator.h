@@ -14,8 +14,6 @@ struct hikari_indicator {
   struct hikari_indicator_bar sheet;
   struct hikari_indicator_bar group;
   struct hikari_indicator_bar mark;
-
-  int bar_height;
 };
 
 void

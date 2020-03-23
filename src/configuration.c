@@ -2083,6 +2083,11 @@ hikari_configuration_reload(char *config_path)
   bool success = hikari_configuration_load(configuration, config_path);
 
   if (success) {
+    if (hikari_server.workspace->focus_view != NULL) {
+      hikari_indicator_damage(
+          &hikari_server.indicator, hikari_server.workspace->focus_view);
+    }
+
     hikari_configuration_fini(hikari_configuration);
     hikari_free(hikari_configuration);
     hikari_configuration = configuration;
@@ -2128,6 +2133,12 @@ hikari_configuration_reload(char *config_path)
               output, output_config->background, output_config->background_fit);
         }
       }
+    }
+
+    if (hikari_server.workspace->focus_view != NULL) {
+      hikari_indicator_update(&hikari_server.indicator,
+          hikari_server.workspace->focus_view,
+          hikari_configuration->indicator_selected);
     }
   } else {
     hikari_configuration_fini(configuration);

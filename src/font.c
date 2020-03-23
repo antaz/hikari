@@ -3,20 +3,8 @@
 #include <cairo/cairo.h>
 #include <string.h>
 
-void
-hikari_font_init(struct hikari_font *font, const char *font_name)
-{
-  font->desc = pango_font_description_from_string(font_name);
-}
-
-void
-hikari_font_fini(struct hikari_font *font)
-{
-  pango_font_description_free(font->desc);
-}
-
-void
-hikari_font_metrics(
+static void
+font_metrics(
     struct hikari_font *font, const char *text, int *width, int *height)
 {
   cairo_surface_t *surface =
@@ -34,4 +22,22 @@ hikari_font_metrics(
   g_object_unref(layout);
   cairo_surface_destroy(surface);
   cairo_destroy(cairo);
+}
+
+void
+hikari_font_init(struct hikari_font *font, const char *font_name)
+{
+  font->desc = pango_font_description_from_string(font_name);
+
+  font_metrics(font, "W", &font->character_width, &font->height);
+
+  // precalculate height for indicator bars since this is the only height we
+  // need.
+  font->height += 8;
+}
+
+void
+hikari_font_fini(struct hikari_font *font)
+{
+  pango_font_description_free(font->desc);
 }

@@ -35,27 +35,17 @@ hikari_indicator_bar_fini(struct hikari_indicator_bar *indicator_bar)
   indicator_bar->texture = NULL;
 }
 
-static void
-damage(struct hikari_indicator_bar *indicator_bar,
-    struct wlr_box *geometry,
-    struct hikari_output *output)
-{
-  geometry->x += 5;
-  geometry->y += indicator_bar->offset;
-  geometry->width = indicator_bar->width;
-  geometry->height = indicator_bar->indicator->bar_height;
-
-  hikari_output_add_damage(output, geometry);
-}
-
 void
 hikari_indicator_bar_damage(struct hikari_indicator_bar *indicator_bar,
     struct wlr_box *view_geometry,
     struct hikari_output *output)
 {
-  struct wlr_box geometry = *view_geometry;
+  struct wlr_box geometry = { .x = view_geometry->x + 5,
+    .y = view_geometry->y + indicator_bar->offset,
+    .width = indicator_bar->width,
+    .height = hikari_configuration->font.height };
 
-  damage(indicator_bar, &geometry, output);
+  hikari_output_add_damage(output, &geometry);
 }
 
 void
@@ -73,19 +63,20 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
     return;
   }
 
-  int font_width, font_height;
-  int width, height;
+  size_t len = strlen(text);
   struct hikari_font *font = &hikari_configuration->font;
-  struct wlr_box geometry = *view_geometry;
+  int width = hikari_configuration->font.character_width * len + 8;
+  int height = hikari_configuration->font.height;
 
-  damage(indicator_bar, &geometry, output);
-
-  hikari_font_metrics(font, text, &font_width, &font_height);
-
-  width = geometry.width = indicator_bar->width = font_width + 8;
-  height = indicator_bar->indicator->bar_height;
+  struct wlr_box geometry = { .x = view_geometry->x + 5,
+    .y = view_geometry->y + indicator_bar->offset,
+    .width = indicator_bar->width,
+    .height = height };
 
   hikari_output_add_damage(output, &geometry);
+
+  geometry.width = width;
+  indicator_bar->width = width;
 
   cairo_surface_t *surface =
       cairo_image_surface_create(CAIRO_FORMAT_ARGB32, width, height);
@@ -129,6 +120,8 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
   cairo_surface_destroy(surface);
   g_object_unref(layout);
   cairo_destroy(cairo);
+
+  hikari_output_add_damage(output, &geometry);
 }
 
 void
@@ -146,7 +139,7 @@ hikari_indicator_bar_render(struct hikari_indicator_bar *indicator_bar,
   float matrix[9];
 
   geometry->width = indicator_bar->width;
-  geometry->height = indicator_bar->indicator->bar_height;
+  geometry->height = hikari_configuration->font.height;
 
   wlr_renderer_scissor(renderer, geometry);
   wlr_matrix_project_box(matrix, geometry, 0, 0, output->transform_matrix);
