@@ -43,11 +43,8 @@ conversation_handler(int num_msg,
 }
 
 bool
-check_password(void)
+check_password(const char *username)
 {
-  struct passwd *passwd = getpwuid(getuid());
-  char *username = passwd->pw_name;
-
   const struct pam_conv conv = {
     .conv = conversation_handler,
     .appdata_ptr = NULL,
@@ -76,11 +73,13 @@ main(int argc, char **argv)
 {
   char input;
   bool success = false;
+  struct passwd *passwd = getpwuid(getuid());
+
   input_buffer = malloc(INPUT_BUFFER_SIZE);
   mlock(input_buffer, INPUT_BUFFER_SIZE);
 
   while (!success) {
-    success = check_password();
+    success = check_password(passwd->pw_name);
   }
 
   munlock(input_buffer, INPUT_BUFFER_SIZE);
