@@ -423,7 +423,6 @@ xdg_popup_create(struct wlr_xdg_popup *wlr_popup, struct hikari_view *parent)
   hikari_view_child_init(
       (struct hikari_view_child *)popup, parent, wlr_popup->base->surface);
 
-  // TODO this does not work correctly with multi monitor
   popup_unconstrain(popup);
 }
 
