@@ -76,6 +76,7 @@ main(int argc, char **argv)
   struct passwd *passwd = getpwuid(getuid());
 
   input_buffer = malloc(INPUT_BUFFER_SIZE);
+  memset(input_buffer, 0, INPUT_BUFFER_SIZE);
   mlock(input_buffer, INPUT_BUFFER_SIZE);
 
   while (!success) {
