@@ -614,7 +614,11 @@ server_init(struct hikari_server *server, char *config_path)
   server->cycling = false;
   server->workspace = NULL;
   server->display = wl_display_create();
-  assert(server->display);
+
+  if (server->display == NULL) {
+    fprintf(stderr, "error: could not create display\n");
+    exit(EXIT_FAILURE);
+  }
 
   hikari_indicator_init(
       &server->indicator, hikari_configuration->indicator_selected);
@@ -622,13 +626,23 @@ server_init(struct hikari_server *server, char *config_path)
   wl_list_init(&server->outputs);
 
   server->event_loop = wl_display_get_event_loop(server->display);
-  assert(server->event_loop);
+
+  if (server->event_loop == NULL) {
+    fprintf(stderr, "error: could not create event loop\n");
+    wl_display_destroy(server->display);
+    exit(EXIT_FAILURE);
+  }
 
   server->backend = wlr_backend_autocreate(server->display, NULL);
-  assert(server->backend);
+
+  if (server->backend == NULL) {
+    wl_display_destroy(server->display);
+    exit(EXIT_FAILURE);
+  }
 
   if (getuid() != geteuid() || getgid() != getegid()) {
     if (setuid(getuid()) != 0 || setgid(getgid()) != 0) {
+      wl_display_destroy(server->display);
       exit(EXIT_FAILURE);
     }
   }
@@ -638,13 +652,18 @@ server_init(struct hikari_server *server, char *config_path)
   signal(SIGPIPE, SIG_IGN);
 
   server->renderer = wlr_backend_get_renderer(server->backend);
-  assert(server->renderer);
+
+  if (server->renderer == NULL) {
+    wl_display_destroy(server->display);
+    exit(EXIT_FAILURE);
+  }
 
   wlr_renderer_init_wl_display(server->renderer, server->display);
 
   server->socket = wl_display_add_socket_auto(server->display);
-  if (!server->socket) {
-    return;
+  if (server->socket == NULL) {
+    wl_display_destroy(server->display);
+    exit(EXIT_FAILURE);
   }
 
   setenv("WAYLAND_DISPLAY", server->socket, true);
