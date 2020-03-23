@@ -539,6 +539,10 @@ properties you want for that view to apply.
   the **current sheet** is unequal to this sheet or **0** this view
   automatically is considered to be **borrowed**.
 
+To configure views of the **systat** *app_id* to become a member of the group
+*monitor* and automatically assign them to sheet **0** with a given position and
+focus grabbing we would do something like this.
+
 ```
 systat = {
   group = monitor
@@ -629,32 +633,32 @@ preventing the layout to cover up a portion of the workspace.
 
 * **single**
 
-Containers using the **single** layout only consume one view which takes up the
-entire container.
+  Containers using the **single** layout only consume one view which takes up
+  the entire container.
 
 * **full**
 
-Each view inside of a container using this algorithm will take up the entire
-size of the container. All of the views are stacked up on top of each other.
+  Each view inside of a container using this algorithm will take up the entire
+  size of the container. All of the views are stacked up on top of each other.
 
 * **stack**
 
-The **stack** algorithm tries to give every view the container consumes an equal
-amount of vertical space (excess space is given to the first view). The order in
-which stacking works is from top to bottom.
+  The **stack** algorithm tries to give every view the container consumes an
+  equal amount of vertical space (excess space is given to the first view). The
+  order in which stacking works is from top to bottom.
 
 * **queue**
 
-The **queue** algorithm tries to give every view the container consumes an equal
-amount of horizontal space (excess space is given to the first view). The order in
-which stacking works is from left to right.
+  The **queue** algorithm tries to give every view the container consumes an
+  equal amount of horizontal space (excess space is given to the first view).
+  The order in which stacking works is from left to right.
 
 * **grid**
 
-A grid tries to give each view the containers consumes an equal amount of
-horizontal and vertical space (excess space is given to the first view, and
-therefore first row of the grid). If the amount of views can not be split up
-into equal rows and column the last part of the grid will not be filled.
+  A grid tries to give each view the containers consumes an equal amount of
+  horizontal and vertical space (excess space is given to the first view, and
+  therefore first row of the grid). If the amount of views can not be split up
+  into equal rows and column the last part of the grid will not be filled.
 
 The easiest way to define a layout is by simply stating the tiling algorithm.
 Binding a fullscreen layout to the layout register **f** can be trivially
@@ -694,6 +698,8 @@ Getting everything to look like is an important aspect of feeling "at home".
 
   Defined the thickness of view borders in pixels.
 
+Standard border thickness is set to **1**.
+
 ```
 border = 1
 ```
@@ -704,6 +710,8 @@ border = 1
   A gap is some extra space that is left between views when using a layout or
   snapping views. The value also specifies a pixel value.
 
+The standard **gap** value is 5.
+
 ```
 gap = 5
 ```
@@ -711,6 +719,8 @@ gap = 5
 * **font**
 
   Specifies the font that is used for indicator bars.
+
+**hikari** uses *DejaVu Sans Mono 10* as its default font setting.
 
 ```
 font = "DejaVu Sans Mono 10"
@@ -804,6 +814,8 @@ are available.
 
   Sets the pointers scroll method. Valid values are *on-button-down*.
 
+Configuring the *System mouse* input device could look like this.
+
 ```
 "System mouse" = {
   accel = 1.0
@@ -850,6 +862,8 @@ When defining a *background* object the following attributes are available.
   Specifies how the wallpaper should be displayed. Available options are
   *center*, *stretch* and *tile*. *stretch* is the default even when specifying
   the background image as a string.
+
+Configuring output *eDP-1* and *WL-1* could look like this.
 
 ```
 outputs {
