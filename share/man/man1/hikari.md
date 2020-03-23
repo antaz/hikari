@@ -821,6 +821,13 @@ Keyboards are configured using *XKB* environment variables.
 * **XKB\_DEFAULT\_OPTIONS**
 * **XKB\_DEFAULT\_RULES**
 
+To specify a layout set **XKB\_DEFAULT\_LAYOUT** to the desired layout. This
+needs to happen before starting **hikari**.
+
+```
+XKB_DEFAULT_LAYOUT "de(nodeadkeys),de"
+```
+
 OUTPUTS
 =======
 

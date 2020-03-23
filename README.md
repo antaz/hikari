@@ -57,13 +57,13 @@ using the screen locker. Copy the appropriate `hikari-unlocker` file from the
 `pam.d` folder to `/usr/local/etc/pam.d` (or `/etc/pam.d` on most Linux
 systems).
 
-### Setting up XKB
+### Setting up the keyboard layout
 
-`hikari` currently gets its `xkb` settings settings the appropriate environment
-variables to something like the following.
+`hikari` gets its keyboard settings from `xkb` environment variables. To select
+a layout set the `XKB_DEFAULT_LAYOUT` to the desired value before staring
+`hikari`.
 
 ```
-XKB_DEFAULT_RULES "evdev"
 XKB_DEFAULT_LAYOUT "de(nodeadkeys),de"
 ```
 

@@ -66,6 +66,8 @@ destroy_handler(struct wl_listener *listener, void *data)
   /* wlr_seat_set_capabilities(hikari_server.seat, caps); */
 }
 
+static const char *hikari_evdev_xkb_default_rules = "evdev";
+
 struct xkb_keymap *
 hikari_load_keymap()
 {
@@ -77,10 +79,15 @@ hikari_load_keymap()
   rules.variant = getenv("XKB_DEFAULT_VARIANT");
   rules.options = getenv("XKB_DEFAULT_OPTIONS");
 
+  if (rules.rules == NULL) {
+    rules.rules = hikari_evdev_xkb_default_rules;
+  }
+
   struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
   struct xkb_keymap *keymap =
       xkb_map_new_from_names(context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
   xkb_context_unref(context);
+
   return keymap;
 }
 
