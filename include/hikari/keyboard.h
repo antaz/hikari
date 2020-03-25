@@ -35,9 +35,13 @@ bool
 hikari_keyboard_cancellation(
     struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event);
 
-struct hikari_mark *
-hikari_keyboard_resolve_mark(
-    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event);
+typedef void (*hikari_keysym_iterator)(
+    struct hikari_keyboard *keyboard, uint32_t keycode, xkb_keysym_t sym);
+
+void
+hikari_keyboard_for_keysym(struct hikari_keyboard *keyboard,
+    uint32_t keycode,
+    hikari_keysym_iterator iter);
 
 static inline uint32_t
 hikari_keyboard_get_codepoint(

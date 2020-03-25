@@ -84,3 +84,17 @@ hikari_mark_set(struct hikari_mark *mark, struct hikari_view *view)
   mark->view = view;
   view->mark = mark;
 }
+
+bool
+hikari_mark_get(char reg, struct hikari_mark **mark)
+{
+
+  if (reg >= 'a' && reg <= 'z') {
+    uint32_t nr = reg - 'a';
+    *mark = &hikari_marks[nr];
+
+    return true;
+  }
+
+  return false;
+}

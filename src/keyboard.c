@@ -165,18 +165,16 @@ hikari_keyboard_cancellation(
   return false;
 }
 
-struct hikari_mark *
-hikari_keyboard_resolve_mark(
-    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
+void
+hikari_keyboard_for_keysym(struct hikari_keyboard *keyboard,
+    uint32_t keycode,
+    hikari_keysym_iterator iter)
 {
-  uint32_t keycode = event->keycode + 8;
-  uint32_t codepoint = hikari_keyboard_get_codepoint(keyboard, keycode);
+  const xkb_keysym_t *syms;
+  int nsyms = xkb_state_key_get_syms(
+      keyboard->device->keyboard->xkb_state, keycode, &syms);
 
-  if (codepoint != 0 && (codepoint >= 'a' && codepoint <= 'z')) {
-    uint32_t nr = codepoint - 'a';
-
-    return &hikari_marks[nr];
+  for (int i = 0; i < nsyms; i++) {
+    iter(keyboard, keycode, syms[i]);
   }
-
-  return NULL;
 }

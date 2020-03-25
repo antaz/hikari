@@ -1,6 +1,8 @@
 #if !defined(HIKARI_MARK_H)
 #define HIKARI_MARK_H
 
+#include <stdbool.h>
+
 struct hikari_view;
 
 struct hikari_mark {
@@ -51,5 +53,8 @@ hikari_mark_clear(struct hikari_mark *mark);
 
 void
 hikari_mark_set(struct hikari_mark *mark, struct hikari_view *view);
+
+bool
+hikari_mark_get(char reg, struct hikari_mark **mark);
 
 #endif

@@ -1,5 +1,6 @@
 #include <hikari/mark_select_mode.h>
 
+#include <assert.h>
 #include <stdbool.h>
 
 #include <hikari/keyboard.h>
@@ -13,11 +14,14 @@ mark_select(struct hikari_workspace *workspace,
     struct wlr_event_keyboard_key *event,
     struct hikari_keyboard *keyboard)
 {
-  struct hikari_mark *mark = hikari_keyboard_resolve_mark(keyboard, event);
+  uint32_t keycode = event->keycode + 8;
+  uint32_t codepoint = hikari_keyboard_get_codepoint(keyboard, keycode);
 
   hikari_server_enter_normal_mode(NULL);
 
-  if (mark != NULL) {
+  struct hikari_mark *mark;
+  if (hikari_mark_get(codepoint, &mark)) {
+    assert(mark != NULL);
     if (hikari_server.mark_select_mode.switch_workspace) {
       hikari_server_switch_to_mark(mark);
     } else {

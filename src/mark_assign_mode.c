@@ -27,57 +27,68 @@ clear_conflict(void)
 }
 
 static void
-update_state(struct hikari_mark *mark,
-    struct wlr_box *geometry,
-    struct hikari_output *output)
+update_state(struct hikari_mark *mark)
 {
   struct hikari_mark_assign_mode *mode = &hikari_server.mark_assign_mode;
 
   assert(mode == (struct hikari_mark_assign_mode *)hikari_server.mode);
 
-  if (mark) {
-    hikari_indicator_update_mark(&hikari_server.indicator,
-        geometry,
-        output,
-        mark->name,
-        hikari_configuration->indicator_insert);
-  } else {
+  struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_view *view = workspace->focus_view;
+  struct hikari_output *output = workspace->output;
+  struct wlr_box *geometry = hikari_view_border_geometry(view);
+
+  if (mark == NULL) {
     hikari_indicator_update_mark(&hikari_server.indicator,
         geometry,
         output,
         " ",
         hikari_configuration->indicator_insert);
-  }
+  } else {
+    if (mode->pending_mark != mark) {
+      clear_conflict();
+      float *indicator_color;
 
-  if (mode->pending_mark != mark) {
-    clear_conflict();
+      if (mark != NULL && mark->view != NULL) {
+        hikari_indicator_update(&mode->indicator,
+            mark->view,
+            hikari_configuration->indicator_conflict);
 
-    if (mark != NULL && mark->view != NULL) {
-      hikari_indicator_update(&mode->indicator,
-          mark->view,
-          hikari_configuration->indicator_conflict);
+        hikari_view_damage_whole(mark->view);
 
-      hikari_view_damage_whole(mark->view);
+        indicator_color = hikari_configuration->indicator_conflict;
+      } else {
+        indicator_color = hikari_configuration->indicator_insert;
+      }
+
+      hikari_indicator_update_mark(&hikari_server.indicator,
+          geometry,
+          output,
+          mark->name,
+          indicator_color);
     }
-
-    mode->pending_mark = mark;
   }
+
+  mode->pending_mark = mark;
 }
 
 static void
-confirm_mark_assign(struct wlr_box *geometry, struct hikari_output *output)
+confirm_mark_assign(void)
 {
   struct hikari_mark_assign_mode *mode = &hikari_server.mark_assign_mode;
 
   assert(mode == (struct hikari_mark_assign_mode *)hikari_server.mode);
 
-  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+  struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_view *view = workspace->focus_view;
+  struct hikari_output *output = workspace->output;
+  struct wlr_box *geometry = hikari_view_border_geometry(view);
   struct hikari_mark *mark = mode->pending_mark;
 
-  if (mark) {
+  if (mark != NULL) {
     clear_conflict();
 
-    hikari_mark_set(mark, focus_view);
+    hikari_mark_set(mark, view);
     hikari_indicator_update_mark(&hikari_server.indicator,
         geometry,
         output,
@@ -86,8 +97,8 @@ confirm_mark_assign(struct wlr_box *geometry, struct hikari_output *output)
 
     mode->pending_mark = NULL;
   } else {
-    if (focus_view->mark != NULL) {
-      hikari_mark_clear(focus_view->mark);
+    if (view->mark != NULL) {
+      hikari_mark_clear(view->mark);
     }
 
     hikari_indicator_update_mark(&hikari_server.indicator,
@@ -101,13 +112,14 @@ confirm_mark_assign(struct wlr_box *geometry, struct hikari_output *output)
 }
 
 static void
-cancel_mark_assign(struct hikari_mark *mark,
-    struct wlr_box *geometry,
-    struct hikari_output *output)
+cancel_mark_assign(void)
 {
   assert(&hikari_server.mark_assign_mode.mode == hikari_server.mode);
 
-  struct hikari_view *view = hikari_server.workspace->focus_view;
+  struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_view *view = workspace->focus_view;
+  struct hikari_output *output = workspace->output;
+  struct wlr_box *geometry = hikari_view_border_geometry(view);
 
   clear_conflict();
 
@@ -129,25 +141,48 @@ cancel_mark_assign(struct hikari_mark *mark,
 }
 
 static void
+handle_keysym(
+    struct hikari_keyboard *keyboard, uint32_t keycode, xkb_keysym_t sym)
+{
+  uint32_t codepoint;
+  struct hikari_mark *mark;
+
+  switch (sym) {
+    case XKB_KEY_Escape:
+      cancel_mark_assign();
+      hikari_server_refresh_indication();
+      break;
+
+    case XKB_KEY_Return:
+      confirm_mark_assign();
+      break;
+
+    case XKB_KEY_BackSpace:
+      update_state(NULL);
+      hikari_server_refresh_indication();
+      break;
+
+    default:
+      codepoint = hikari_keyboard_get_codepoint(keyboard, keycode);
+
+      if (hikari_mark_get(codepoint, &mark)) {
+        update_state(mark);
+        hikari_server_refresh_indication();
+      }
+      break;
+  }
+}
+
+static void
 assign_mark(struct hikari_workspace *workspace,
     struct wlr_event_keyboard_key *event,
     struct hikari_keyboard *keyboard)
 {
   assert(hikari_server.workspace->focus_view != NULL);
 
-  struct hikari_mark *mark = hikari_keyboard_resolve_mark(keyboard, event);
-  struct wlr_box *geometry = hikari_view_border_geometry(workspace->focus_view);
-  struct hikari_output *output = workspace->output;
+  uint32_t keycode = event->keycode + 8;
 
-  if (mark != NULL) {
-    update_state(mark, geometry, output);
-    hikari_server_refresh_indication();
-  } else if (hikari_keyboard_confirmation(keyboard, event)) {
-    confirm_mark_assign(geometry, output);
-  } else if (hikari_keyboard_cancellation(keyboard, event)) {
-    cancel_mark_assign(mark, geometry, output);
-    hikari_server_refresh_indication();
-  }
+  hikari_keyboard_for_keysym(keyboard, keycode, handle_keysym);
 }
 
 static void
