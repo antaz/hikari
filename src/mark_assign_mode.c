@@ -11,13 +11,20 @@
 #include <hikari/render_data.h>
 #include <hikari/view.h>
 
-static void
-clear_conflict(void)
+static struct hikari_mark_assign_mode *
+get_mode(void)
 {
   struct hikari_mark_assign_mode *mode = &hikari_server.mark_assign_mode;
 
   assert(mode == (struct hikari_mark_assign_mode *)hikari_server.mode);
 
+  return mode;
+}
+
+static void
+clear_conflict(void)
+{
+  struct hikari_mark_assign_mode *mode = get_mode();
   struct hikari_mark *mark = mode->pending_mark;
 
   if (mark != NULL && mark->view != NULL) {
@@ -29,10 +36,7 @@ clear_conflict(void)
 static void
 update_state(struct hikari_mark *mark)
 {
-  struct hikari_mark_assign_mode *mode = &hikari_server.mark_assign_mode;
-
-  assert(mode == (struct hikari_mark_assign_mode *)hikari_server.mode);
-
+  struct hikari_mark_assign_mode *mode = get_mode();
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_view *view = workspace->focus_view;
   struct hikari_output *output = workspace->output;
@@ -75,10 +79,7 @@ update_state(struct hikari_mark *mark)
 static void
 confirm_mark_assign(void)
 {
-  struct hikari_mark_assign_mode *mode = &hikari_server.mark_assign_mode;
-
-  assert(mode == (struct hikari_mark_assign_mode *)hikari_server.mode);
-
+  struct hikari_mark_assign_mode *mode = get_mode();
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_view *view = workspace->focus_view;
   struct hikari_output *output = workspace->output;
@@ -114,8 +115,6 @@ confirm_mark_assign(void)
 static void
 cancel_mark_assign(void)
 {
-  assert(&hikari_server.mark_assign_mode.mode == hikari_server.mode);
-
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_view *view = workspace->focus_view;
   struct hikari_output *output = workspace->output;
@@ -207,10 +206,9 @@ static void
 render(struct hikari_output *output, struct hikari_render_data *render_data)
 {
   assert(hikari_server.workspace->focus_view != NULL);
-  struct hikari_view *view = hikari_server.workspace->focus_view;
 
-  struct hikari_mark_assign_mode *mode =
-      (struct hikari_mark_assign_mode *)hikari_server.mode;
+  struct hikari_view *view = hikari_server.workspace->focus_view;
+  struct hikari_mark_assign_mode *mode = get_mode();
 
   if (mode->pending_mark != NULL && mode->pending_mark->view != NULL &&
       mode->pending_mark->view->output == output) {

@@ -21,13 +21,20 @@
 #include <hikari/view.h>
 #include <hikari/workspace.h>
 
+static struct hikari_group_assign_mode *
+get_mode(void)
+{
+  struct hikari_group_assign_mode *mode = &hikari_server.group_assign_mode;
+
+  assert(mode == (struct hikari_group_assign_mode *)hikari_server.mode);
+
+  return mode;
+}
+
 static void
 init_completion(void)
 {
-  struct hikari_group_assign_mode *mode =
-      (struct hikari_group_assign_mode *)hikari_server.mode;
-
-  assert(mode == (struct hikari_group_assign_mode *)hikari_server.mode);
+  struct hikari_group_assign_mode *mode = get_mode();
 
   if (mode->completion != NULL) {
     return;
@@ -55,10 +62,7 @@ init_completion(void)
 static void
 fini_completion(void)
 {
-  struct hikari_group_assign_mode *mode =
-      (struct hikari_group_assign_mode *)hikari_server.mode;
-
-  assert(mode == (struct hikari_group_assign_mode *)hikari_server.mode);
+  struct hikari_group_assign_mode *mode = get_mode();
 
   if (mode->completion == NULL) {
     return;
@@ -85,11 +89,7 @@ put_char(struct hikari_input_buffer *input_buffer,
 static void
 confirm_group_assign(void)
 {
-  struct hikari_group_assign_mode *mode =
-      (struct hikari_group_assign_mode *)&hikari_server.group_assign_mode;
-
-  assert(mode == (struct hikari_group_assign_mode *)hikari_server.mode);
-
+  struct hikari_group_assign_mode *mode = get_mode();
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct wlr_box *geometry = hikari_view_geometry(workspace->focus_view);
 
@@ -167,17 +167,11 @@ cancel_group_assign(void)
 static void
 update_state(void)
 {
-  struct hikari_group_assign_mode *mode =
-      (struct hikari_group_assign_mode *)&hikari_server.group_assign_mode;
-
-  assert(mode == (struct hikari_group_assign_mode *)hikari_server.mode);
-
+  struct hikari_group_assign_mode *mode = get_mode();
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct wlr_box *geometry = hikari_view_border_geometry(workspace->focus_view);
-
-  struct hikari_group *group;
-
-  group = hikari_server_find_group(mode->input_buffer.buffer);
+  struct hikari_group *group =
+      hikari_server_find_group(mode->input_buffer.buffer);
 
   if (!strcmp(mode->input_buffer.buffer, "")) {
     hikari_indicator_update_group(&hikari_server.indicator,
@@ -211,11 +205,7 @@ static void
 handle_keysym(
     struct hikari_keyboard *keyboard, uint32_t keycode, xkb_keysym_t sym)
 {
-  struct hikari_group_assign_mode *mode =
-      (struct hikari_group_assign_mode *)hikari_server.mode;
-
-  assert(mode == &hikari_server.group_assign_mode);
-
+  struct hikari_group_assign_mode *mode = get_mode();
   char *text;
 
   switch (sym) {
@@ -317,15 +307,11 @@ modifier_handler(struct wl_listener *listener, void *data)
 static void
 render(struct hikari_output *output, struct hikari_render_data *render_data)
 {
-  struct hikari_group_assign_mode *mode = &hikari_server.group_assign_mode;
-
-  assert(mode == (struct hikari_group_assign_mode *)hikari_server.mode);
-
+  struct hikari_group_assign_mode *mode = get_mode();
+  struct hikari_group *group = mode->group;
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
   assert(focus_view != NULL);
-
-  struct hikari_group *group = mode->group;
 
   if (group != NULL) {
     float *indicator_first = hikari_configuration->indicator_first;

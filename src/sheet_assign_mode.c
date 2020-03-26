@@ -12,6 +12,16 @@
 #include <hikari/view.h>
 #include <hikari/workspace.h>
 
+static struct hikari_sheet_assign_mode *
+get_mode(void)
+{
+  struct hikari_sheet_assign_mode *mode = &hikari_server.sheet_assign_mode;
+
+  assert(mode == (struct hikari_sheet_assign_mode *)hikari_server.mode);
+
+  return mode;
+}
+
 #define CYCLE_SHEET(name)                                                      \
   static struct hikari_sheet *name##_sheet(struct hikari_sheet *sheet)         \
   {                                                                            \
@@ -31,11 +41,7 @@ CYCLE_SHEET(prev)
 static void
 confirm_sheet_assign(struct hikari_workspace *workspace)
 {
-  struct hikari_sheet_assign_mode *mode =
-      (struct hikari_sheet_assign_mode *)&hikari_server.sheet_assign_mode;
-
-  assert(mode == (struct hikari_sheet_assign_mode *)hikari_server.mode);
-
+  struct hikari_sheet_assign_mode *mode = get_mode();
   struct hikari_view *focus_view = workspace->focus_view;
   struct wlr_box *geometry = hikari_view_geometry(focus_view);
   struct hikari_sheet *sheet = mode->sheet;
@@ -77,11 +83,7 @@ cancel_sheet_assign(struct hikari_workspace *workspace)
 static void
 update_state(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
 {
-  struct hikari_sheet_assign_mode *mode =
-      (struct hikari_sheet_assign_mode *)&hikari_server.sheet_assign_mode;
-
-  assert(mode == (struct hikari_sheet_assign_mode *)hikari_server.mode);
-
+  struct hikari_sheet_assign_mode *mode = get_mode();
   struct hikari_view *focus_view = workspace->focus_view;
   struct wlr_box *geometry = hikari_view_border_geometry(focus_view);
 
@@ -102,9 +104,7 @@ static void
 handle_keysym(
     struct hikari_keyboard *keyboard, uint32_t keycode, xkb_keysym_t sym)
 {
-  struct hikari_sheet_assign_mode *mode =
-      (struct hikari_sheet_assign_mode *)hikari_server.mode;
-
+  struct hikari_sheet_assign_mode *mode = get_mode();
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_sheet *sheet = mode->sheet;
 
