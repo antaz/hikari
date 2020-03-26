@@ -193,14 +193,6 @@ update_state(void)
   }
 }
 
-static bool
-check_modifier(struct hikari_keyboard *keyboard, uint32_t modifier)
-{
-  uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->device->keyboard);
-
-  return modifiers == modifier;
-}
-
 static void
 handle_keysym(
     struct hikari_keyboard *keyboard, uint32_t keycode, xkb_keysym_t sym)
@@ -223,7 +215,7 @@ handle_keysym(
       goto done;
 
     case XKB_KEY_e:
-      if (check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
+      if (hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
         if (mode->completion != NULL) {
           text = hikari_completion_cancel(mode->completion);
           hikari_input_buffer_replace(&mode->input_buffer, text);
@@ -236,7 +228,7 @@ handle_keysym(
 
     case XKB_KEY_h:
       fini_completion();
-      if (check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
+      if (hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
         hikari_input_buffer_remove_char(&mode->input_buffer);
       } else {
         put_char(&mode->input_buffer, keyboard, keycode);
@@ -245,7 +237,7 @@ handle_keysym(
 
     case XKB_KEY_u:
       fini_completion();
-      if (check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
+      if (hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
         hikari_input_buffer_clear(&mode->input_buffer);
       } else {
         put_char(&mode->input_buffer, keyboard, keycode);
@@ -254,7 +246,7 @@ handle_keysym(
 
     case XKB_KEY_w:
       fini_completion();
-      if (check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
+      if (hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
         hikari_input_buffer_remove_word(&mode->input_buffer);
       } else {
         put_char(&mode->input_buffer, keyboard, keycode);

@@ -43,4 +43,13 @@ hikari_keyboard_get_codepoint(
       keyboard->device->keyboard->xkb_state, keycode);
 }
 
+static inline bool
+hikari_keyboard_check_modifier(
+    struct hikari_keyboard *keyboard, uint32_t modifier)
+{
+  uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->device->keyboard);
+
+  return modifiers == modifier;
+}
+
 #endif
