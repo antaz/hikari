@@ -1,6 +1,7 @@
 #include <hikari/input_buffer.h>
 
 #include <assert.h>
+#include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -14,6 +15,19 @@ is_empty(struct hikari_input_buffer *input_buffer)
   assert(pos == 0 ? input_buffer->buffer[0] == '\0' : true);
 
   return pos == 0;
+}
+
+static bool
+current_char(struct hikari_input_buffer *input_buffer, char *current)
+{
+  size_t pos = input_buffer->pos;
+
+  if (is_empty(input_buffer)) {
+    return false;
+  } else {
+    *current = input_buffer->buffer[pos - 1];
+    return true;
+  }
 }
 
 struct hikari_input_buffer *
@@ -63,6 +77,25 @@ hikari_input_buffer_remove_char(struct hikari_input_buffer *input_buffer)
 
   input_buffer->pos--;
   input_buffer->buffer[input_buffer->pos] = '\0';
+}
+
+void
+hikari_input_buffer_remove_word(struct hikari_input_buffer *input_buffer)
+{
+  if (is_empty(input_buffer)) {
+    return;
+  }
+
+  for (;;) {
+    hikari_input_buffer_remove_char(input_buffer);
+
+    char current;
+    bool has_char = current_char(input_buffer, &current);
+
+    if (!has_char || isspace(current)) {
+      break;
+    }
+  }
 }
 
 void

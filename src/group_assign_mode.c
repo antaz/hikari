@@ -243,10 +243,19 @@ handle_keysym(
       }
       break;
 
-    case XKB_KEY_w:
+    case XKB_KEY_u:
       fini_completion();
       if (check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
         hikari_input_buffer_clear(&mode->input_buffer);
+      } else {
+        put_char(&mode->input_buffer, keyboard, keycode);
+      }
+      break;
+
+    case XKB_KEY_w:
+      fini_completion();
+      if (check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
+        hikari_input_buffer_remove_word(&mode->input_buffer);
       } else {
         put_char(&mode->input_buffer, keyboard, keycode);
       }

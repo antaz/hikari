@@ -28,6 +28,9 @@ void
 hikari_input_buffer_remove_char(struct hikari_input_buffer *input_buffer);
 
 void
+hikari_input_buffer_remove_word(struct hikari_input_buffer *input_buffer);
+
+void
 hikari_input_buffer_clear(struct hikari_input_buffer *input_buffer);
 
 char *
