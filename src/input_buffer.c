@@ -1,8 +1,20 @@
 #include <hikari/input_buffer.h>
 
+#include <assert.h>
+#include <stdbool.h>
 #include <string.h>
 
 #include <hikari/utf8.h>
+
+static bool
+is_empty(struct hikari_input_buffer *input_buffer)
+{
+  size_t pos = input_buffer->pos;
+
+  assert(pos == 0 ? input_buffer->buffer[0] == '\0' : true);
+
+  return pos == 0;
+}
 
 struct hikari_input_buffer *
 hikari_input_buffer_init(
@@ -45,8 +57,7 @@ hikari_input_buffer_add_utf32_char(
 void
 hikari_input_buffer_remove_char(struct hikari_input_buffer *input_buffer)
 {
-  if (input_buffer->pos == 0) {
-    input_buffer->buffer[0] = '\0';
+  if (is_empty(input_buffer)) {
     return;
   }
 
