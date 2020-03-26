@@ -27,14 +27,6 @@ hikari_keyboard_fini(struct hikari_keyboard *keyboard);
 struct xkb_keymap *
 hikari_load_keymap();
 
-bool
-hikari_keyboard_confirmation(
-    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event);
-
-bool
-hikari_keyboard_cancellation(
-    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event);
-
 typedef void (*hikari_keysym_iterator)(
     struct hikari_keyboard *keyboard, uint32_t keycode, xkb_keysym_t sym);
 

@@ -83,99 +83,14 @@ put_char(struct hikari_input_buffer *input_buffer,
 }
 
 static void
-process_input_key(struct hikari_workspace *workspace,
-    struct wlr_event_keyboard_key *event,
-    struct hikari_keyboard *keyboard)
-{
-  struct hikari_group_assign_mode *mode =
-      (struct hikari_group_assign_mode *)hikari_server.mode;
-
-  uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->device->keyboard);
-
-  const xkb_keysym_t *syms;
-  uint32_t keycode = event->keycode + 8;
-  char *text;
-
-  int nsyms = xkb_state_key_get_syms(
-      keyboard->device->keyboard->xkb_state, keycode, &syms);
-
-  for (int i = 0; i < nsyms; i++) {
-    switch (syms[i]) {
-      case XKB_KEY_Caps_Lock:
-      case XKB_KEY_Shift_L:
-      case XKB_KEY_Shift_R:
-      case XKB_KEY_Control_L:
-      case XKB_KEY_Control_R:
-      case XKB_KEY_Meta_L:
-      case XKB_KEY_Meta_R:
-      case XKB_KEY_Alt_L:
-      case XKB_KEY_Alt_R:
-      case XKB_KEY_Super_L:
-      case XKB_KEY_Super_R:
-        break;
-
-      case XKB_KEY_e:
-        if (modifiers == WLR_MODIFIER_CTRL) {
-          if (mode->completion != NULL) {
-            text = hikari_completion_cancel(mode->completion);
-            hikari_input_buffer_replace(&mode->input_buffer, text);
-            fini_completion();
-          }
-        } else {
-          put_char(&mode->input_buffer, keyboard, keycode);
-        }
-        break;
-
-      case XKB_KEY_h:
-        fini_completion();
-        if (modifiers == WLR_MODIFIER_CTRL) {
-          hikari_input_buffer_remove_char(&mode->input_buffer);
-        } else {
-          put_char(&mode->input_buffer, keyboard, keycode);
-        }
-        break;
-
-      case XKB_KEY_w:
-        fini_completion();
-        if (modifiers == WLR_MODIFIER_CTRL) {
-          hikari_input_buffer_clear(&mode->input_buffer);
-        } else {
-          put_char(&mode->input_buffer, keyboard, keycode);
-        }
-        break;
-
-      case XKB_KEY_BackSpace:
-        fini_completion();
-        hikari_input_buffer_remove_char(&mode->input_buffer);
-        break;
-
-      case XKB_KEY_Tab:
-        init_completion();
-        text = hikari_completion_next(mode->completion);
-        hikari_input_buffer_replace(&mode->input_buffer, text);
-        break;
-
-      case XKB_KEY_ISO_Left_Tab:
-        init_completion();
-        text = hikari_completion_prev(mode->completion);
-        hikari_input_buffer_replace(&mode->input_buffer, text);
-        break;
-
-      default:
-        put_char(&mode->input_buffer, keyboard, keycode);
-        break;
-    }
-  }
-}
-
-static void
-confirm_group_assign(struct hikari_workspace *workspace)
+confirm_group_assign(void)
 {
   struct hikari_group_assign_mode *mode =
       (struct hikari_group_assign_mode *)&hikari_server.group_assign_mode;
 
   assert(mode == (struct hikari_group_assign_mode *)hikari_server.mode);
 
+  struct hikari_workspace *workspace = hikari_server.workspace;
   struct wlr_box *geometry = hikari_view_geometry(workspace->focus_view);
 
   struct hikari_group *group;
@@ -219,13 +134,16 @@ confirm_group_assign(struct hikari_workspace *workspace)
           hikari_configuration->indicator_selected);
     }
   }
+
   hikari_view_group(hikari_server.workspace->focus_view, group);
+
   hikari_server_enter_normal_mode(NULL);
 }
 
 static void
-cancel_group_assign(struct hikari_workspace *workspace)
+cancel_group_assign(void)
 {
+  struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_view *focus_view = workspace->focus_view;
   struct wlr_box *geometry = hikari_view_geometry(focus_view);
 
@@ -242,24 +160,23 @@ cancel_group_assign(struct hikari_workspace *workspace)
         "",
         hikari_configuration->indicator_selected);
   }
+
   hikari_server_enter_normal_mode(NULL);
 }
 
 static void
-update_state(struct hikari_workspace *workspace,
-    struct hikari_keyboard *keyboard,
-    struct wlr_event_keyboard_key *event)
+update_state(void)
 {
   struct hikari_group_assign_mode *mode =
       (struct hikari_group_assign_mode *)&hikari_server.group_assign_mode;
 
   assert(mode == (struct hikari_group_assign_mode *)hikari_server.mode);
 
+  struct hikari_workspace *workspace = hikari_server.workspace;
   struct wlr_box *geometry = hikari_view_border_geometry(workspace->focus_view);
 
   struct hikari_group *group;
 
-  process_input_key(workspace, event, keyboard);
   group = hikari_server_find_group(mode->input_buffer.buffer);
 
   if (!strcmp(mode->input_buffer.buffer, "")) {
@@ -282,18 +199,103 @@ update_state(struct hikari_workspace *workspace,
   }
 }
 
-static void
-assign_group(struct hikari_workspace *workspace,
-    struct wlr_event_keyboard_key *event,
-    struct hikari_keyboard *keyboard)
+static bool
+check_modifier(struct hikari_keyboard *keyboard, uint32_t modifier)
 {
-  if (hikari_keyboard_confirmation(keyboard, event)) {
-    confirm_group_assign(workspace);
-  } else if (hikari_keyboard_cancellation(keyboard, event)) {
-    cancel_group_assign(workspace);
-  } else {
-    update_state(workspace, keyboard, event);
+  uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->device->keyboard);
+
+  return modifiers == modifier;
+}
+
+static void
+handle_keysym(
+    struct hikari_keyboard *keyboard, uint32_t keycode, xkb_keysym_t sym)
+{
+  struct hikari_group_assign_mode *mode =
+      (struct hikari_group_assign_mode *)hikari_server.mode;
+
+  assert(mode == &hikari_server.group_assign_mode);
+
+  char *text;
+
+  switch (sym) {
+    case XKB_KEY_Caps_Lock:
+    case XKB_KEY_Shift_L:
+    case XKB_KEY_Shift_R:
+    case XKB_KEY_Control_L:
+    case XKB_KEY_Control_R:
+    case XKB_KEY_Meta_L:
+    case XKB_KEY_Meta_R:
+    case XKB_KEY_Alt_L:
+    case XKB_KEY_Alt_R:
+    case XKB_KEY_Super_L:
+    case XKB_KEY_Super_R:
+      goto done;
+
+    case XKB_KEY_e:
+      if (check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
+        if (mode->completion != NULL) {
+          text = hikari_completion_cancel(mode->completion);
+          hikari_input_buffer_replace(&mode->input_buffer, text);
+          fini_completion();
+        }
+      } else {
+        put_char(&mode->input_buffer, keyboard, keycode);
+      }
+      break;
+
+    case XKB_KEY_h:
+      fini_completion();
+      if (check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
+        hikari_input_buffer_remove_char(&mode->input_buffer);
+      } else {
+        put_char(&mode->input_buffer, keyboard, keycode);
+      }
+      break;
+
+    case XKB_KEY_w:
+      fini_completion();
+      if (check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
+        hikari_input_buffer_clear(&mode->input_buffer);
+      } else {
+        put_char(&mode->input_buffer, keyboard, keycode);
+      }
+      break;
+
+    case XKB_KEY_BackSpace:
+      fini_completion();
+      hikari_input_buffer_remove_char(&mode->input_buffer);
+      break;
+
+    case XKB_KEY_Tab:
+      init_completion();
+      text = hikari_completion_next(mode->completion);
+      hikari_input_buffer_replace(&mode->input_buffer, text);
+      break;
+
+    case XKB_KEY_ISO_Left_Tab:
+      init_completion();
+      text = hikari_completion_prev(mode->completion);
+      hikari_input_buffer_replace(&mode->input_buffer, text);
+      break;
+
+    case XKB_KEY_Escape:
+      cancel_group_assign();
+      goto done;
+
+    case XKB_KEY_Return:
+      confirm_group_assign();
+      goto done;
+
+    default:
+      put_char(&mode->input_buffer, keyboard, keycode);
+      break;
   }
+
+  update_state();
+
+done:
+  return;
 }
 
 static void
@@ -302,10 +304,9 @@ key_handler(struct wl_listener *listener, void *data)
   struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
   struct wlr_event_keyboard_key *event = data;
 
-  struct hikari_workspace *workspace = hikari_server.workspace;
-
   if (event->state == WLR_KEY_PRESSED) {
-    assign_group(workspace, event, keyboard);
+    uint32_t keycode = event->keycode + 8;
+    hikari_keyboard_for_keysym(keyboard, keycode, handle_keysym);
   }
 }
 
