@@ -159,6 +159,11 @@ handle_keysym(
       sheet = prev_sheet(sheet);
       break;
 
+    case XKB_KEY_c:
+    case XKB_KEY_d:
+      if (!hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
+        goto done;
+      }
     case XKB_KEY_Escape:
       cancel_sheet_assign(workspace);
       goto done;

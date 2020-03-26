@@ -140,13 +140,28 @@ cancel_mark_assign(void)
 }
 
 static void
+select_mark(struct hikari_keyboard *keyboard, uint32_t keycode)
+{
+  uint32_t codepoint = hikari_keyboard_get_codepoint(keyboard, keycode);
+
+  struct hikari_mark *mark;
+  if (hikari_mark_get(codepoint, &mark)) {
+    update_state(mark);
+    hikari_server_refresh_indication();
+  }
+}
+
+static void
 handle_keysym(
     struct hikari_keyboard *keyboard, uint32_t keycode, xkb_keysym_t sym)
 {
-  uint32_t codepoint;
-  struct hikari_mark *mark;
-
   switch (sym) {
+    case XKB_KEY_c:
+    case XKB_KEY_d:
+      if (!hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
+        select_mark(keyboard, keycode);
+        break;
+      }
     case XKB_KEY_Escape:
       cancel_mark_assign();
       hikari_server_refresh_indication();
@@ -162,12 +177,7 @@ handle_keysym(
       break;
 
     default:
-      codepoint = hikari_keyboard_get_codepoint(keyboard, keycode);
-
-      if (hikari_mark_get(codepoint, &mark)) {
-        update_state(mark);
-        hikari_server_refresh_indication();
-      }
+      select_mark(keyboard, keycode);
       break;
   }
 }
@@ -189,11 +199,9 @@ key_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
   struct wlr_event_keyboard_key *event = data;
-
   struct hikari_workspace *workspace = hikari_server.workspace;
-  uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->device->keyboard);
 
-  if (event->state == WLR_KEY_PRESSED && modifiers == 0) {
+  if (event->state == WLR_KEY_PRESSED) {
     assign_mark(workspace, event, keyboard);
   }
 }

@@ -270,6 +270,12 @@ handle_keysym(
       hikari_input_buffer_replace(&mode->input_buffer, text);
       break;
 
+    case XKB_KEY_c:
+    case XKB_KEY_d:
+      if (!hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
+        put_char(&mode->input_buffer, keyboard, keycode);
+        break;
+      }
     case XKB_KEY_Escape:
       cancel_group_assign();
       goto done;
