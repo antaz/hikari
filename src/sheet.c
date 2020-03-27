@@ -278,23 +278,6 @@ LAYOUT(empty)
 
 #undef LAYOUT_WINDOWS
 
-void
-hikari_sheet_reset_layout(struct hikari_sheet *sheet)
-{
-  struct hikari_layout *layout = sheet->layout;
-
-  if (layout == NULL) {
-    return;
-  }
-
-  struct hikari_view *view;
-  wl_list_for_each (view, &sheet->views, sheet_views) {
-    if (hikari_view_is_tiled(view)) {
-      hikari_view_reset_geometry(view);
-    }
-  }
-}
-
 #define SHEET_VIEW(name, link)                                                 \
   struct hikari_view *hikari_sheet_##name##_view(struct hikari_sheet *sheet)   \
   {                                                                            \

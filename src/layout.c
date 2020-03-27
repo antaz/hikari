@@ -42,3 +42,18 @@ hikari_layout_init(struct hikari_layout *layout,
 CYCLE_LAYOUT(first, next)
 CYCLE_LAYOUT(last, prev)
 #undef CYCLE_LAYOUT
+
+void
+hikari_layout_reset(struct hikari_layout *layout)
+{
+  assert(layout != NULL);
+
+  struct hikari_sheet *sheet = layout->sheet;
+
+  struct hikari_view *view;
+  wl_list_for_each (view, &sheet->views, sheet_views) {
+    if (hikari_view_is_tiled(view)) {
+      hikari_view_reset_geometry(view);
+    }
+  }
+}

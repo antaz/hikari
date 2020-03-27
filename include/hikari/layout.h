@@ -27,4 +27,7 @@ hikari_layout_first_view(struct hikari_layout *layout);
 struct hikari_view *
 hikari_layout_last_view(struct hikari_layout *layout);
 
+void
+hikari_layout_reset(struct hikari_layout *layout);
+
 #endif

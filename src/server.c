@@ -35,6 +35,7 @@
 #include <hikari/configuration.h>
 #include <hikari/exec.h>
 #include <hikari/keyboard.h>
+#include <hikari/layout.h>
 #include <hikari/mark.h>
 #include <hikari/memory.h>
 #include <hikari/output.h>
@@ -1141,7 +1142,13 @@ hikari_server_execute_command(void *arg)
 void
 hikari_server_reset_sheet_layout(void *arg)
 {
-  hikari_sheet_reset_layout(hikari_server.workspace->sheet);
+  struct hikari_layout *layout = hikari_server.workspace->sheet->layout;
+
+  if (layout == NULL) {
+    return;
+  }
+
+  hikari_layout_reset(layout);
 }
 
 void

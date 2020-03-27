@@ -82,9 +82,6 @@ hikari_sheet_empty_layout(struct hikari_sheet *sheet,
 int
 hikari_sheet_tileable_views(struct hikari_sheet *sheet);
 
-void
-hikari_sheet_reset_layout(struct hikari_sheet *sheet);
-
 struct hikari_sheet *
 hikari_sheet_next(struct hikari_sheet *sheet);
 
