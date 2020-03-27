@@ -59,3 +59,46 @@ hikari_group_last_view(
 
   return NULL;
 }
+
+void
+hikari_group_raise(struct hikari_group *group, struct hikari_view *top)
+{
+  assert(group != NULL);
+  assert(top != NULL);
+
+  struct hikari_view *view, *view_temp, *first = NULL;
+  wl_list_for_each_reverse_safe (
+      view, view_temp, &group->visible_views, visible_group_views) {
+    if (view == first) {
+      break;
+    } else if (first == NULL) {
+      first = view;
+    }
+
+    if (view != top) {
+      hikari_view_raise(view);
+    }
+  }
+
+  hikari_view_raise(top);
+}
+
+void
+hikari_group_lower(struct hikari_group *group, struct hikari_view *top)
+{
+  hikari_view_lower(top);
+
+  struct hikari_view *view, *view_temp, *first = NULL;
+  wl_list_for_each_safe (
+      view, view_temp, &group->visible_views, visible_group_views) {
+    if (view == first) {
+      break;
+    } else if (first == NULL) {
+      first = view;
+    }
+
+    if (view != top) {
+      hikari_view_lower(view);
+    }
+  }
+}

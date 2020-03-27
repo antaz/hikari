@@ -477,27 +477,9 @@ hikari_workspace_raise_view(struct hikari_workspace *workspace)
 void
 hikari_workspace_raise_group(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
-  struct hikari_group *group = focus_view->group;
-  struct hikari_view *tail = NULL;
-
-  struct hikari_view *view = NULL, *view_temp = NULL;
-  wl_list_for_each_reverse_safe (
-      view, view_temp, &workspace->views, workspace_views) {
-    if (view == tail) {
-      break;
-    }
-
-    if (view->group == group && view != focus_view) {
-      if (tail == NULL) {
-        tail = view;
-      }
-      hikari_view_raise(view);
-    }
-  }
-
-  hikari_view_raise(focus_view);
+  hikari_group_raise(focus_view->group, focus_view);
 
   hikari_server_refresh_indication();
 }
@@ -516,22 +498,9 @@ hikari_workspace_lower_view(struct hikari_workspace *workspace)
 void
 hikari_workspace_lower_group(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
-  struct hikari_group *group = focus_view->group;
-
-  hikari_view_lower(focus_view);
-
-  struct hikari_view *view = NULL, *view_temp = NULL;
-  wl_list_for_each_safe (view, view_temp, &workspace->views, workspace_views) {
-    if (view == focus_view) {
-      break;
-    }
-
-    if (view->group == group) {
-      hikari_view_lower(view);
-    }
-  }
+  hikari_group_lower(focus_view->group, focus_view);
 
   hikari_server_cursor_focus();
 }
