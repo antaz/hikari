@@ -718,7 +718,6 @@ server_init(struct hikari_server *server, char *config_path)
   hikari_normal_mode_init(&server->normal_mode);
   hikari_resize_mode_init(&server->resize_mode);
   hikari_sheet_assign_mode_init(&server->sheet_assign_mode);
-  hikari_tiling_mode_init(&server->tiling_mode);
 
   hikari_marks_init();
 }
@@ -1014,26 +1013,6 @@ hikari_server_enter_input_grab_mode(void *arg)
   hikari_server.mode = (struct hikari_mode *)&hikari_server.input_grab_mode;
 
   hikari_server_refresh_indication();
-}
-
-void
-hikari_server_enter_tiling_mode(void *arg)
-{
-  struct hikari_workspace *workspace = hikari_server.workspace;
-
-  assert(workspace != NULL);
-
-  if (workspace->sheet->layout == NULL) {
-    return;
-  }
-
-  if (workspace->focus_view != NULL) {
-    hikari_workspace_focus_view(workspace, NULL);
-  }
-
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.tiling_mode;
-
-  hikari_output_damage_whole(workspace->output);
 }
 
 static void

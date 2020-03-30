@@ -14,7 +14,6 @@
 #include <hikari/normal_mode.h>
 #include <hikari/resize_mode.h>
 #include <hikari/sheet_assign_mode.h>
-#include <hikari/tiling_mode.h>
 #include <hikari/workspace.h>
 
 struct wlr_input_device;
@@ -91,7 +90,6 @@ struct hikari_server {
   struct hikari_normal_mode normal_mode;
   struct hikari_resize_mode resize_mode;
   struct hikari_sheet_assign_mode sheet_assign_mode;
-  struct hikari_tiling_mode tiling_mode;
 
   struct {
     uint32_t modifiers;
@@ -284,7 +282,6 @@ MODE(move)
 MODE(normal)
 MODE(resize)
 MODE(sheet_assign)
-MODE(tiling)
 
 void
 hikari_server_enter_mark_select_switch_mode(void *arg);

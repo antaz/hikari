@@ -60,7 +60,6 @@ OBJS = \
 	sheet_assign_mode.o \
 	split.o \
 	tile.o \
-	tiling_mode.o \
 	unlocker.o \
 	view.o \
 	view_autoconf.o \
