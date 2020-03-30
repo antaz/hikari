@@ -395,6 +395,23 @@ hikari_sheet_prev_inhabited(struct hikari_sheet *sheet)
   return sheet;
 }
 
+static void
+raise_floating(struct hikari_sheet *sheet)
+{
+  struct hikari_view *view, *view_temp, *first = NULL;
+  wl_list_for_each_reverse_safe (view, view_temp, &sheet->views, sheet_views) {
+    if (hikari_view_is_floating(view)) {
+      if (first == view) {
+        break;
+      } else if (first == NULL) {
+        first = view;
+      }
+
+      hikari_view_raise(view);
+    }
+  }
+}
+
 void
 hikari_sheet_apply_split(struct hikari_sheet *sheet, struct hikari_split *split)
 {
@@ -419,6 +436,8 @@ hikari_sheet_apply_split(struct hikari_sheet *sheet, struct hikari_split *split)
   sheet->layout->split = split;
 
   hikari_split_apply(split, &geometry, first);
+
+  raise_floating(sheet);
 }
 
 bool
