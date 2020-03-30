@@ -1159,7 +1159,9 @@ hikari_server_layout_sheet(void *arg)
       hikari_configuration_lookup_layout(hikari_configuration, layout_register);
 
   if (split != NULL) {
-    hikari_sheet_apply_split(hikari_server.workspace->sheet, split);
+    struct hikari_workspace *workspace = hikari_server.workspace;
+    hikari_workspace_display_sheet_current(workspace);
+    hikari_sheet_apply_split(workspace->sheet, split);
   }
 }
 

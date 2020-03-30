@@ -50,9 +50,7 @@ scan_next_tileable_view(struct hikari_view *view)
   while (next != &view->sheet->views) {
     view = wl_container_of(next, view, sheet_views);
     if (hikari_view_is_tileable(view)) {
-      if (hikari_view_is_hidden(view)) {
-        hikari_view_show(view);
-      }
+      assert(!hikari_view_is_hidden(view));
       return view;
     }
     next = view->sheet_views.next;
