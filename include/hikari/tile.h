@@ -31,4 +31,10 @@ hikari_tile_prev_view(struct hikari_tile *tile);
 void
 hikari_tile_detach(struct hikari_tile *tile);
 
+static inline bool
+hikari_tile_is_attached(struct hikari_tile *tile)
+{
+  return tile->layout != NULL;
+}
+
 #endif

@@ -215,8 +215,6 @@ cancel_tile(struct hikari_view *view)
     hikari_tile_detach(tile);
     hikari_free(tile);
     view->pending_operation.tile = NULL;
-
-    hikari_view_unset_dirty(view);
   }
 }
 
@@ -224,21 +222,27 @@ static void
 queue_reset(struct hikari_view *view, bool center, bool migrate)
 {
   struct wlr_box *geometry = hikari_view_geometry(view);
+  struct hikari_operation *op = &view->pending_operation;
+  struct hikari_tile *tile = view->tile;
 
   cancel_tile(view);
+  hikari_view_set_dirty(view);
 
-  if (geometry->width != view->geometry.width &&
-      geometry->height != view->geometry.height) {
-    uint32_t serial =
+  if (hikari_view_is_tiled(view) && hikari_tile_is_attached(tile)) {
+    hikari_tile_detach(tile);
+  }
+
+  op->type = HIKARI_OPERATION_TYPE_RESET;
+  op->geometry = view->geometry;
+  op->center = center;
+  op->migrate = migrate;
+
+  if (geometry->width == view->geometry.width &&
+      geometry->height == view->geometry.height) {
+    hikari_view_commit_pending_operation(view, geometry);
+  } else {
+    op->serial =
         view->resize(view, view->geometry.width, view->geometry.height);
-
-    struct hikari_operation *op = &view->pending_operation;
-
-    op->type = HIKARI_OPERATION_TYPE_RESET;
-    op->serial = serial;
-    op->geometry = view->geometry;
-    op->center = center;
-    op->migrate = migrate;
 
     if (view->move_resize != NULL) {
       view->move_resize(view,
@@ -247,36 +251,10 @@ queue_reset(struct hikari_view *view, bool center, bool migrate)
           op->geometry.width,
           op->geometry.height);
     }
-
-    hikari_view_set_dirty(view);
-  } else {
-    if (hikari_view_is_hidden(view)) {
-      move_to_top(view);
-    } else {
-      raise_view(view);
-    }
-
-    if (migrate) {
-      assert(hikari_view_is_hidden(view));
-
-      struct hikari_sheet *sheet = view->sheet;
-
-      move_view(view, geometry, geometry->x, geometry->y);
-
-      if (hikari_sheet_is_visible(sheet)) {
-        hikari_view_show(view);
-
-        if (center) {
-          hikari_view_center_cursor(view);
-          hikari_server_cursor_focus();
-        }
-      }
-    }
   }
 
-  if (hikari_view_is_tiled(view)) {
-    hikari_tile_detach(view->tile);
-  }
+  assert(
+      hikari_view_is_tiled(view) ? !hikari_tile_is_attached(view->tile) : true);
 }
 
 static void
@@ -1474,6 +1452,33 @@ commit_resize(struct hikari_view *view,
 }
 
 static void
+commit_migrate(struct hikari_view *view,
+    struct hikari_operation *operation,
+    struct wlr_box *geometry_before)
+{
+  hikari_view_refresh_geometry(view, &operation->geometry);
+
+  struct hikari_sheet *sheet = view->sheet;
+  struct wlr_box *geometry = hikari_view_geometry(view);
+
+  hikari_output_add_damage(view->output, geometry_before);
+
+  move_view(view, geometry, geometry->x, geometry->y);
+
+  if (hikari_sheet_is_visible(sheet)) {
+    if (hikari_view_is_hidden(view)) {
+      hikari_view_show(view);
+    }
+    raise_view(view);
+
+    if (operation->center) {
+      hikari_view_center_cursor(view);
+      hikari_server_cursor_focus();
+    }
+  }
+}
+
+static void
 commit_reset(struct hikari_view *view,
     struct hikari_operation *operation,
     struct wlr_box *geometry_before)
@@ -1481,6 +1486,7 @@ commit_reset(struct hikari_view *view,
   hikari_indicator_damage(&hikari_server.indicator, view);
 
   if (hikari_view_is_tiled(view)) {
+    assert(!hikari_tile_is_attached(view->tile));
     hikari_free(view->tile);
     view->tile = NULL;
   }
@@ -1499,29 +1505,7 @@ commit_reset(struct hikari_view *view,
   }
 
   if (operation->migrate) {
-    struct hikari_sheet *sheet = view->sheet;
-
-    hikari_output_add_damage(view->output, geometry_before);
-
-    struct wlr_box *geometry = hikari_view_geometry(view);
-
-    hikari_view_refresh_geometry(view, &operation->geometry);
-    move_view(view, geometry, geometry->x, geometry->y);
-
-    if (hikari_sheet_is_visible(sheet)) {
-      if (hikari_view_is_hidden(view)) {
-        hikari_view_show(view);
-      }
-
-      raise_view(view);
-
-      if (operation->center) {
-        hikari_view_center_cursor(view);
-        hikari_server_cursor_focus();
-      }
-    } else {
-      move_to_top(view);
-    }
+    commit_migrate(view, &view->pending_operation, geometry_before);
   } else {
     commit_pending_operation(view, operation, geometry_before);
   }
@@ -1644,6 +1628,8 @@ commit_tile(struct hikari_view *view,
   if (hikari_view_is_tiled(view)) {
     struct hikari_tile *tile = view->tile;
 
+    assert(hikari_tile_is_attached(tile));
+
     wl_list_remove(&tile->layout_tiles);
     hikari_free(tile);
     view->tile = NULL;
@@ -1702,7 +1688,7 @@ hikari_view_commit_pending_operation(
     struct hikari_view *view, struct wlr_box *geometry)
 {
   assert(view != NULL);
-  assert(view->pending_operation.dirty);
+  assert(hikari_view_is_dirty(view));
 
   view->pending_operation.geometry.width = geometry->width;
   view->pending_operation.geometry.height = geometry->height;
