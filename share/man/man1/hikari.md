@@ -694,14 +694,13 @@ Getting everything to look like is an important aspect of feeling "at home".
 
 * **border**
 
-  Defined the thickness of view borders in pixels.
+  Defines the thickness of view borders in pixels.
 
 Standard border thickness is set to **1**.
 
 ```
 border = 1
 ```
-
 
 * **gap**
 
