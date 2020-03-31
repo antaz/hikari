@@ -57,3 +57,64 @@ hikari_layout_reset(struct hikari_layout *layout)
     }
   }
 }
+
+static void
+restack(struct hikari_layout *layout)
+{
+  assert(layout != NULL);
+
+  struct hikari_tile *tile;
+  wl_list_for_each_reverse (tile, &layout->tiles, layout_tiles) {
+    struct hikari_view *view = tile->view;
+
+    if (hikari_view_is_hidden(view)) {
+      hikari_view_show(view);
+    }
+
+    hikari_view_raise(view);
+  }
+}
+
+void
+hikari_layout_restack_append(struct hikari_layout *layout)
+{
+  assert(layout != NULL);
+
+  restack(layout);
+
+  hikari_sheet_apply_split(layout->sheet, layout->split);
+}
+
+static bool
+view_is_prependable(struct hikari_view *view)
+{
+  return !hikari_view_is_tiled(view) && hikari_view_is_tileable(view);
+}
+
+static void
+raise_prependable(struct hikari_sheet *sheet)
+{
+  struct hikari_view *view, *view_temp, *first = NULL;
+  wl_list_for_each_reverse_safe (view, view_temp, &sheet->views, sheet_views) {
+    if (view_is_prependable(view)) {
+      if (view == first) {
+        break;
+      } else if (first == NULL) {
+        first = view;
+      }
+
+      hikari_view_raise(view);
+    }
+  }
+}
+
+void
+hikari_layout_restack_prepend(struct hikari_layout *layout)
+{
+  assert(layout != NULL);
+
+  restack(layout);
+  raise_prependable(layout->sheet);
+
+  hikari_sheet_apply_split(layout->sheet, layout->split);
+}

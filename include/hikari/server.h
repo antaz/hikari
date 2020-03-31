@@ -294,6 +294,12 @@ void
 hikari_server_reset_sheet_layout(void *arg);
 
 void
+hikari_server_layout_restack_append(void *arg);
+
+void
+hikari_server_layout_restack_prepend(void *arg);
+
+void
 hikari_server_layout_sheet(void *arg);
 
 void

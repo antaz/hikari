@@ -1131,6 +1131,30 @@ hikari_server_reset_sheet_layout(void *arg)
 }
 
 void
+hikari_server_layout_restack_append(void *arg)
+{
+  struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_layout *layout = workspace->sheet->layout;
+
+  if (layout != NULL) {
+    hikari_workspace_display_sheet_current(workspace);
+    hikari_layout_restack_append(layout);
+  }
+}
+
+void
+hikari_server_layout_restack_prepend(void *arg)
+{
+  struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_layout *layout = workspace->sheet->layout;
+
+  if (layout != NULL) {
+    hikari_workspace_display_sheet_current(workspace);
+    hikari_layout_restack_prepend(layout);
+  }
+}
+
+void
 hikari_server_layout_sheet(void *arg)
 {
   char layout_register = (intptr_t)arg;

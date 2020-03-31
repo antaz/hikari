@@ -227,6 +227,11 @@ Layout actions
 
   Resets the geometry of all views in the current layout.
 
+* **layout-restack-[append|prepend]**
+
+  Adds non-floating sheet views to an existing layout without changing layout
+  order of already tiled views.
+
 Mark actions
 ------------
 * **mark-show-[a-z]**

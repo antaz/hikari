@@ -30,4 +30,10 @@ hikari_layout_last_view(struct hikari_layout *layout);
 void
 hikari_layout_reset(struct hikari_layout *layout);
 
+void
+hikari_layout_restack_append(struct hikari_layout *layout);
+
+void
+hikari_layout_restack_prepend(struct hikari_layout *layout);
+
 #endif

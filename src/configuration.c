@@ -1297,6 +1297,12 @@ parse_binding(struct hikari_configuration *configuration,
   } else if (!strcmp(str, "layout-reset")) {
     *action = hikari_server_reset_sheet_layout;
     *arg = NULL;
+  } else if (!strcmp(str, "layout-restack-append")) {
+    *action = hikari_server_layout_restack_append;
+    *arg = NULL;
+  } else if (!strcmp(str, "layout-restack-prepend")) {
+    *action = hikari_server_layout_restack_prepend;
+    *arg = NULL;
 
   } else if (!strcmp(str, "mode-enter-group-assign")) {
     *action = hikari_server_enter_group_assign_mode;
