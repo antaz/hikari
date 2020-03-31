@@ -342,7 +342,7 @@ buffer_damage_end:
   pixman_region32_fini(&buffer_damage);
 
   struct hikari_view *view = NULL;
-  wl_list_for_each_reverse (view, &output->workspace->views, workspace_views) {
+  wl_list_for_each_reverse (view, &output->views, output_views) {
     hikari_view_interface_for_each_surface(
         (struct hikari_view_interface *)view, send_frame_done, &now);
   }
