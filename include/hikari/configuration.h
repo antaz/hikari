@@ -31,6 +31,7 @@ struct hikari_configuration {
 
   int border;
   int gap;
+  int step;
 
   struct hikari_bindings bindings;
 

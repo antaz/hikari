@@ -4,6 +4,7 @@
 #include <wayland-server-core.h>
 #include <wayland-util.h>
 
+#include <hikari/configuration.h>
 #include <hikari/group_assign_mode.h>
 #include <hikari/indicator.h>
 #include <hikari/input_grab_mode.h>
@@ -203,10 +204,10 @@ SHEET_ACTIONS(prev)
     hikari_workspace_snap_view_##dir(hikari_server.workspace);                 \
   }
 
-MOVE_RESIZE_ACTIONS(up, 0, -100)
-MOVE_RESIZE_ACTIONS(down, 0, 100)
-MOVE_RESIZE_ACTIONS(left, -100, 0)
-MOVE_RESIZE_ACTIONS(right, 100, 0)
+MOVE_RESIZE_ACTIONS(up, 0, -hikari_configuration->step)
+MOVE_RESIZE_ACTIONS(down, 0, hikari_configuration->step)
+MOVE_RESIZE_ACTIONS(left, -hikari_configuration->step, 0)
+MOVE_RESIZE_ACTIONS(right, hikari_configuration->step, 0)
 #undef MOVE_RESIZE_ACTIONS
 
 #define CYCLE_ACTION(n) void hikari_server_cycle_##n(void *arg);

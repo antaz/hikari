@@ -721,6 +721,18 @@ gap = 5
 
 ```
 font = "DejaVu Sans Mono 10"
+
+```
+
+* **step**
+
+  The step value defines how many pixels move and resize operations should
+  cover.
+
+The standard **step** value is 100.
+
+```
+step = 100
 ```
 
 Colorschemes

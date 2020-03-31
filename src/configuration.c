@@ -1970,6 +1970,22 @@ parse_gap(
 }
 
 static bool
+parse_step(
+    struct hikari_configuration *configuration, const ucl_object_t *step_obj)
+{
+  int64_t step;
+
+  if (!ucl_object_toint_safe(step_obj, &step)) {
+    fprintf(stderr, "configuration error: expected integer for \"step\"\n");
+    return false;
+  }
+
+  configuration->step = step;
+
+  return true;
+}
+
+static bool
 parse_font(
     struct hikari_configuration *configuration, const ucl_object_t *font_obj)
 {
@@ -2057,6 +2073,10 @@ hikari_configuration_load(
       }
     } else if (!strcmp(key, "gap")) {
       if (!parse_gap(configuration, cur)) {
+        goto done;
+      }
+    } else if (!strcmp(key, "step")) {
+      if (!parse_step(configuration, cur)) {
         goto done;
       }
     } else if (!!strcmp(key, "actions") && !!strcmp(key, "layouts")) {
@@ -2178,6 +2198,7 @@ hikari_configuration_init(struct hikari_configuration *configuration)
 
   configuration->border = 1;
   configuration->gap = 5;
+  configuration->step = 100;
 
   for (int i = 0; i < HIKARI_NR_OF_EXECS; i++) {
     hikari_exec_init(&configuration->execs[i]);
