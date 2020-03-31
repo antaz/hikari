@@ -104,11 +104,6 @@ and each _group_ can have an arbitrary name. Views from one _group_ can be
 spread among all available sheets. Some actions act on entire _groups_ rather
 than individual views.
 
-Each sheet automatically has its own **sheet group** that collects all views
-pinned to it that are not a member of an arbitrary group. Its name starts with
-the sheet number and also contains the name of the output the sheet's workspace
-belongs to.
-
 Layout
 ------
 Each sheet can have at most one _layout_ for tiling views. Applying a _layout_
@@ -252,8 +247,7 @@ Mode actions
 
   Entering _group-assign-mode_ allows the user to change the group of the
   currently focused view. Groups that do no exist yet get created. Groups that
-  become empty get destroyed. Groups are not allowed to start with a digit
-  unless they are automatically created as sheet groups.
+  become empty get destroyed.
 
 * **mode-enter-input-grab**
 
@@ -513,10 +507,8 @@ VIEW CONFIGURATION
 ==================
 
 When an application start its views can be automatically configured by
-**hikari**. Each view has a property called *app_id* (*class* for X
-applications), in the *views* section this can be used to specify certain
-properties you want for that view to apply.
-
+**hikari**. Each view has a property called *id*, in the *views* section this
+can be used to specify certain properties you want for that view to apply.
 
 * **focus**
 
@@ -527,7 +519,8 @@ properties you want for that view to apply.
 * **group**
 
   Automatically assign this view to a group (if the group does not exist it is
-  created automatically).
+  created automatically). If no group is specified a group name equal to the
+  view *id* is chosen.
 
 * **mark**
 
@@ -544,7 +537,7 @@ properties you want for that view to apply.
   the **current sheet** is unequal to this sheet or **0** this view
   automatically is considered to be **borrowed**.
 
-To configure views of the **systat** *app_id* to become a member of the group
+To configure views of the **systat** *id* to become a member of the group
 *monitor* and automatically assign them to sheet **0** with a given position and
 focus grabbing we would do something like this.
 

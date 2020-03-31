@@ -11,7 +11,6 @@ struct hikari_workspace;
 
 struct hikari_group {
   char *name;
-  struct hikari_sheet *sheet;
 
   struct wl_list views;
   struct wl_list visible_views;
@@ -39,11 +38,5 @@ hikari_group_first_view(
 struct hikari_view *
 hikari_group_last_view(
     struct hikari_group *group, struct hikari_workspace *workspace);
-
-static inline bool
-hikari_group_is_sheet(struct hikari_group *group)
-{
-  return group->sheet != NULL;
-}
 
 #endif

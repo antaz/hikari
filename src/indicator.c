@@ -54,12 +54,8 @@ hikari_indicator_update(struct hikari_indicator *indicator,
       hikari_view_is_invisible(view),
       hikari_view_is_floating(view));
 
-  if (view->sheet->group != view->group) {
-    hikari_indicator_update_group(
-        indicator, geometry, output, view->group->name, background);
-  } else {
-    hikari_indicator_update_group(indicator, geometry, output, "", background);
-  }
+  hikari_indicator_update_group(
+      indicator, geometry, output, view->group->name, background);
 
   if (view->mark != NULL) {
     hikari_indicator_update_mark(
@@ -101,6 +97,12 @@ hikari_indicator_render(
   render_data->geometry = border_geometry;
 }
 
+static char
+sheet_name(struct hikari_sheet *sheet)
+{
+  return sheet->nr + 48;
+}
+
 void
 hikari_indicator_update_sheet(struct hikari_indicator *indicator,
     struct wlr_box *view_geometry,
@@ -120,17 +122,17 @@ hikari_indicator_update_sheet(struct hikari_indicator *indicator,
 
   if (invisible) {
     text[i++] = '[';
-    text[i++] = sheet->group->name[0];
+    text[i++] = sheet_name(sheet);
     text[i++] = ']';
   } else {
-    text[i++] = sheet->group->name[0];
+    text[i++] = sheet_name(sheet);
   }
 
   if (sheet->workspace->sheet != sheet) {
     text[i++] = ' ';
     text[i++] = '@';
     text[i++] = ' ';
-    text[i++] = sheet->workspace->sheet->group->name[0];
+    text[i++] = sheet_name(sheet->workspace->sheet);
   }
 
   text[i++] = ' ';

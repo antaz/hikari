@@ -186,24 +186,12 @@ static void
 remove_from_group(struct hikari_view *view)
 {
   assert(!hikari_view_is_hidden(view));
-  assert(!hikari_group_is_sheet(view->group));
 
   if (!hikari_view_is_hidden(view)) {
     decrease_group_visibility(view);
   }
 
   detach_from_group(view);
-}
-
-static void
-remove_from_sheet_group(struct hikari_view *view)
-{
-  assert(hikari_group_is_sheet(view->group));
-
-  decrease_group_visibility(view);
-
-  wl_list_remove(&view->group_views);
-  wl_list_remove(&view->sheet_views);
 }
 
 static void
@@ -272,179 +260,6 @@ queue_migrate(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
   queue_reset(view, center, true);
 }
 
-static void
-regroup_from_sheet_to_sheet(
-    struct hikari_view *view, struct hikari_group *group, bool center)
-{
-  assert(hikari_group_is_sheet(view->group));
-  assert(hikari_group_is_sheet(group));
-
-  bool migrate = group->sheet->workspace->output != view->output;
-
-  if (migrate) {
-    if (!hikari_view_is_hidden(view)) {
-      hikari_view_hide(view);
-    }
-
-    view->group = group;
-
-    queue_migrate(view, group->sheet, true);
-  } else {
-
-    if (hikari_sheet_is_visible(group->sheet)) {
-      remove_from_sheet_group(view);
-
-      view->sheet = group->sheet;
-      wl_list_insert(&view->sheet->views, &view->sheet_views);
-
-      view->group = group;
-      wl_list_insert(&group->views, &view->group_views);
-
-      increase_group_visiblity(view);
-
-      wl_list_remove(&view->workspace_views);
-      wl_list_insert(&group->sheet->workspace->views, &view->workspace_views);
-
-      if (hikari_view_is_tiled(view)) {
-        hikari_view_reset_geometry(view);
-      }
-    } else {
-      assert(view != NULL);
-
-      hikari_view_hide(view);
-
-      view->sheet = group->sheet;
-      wl_list_remove(&view->sheet_views);
-      wl_list_insert(&view->sheet->views, &view->sheet_views);
-
-      view->group = group;
-      wl_list_remove(&view->group_views);
-      wl_list_insert(&view->group->views, &view->group_views);
-
-      if (hikari_view_is_tiled(view)) {
-        hikari_view_reset_geometry(view);
-      }
-    }
-  }
-}
-
-static void
-regroup_from_sheet_to_group(
-    struct hikari_view *view, struct hikari_group *group)
-{
-  assert(hikari_group_is_sheet(view->group));
-  assert(!hikari_group_is_sheet(group));
-
-  remove_from_sheet_group(view);
-
-  wl_list_insert(&view->sheet->views, &view->sheet_views);
-
-  view->group = group;
-  wl_list_insert(&group->views, &view->group_views);
-
-  increase_group_visiblity(view);
-
-  wl_list_remove(&view->workspace_views);
-  wl_list_insert(&view->sheet->workspace->views, &view->workspace_views);
-}
-
-static void
-regroup_from_group_to_sheet(
-    struct hikari_view *view, struct hikari_group *group)
-{
-  assert(!hikari_group_is_sheet(view->group));
-  assert(hikari_group_is_sheet(group));
-
-  bool migrate = group->sheet->workspace->output != view->output;
-
-  if (migrate) {
-    if (!hikari_view_is_hidden(view)) {
-      hikari_view_hide(view);
-    }
-
-    detach_from_group(view);
-    wl_list_init(&view->group_views);
-
-    view->group = group;
-
-    queue_migrate(view, group->sheet, true);
-  } else {
-    if (hikari_sheet_is_visible(group->sheet)) {
-      remove_from_group(view);
-
-      view->sheet = group->sheet;
-      wl_list_remove(&view->sheet_views);
-      wl_list_insert(&view->sheet->views, &view->sheet_views);
-
-      view->group = group;
-      wl_list_insert(&group->views, &view->group_views);
-
-      increase_group_visiblity(view);
-
-      wl_list_remove(&view->workspace_views);
-      wl_list_insert(&view->sheet->workspace->views, &view->workspace_views);
-    } else {
-      hikari_view_hide(view);
-
-      detach_from_group(view);
-
-      view->sheet = group->sheet;
-      view->group = group;
-
-      wl_list_remove(&view->sheet_views);
-      wl_list_insert(&view->sheet->views, &view->sheet_views);
-
-      wl_list_insert(&view->group->views, &view->group_views);
-
-      if (hikari_view_is_tiled(view)) {
-        hikari_view_reset_geometry(view);
-      }
-    }
-  }
-}
-
-static void
-regroup_from_group_to_group(
-    struct hikari_view *view, struct hikari_group *group)
-{
-  assert(!hikari_group_is_sheet(view->group));
-  assert(!hikari_group_is_sheet(group));
-
-  remove_from_group(view);
-
-  wl_list_remove(&view->sheet_views);
-  wl_list_insert(&view->sheet->views, &view->sheet_views);
-
-  view->group = group;
-  wl_list_insert(&group->views, &view->group_views);
-
-  increase_group_visiblity(view);
-
-  wl_list_remove(&view->workspace_views);
-  wl_list_insert(&view->sheet->workspace->views, &view->workspace_views);
-}
-
-static void
-regroup(struct hikari_view *view, struct hikari_group *group, bool center)
-{
-  assert(view != NULL);
-  assert(group != NULL);
-
-  if (hikari_group_is_sheet(view->group)) {
-    if (hikari_group_is_sheet(group)) {
-      regroup_from_sheet_to_sheet(view, group, center);
-    } else {
-      regroup_from_sheet_to_group(view, group);
-    }
-  } else {
-    if (hikari_group_is_sheet(group)) {
-      regroup_from_group_to_sheet(view, group);
-    } else {
-      regroup_from_group_to_group(view, group);
-    }
-  }
-}
-
 void
 hikari_view_init(struct hikari_view *view,
     enum hikari_view_type type,
@@ -464,6 +279,7 @@ hikari_view_init(struct hikari_view *view,
   view->group = NULL;
   view->title = NULL;
   view->tile = NULL;
+  view->id = NULL;
   view->use_csd = false;
   view->current_geometry = &view->geometry;
   view->current_unmaximized_geometry = &view->geometry;
@@ -484,13 +300,10 @@ hikari_view_fini(struct hikari_view *view)
 #endif
 
   hikari_free(view->title);
+  hikari_free(view->id);
 
   if (view->group != NULL) {
-    if (hikari_group_is_sheet(view->group)) {
-      wl_list_remove(&view->group_views);
-    } else {
-      detach_from_group(view);
-    }
+    detach_from_group(view);
   }
 
   if (view->sheet != NULL) {
@@ -538,6 +351,15 @@ hikari_view_set_title(struct hikari_view *view, const char *title)
   } else {
     view->title = NULL;
   }
+}
+
+void
+hikari_view_set_id(struct hikari_view *view, const char *id)
+{
+  assert(view->id == NULL);
+  view->id = hikari_malloc(strlen(id) + 1);
+
+  strcpy(view->id, id);
 }
 
 struct damage_data_t {
@@ -1116,8 +938,6 @@ pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
       hikari_view_damage_whole(view);
       hikari_indicator_damage(&hikari_server.indicator, view);
     }
-  } else if (view->sheet->group == view->group) {
-    regroup(view, sheet->group, center);
   } else {
     if (migrate) {
       queue_migrate(view, sheet, center);
@@ -1221,7 +1041,19 @@ hikari_view_group(struct hikari_view *view, struct hikari_group *group)
     return;
   }
 
-  regroup(view, group, false);
+  remove_from_group(view);
+
+  wl_list_remove(&view->sheet_views);
+  wl_list_insert(&view->sheet->views, &view->sheet_views);
+
+  view->group = group;
+  wl_list_insert(&group->views, &view->group_views);
+
+  increase_group_visiblity(view);
+
+  wl_list_remove(&view->workspace_views);
+  wl_list_insert(&view->sheet->workspace->views, &view->workspace_views);
+
   hikari_view_damage_whole(view);
 }
 

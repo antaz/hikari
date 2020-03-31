@@ -808,7 +808,6 @@ hikari_server_find_or_create_group(const char *group_name)
   if (group == NULL) {
     group = hikari_malloc(sizeof(struct hikari_group));
     hikari_group_init(group, group_name);
-    group->sheet = NULL;
   }
 
   return group;
@@ -981,22 +980,13 @@ hikari_server_enter_group_assign_mode(void *arg)
   struct wlr_box *geometry = hikari_view_border_geometry(focus_view);
   struct hikari_output *output = hikari_server.workspace->output;
 
-  if (focus_view->group == focus_view->sheet->group) {
-    hikari_input_buffer_clear(&mode->input_buffer);
-    hikari_indicator_update_group(&hikari_server.indicator,
-        geometry,
-        output,
-        " ",
-        hikari_configuration->indicator_insert);
-  } else {
-    hikari_input_buffer_replace(&mode->input_buffer, focus_view->group->name);
+  hikari_input_buffer_replace(&mode->input_buffer, focus_view->group->name);
 
-    hikari_indicator_update_group(&hikari_server.indicator,
-        geometry,
-        output,
-        focus_view->group->name,
-        hikari_configuration->indicator_insert);
-  }
+  hikari_indicator_update_group(&hikari_server.indicator,
+      geometry,
+      output,
+      focus_view->group->name,
+      hikari_configuration->indicator_insert);
 }
 
 void

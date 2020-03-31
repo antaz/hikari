@@ -91,51 +91,26 @@ confirm_group_assign(void)
 {
   struct hikari_group_assign_mode *mode = get_mode();
   struct hikari_workspace *workspace = hikari_server.workspace;
-  struct wlr_box *geometry = hikari_view_geometry(workspace->focus_view);
+  struct hikari_view *focus_view = workspace->focus_view;
+  struct wlr_box *geometry = hikari_view_geometry(focus_view);
 
   struct hikari_group *group;
   char *input = mode->input_buffer.buffer;
   if (!strcmp(input, "")) {
-    group = workspace->sheet->group;
-    hikari_indicator_update_group(&hikari_server.indicator,
-        geometry,
-        workspace->output,
-        "",
-        hikari_configuration->indicator_selected);
+    group = hikari_server_find_or_create_group(focus_view->id);
   } else {
-    if (isdigit(input[0])) {
-      group = hikari_server_find_group(input);
-
-      if (group == NULL) {
-        hikari_indicator_update_group(&hikari_server.indicator,
-            geometry,
-            workspace->output,
-            input,
-            hikari_configuration->indicator_conflict);
-        return;
-      }
-    } else {
-      group = hikari_server_find_or_create_group(input);
-    }
-
-    assert(group != NULL);
-
-    if (group->sheet == NULL) {
-      hikari_indicator_update_group(&hikari_server.indicator,
-          geometry,
-          workspace->output,
-          group->name,
-          hikari_configuration->indicator_selected);
-    } else {
-      hikari_indicator_update_group(&hikari_server.indicator,
-          geometry,
-          workspace->output,
-          "",
-          hikari_configuration->indicator_selected);
-    }
+    group = hikari_server_find_or_create_group(input);
   }
 
-  hikari_view_group(hikari_server.workspace->focus_view, group);
+  assert(group != NULL);
+
+  hikari_indicator_update_group(&hikari_server.indicator,
+      geometry,
+      workspace->output,
+      group->name,
+      hikari_configuration->indicator_selected);
+
+  hikari_view_group(focus_view, group);
 
   hikari_server_enter_normal_mode(NULL);
 }
@@ -147,19 +122,11 @@ cancel_group_assign(void)
   struct hikari_view *focus_view = workspace->focus_view;
   struct wlr_box *geometry = hikari_view_geometry(focus_view);
 
-  if (focus_view->group != focus_view->sheet->group) {
-    hikari_indicator_update_group(&hikari_server.indicator,
-        geometry,
-        workspace->output,
-        focus_view->group->name,
-        hikari_configuration->indicator_selected);
-  } else {
-    hikari_indicator_update_group(&hikari_server.indicator,
-        geometry,
-        workspace->output,
-        "",
-        hikari_configuration->indicator_selected);
-  }
+  hikari_indicator_update_group(&hikari_server.indicator,
+      geometry,
+      workspace->output,
+      focus_view->group->name,
+      hikari_configuration->indicator_selected);
 
   hikari_server_enter_normal_mode(NULL);
 }

@@ -136,14 +136,12 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
   int x;
   int y;
 
-  hikari_configuration_resolve_view_autoconf(hikari_configuration,
-      xwayland_view->surface->class,
-      view,
-      &sheet,
-      &group,
-      &x,
-      &y,
-      focus);
+  const char *app_id = xwayland_view->surface->class;
+
+  hikari_view_set_id(view, app_id);
+
+  hikari_configuration_resolve_view_autoconf(
+      hikari_configuration, app_id, view, &sheet, &group, &x, &y, focus);
 
   if (x == -1) {
     x = hikari_server.cursor->x - output->geometry.x;

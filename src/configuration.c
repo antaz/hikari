@@ -457,7 +457,7 @@ hikari_configuration_resolve_view_autoconf(
         strlen(view_autoconf->group_name) > 0) {
       *group = hikari_server_find_or_create_group(view_autoconf->group_name);
     } else {
-      *group = (*sheet)->group;
+      *group = hikari_server_find_or_create_group(app_id);
     }
 
     if (view_autoconf->position.x != -1 && view_autoconf->position.y != -1) {
@@ -477,8 +477,7 @@ hikari_configuration_resolve_view_autoconf(
     struct hikari_output *output = hikari_server.workspace->output;
 
     *sheet = hikari_server.workspace->sheet;
-    *group = (*sheet)->group;
-
+    *group = hikari_server_find_or_create_group(app_id);
     *x = hikari_server.cursor->x - output->geometry.x;
     *y = hikari_server.cursor->y - output->geometry.y;
   }

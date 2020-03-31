@@ -60,9 +60,6 @@ hikari_workspace_init(
 void
 hikari_workspace_fini(struct hikari_workspace *workspace)
 {
-  for (int i = 0; i < HIKARI_NR_OF_SHEETS; i++) {
-    hikari_sheet_fini(&workspace->sheets[i]);
-  }
   hikari_free(workspace->sheets);
 
   wl_list_remove(&workspace->server_workspaces);

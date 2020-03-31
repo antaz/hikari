@@ -15,16 +15,12 @@ struct hikari_sheet {
   struct wl_list views;
   struct hikari_layout *layout;
 
-  struct hikari_group *group;
   struct hikari_workspace *workspace;
 };
 
 void
 hikari_sheet_init(
     struct hikari_sheet *sheet, int nr, struct hikari_workspace *workspace);
-
-void
-hikari_sheet_fini(struct hikari_sheet *sheet);
 
 static const int HIKARI_NR_OF_SHEETS = 10;
 

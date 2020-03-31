@@ -46,6 +46,7 @@ struct hikari_view {
   bool use_csd;
   unsigned int flags;
   char *title;
+  char *id;
   struct hikari_border border;
   struct hikari_indicator_frame indicator_frame;
   struct hikari_tile *tile;
@@ -150,6 +151,9 @@ hikari_view_manage(struct hikari_view *view,
 
 void
 hikari_view_set_title(struct hikari_view *view, const char *title);
+
+void
+hikari_view_set_id(struct hikari_view *view, const char *id);
 
 #define VIEW_ACTION(name) void hikari_view_##name(struct hikari_view *view);
 

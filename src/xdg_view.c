@@ -121,6 +121,8 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   printf("APP ID %s\n", app_id);
 #endif
 
+  hikari_view_set_id(view, app_id);
+
   int x;
   int y;
   hikari_configuration_resolve_view_autoconf(
