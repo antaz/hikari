@@ -1474,6 +1474,7 @@ commit_tile(struct hikari_view *view,
 
   if (!hikari_view_is_hidden(view)) {
     commit_pending_geometry(view, &operation->geometry, geometry_before);
+    hikari_server_cursor_focus();
   } else {
     hikari_view_refresh_geometry(view, &operation->geometry);
   }
