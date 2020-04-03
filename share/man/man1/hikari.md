@@ -835,7 +835,8 @@ Configuring the *System mouse* input device could look like this.
 
 Keyboards
 ---------
-Keyboards are configured using *XKB* environment variables.
+Keyboards are configured using *XKB* environment variables. Refer to
+xkeyboard-config(7) for possible settings.
 
 * **XKB\_DEFAULT\_LAYOUT**
 * **XKB\_DEFAULT\_MODEL**
