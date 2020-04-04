@@ -93,7 +93,7 @@ normal_mode_button_handler(
     return;
   }
 
-  if (event->state == WLR_KEY_PRESSED) {
+  if (event->state == WLR_BUTTON_PRESSED) {
     uint32_t modifiers = hikari_server.keyboard_state.modifiers;
     struct hikari_modifier_bindings *map =
         &hikari_configuration->bindings.mouse[modifiers];
