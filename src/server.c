@@ -637,8 +637,6 @@ setup_xdg_shell(struct hikari_server *server)
 static void
 new_layer_shell_surface_handler(struct wl_listener *listener, void *data)
 {
-  printf("NEW LAYER SURFACE\n");
-
   struct wlr_layer_surface_v1 *wlr_layer_surface =
       (struct wlr_layer_surface_v1 *)data;
   struct hikari_layer *layer = hikari_malloc(sizeof(struct hikari_layer));
