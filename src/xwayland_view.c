@@ -354,8 +354,11 @@ for_each_surface(struct hikari_view_interface *view_interface,
     void *data)
 {
   struct hikari_view *view = (struct hikari_view *)view_interface;
+  struct wlr_surface *surface = view->surface;
 
-  wlr_surface_for_each_surface(view->surface, func, data);
+  if (surface != NULL) {
+    wlr_surface_for_each_surface(surface, func, data);
+  }
 }
 
 static void
