@@ -40,6 +40,7 @@
 #include <hikari/border.h>
 #include <hikari/command.h>
 #include <hikari/configuration.h>
+#include <hikari/decoration.h>
 #include <hikari/exec.h>
 #include <hikari/keyboard.h>
 #include <hikari/layout.h>
@@ -570,6 +571,17 @@ server_decoration_handler(struct wl_listener *listener, void *data)
 }
 
 static void
+new_toplevel_decoration_handler(struct wl_listener *listener, void *data)
+{
+  struct wlr_xdg_toplevel_decoration_v1 *wlr_decoration = data;
+
+  struct hikari_decoration *decoration =
+      hikari_malloc(sizeof(struct hikari_decoration));
+
+  hikari_decoration_init(decoration, wlr_decoration);
+}
+
+static void
 setup_decorations(struct hikari_server *server)
 {
   server->decoration_manager =
@@ -581,6 +593,12 @@ setup_decorations(struct hikari_server *server)
   wl_signal_add(&server->decoration_manager->events.new_decoration,
       &server->new_decoration);
   server->new_decoration.notify = server_decoration_handler;
+
+  server->xdg_decoration_manager =
+      wlr_xdg_decoration_manager_v1_create(server->display);
+  wl_signal_add(&server->xdg_decoration_manager->events.new_toplevel_decoration,
+      &server->new_toplevel_decoration);
+  server->new_toplevel_decoration.notify = new_toplevel_decoration_handler;
 }
 
 static void

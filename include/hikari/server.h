@@ -55,6 +55,7 @@ struct hikari_server {
   struct wl_listener request_set_selection;
   struct wl_listener output_layout_change;
   struct wl_listener new_decoration;
+  struct wl_listener new_toplevel_decoration;
   struct wl_listener new_layer_shell_surface;
 #ifdef HAVE_XWAYLAND
   struct wl_listener new_xwayland_surface;
@@ -64,6 +65,7 @@ struct hikari_server {
 
   struct wlr_compositor *compositor;
   struct wlr_server_decoration_manager *decoration_manager;
+  struct wlr_xdg_decoration_manager_v1 *xdg_decoration_manager;
 
   struct wlr_xdg_shell *xdg_shell;
   struct wlr_layer_shell_v1 *layer_shell;

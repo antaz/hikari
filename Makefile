@@ -28,6 +28,7 @@ OBJS = \
 	command.o \
 	completion.o \
 	configuration.o \
+	decoration.o \
 	exec.o \
 	font.o \
 	geometry.o \
