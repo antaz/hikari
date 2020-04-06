@@ -153,6 +153,16 @@ and can be enabled via setting `WITH_GAMMACONTROL`.
 make WITH_GAMMACONTROL=YES
 ```
 
+#### Building with layer-shell support
+
+Some applications that are used to build desktop components require
+`layer-shell`. Examples for this are `waybar`, `wofi` and `slurp`. To turn on
+`layer-shell` support compile with the `WITH_LAYERSHELL` option.
+
+```
+make WITH_LAYERSHELL=YES
+```
+
 #### Building the manpage
 
 Building the `hikari` manpage requires [`pandoc`](http://pandoc.org/). To build

@@ -21,10 +21,11 @@ void
 hikari_geometry_shrink(struct wlr_box *geometry, int gap);
 
 void
-hikari_geometry_constrain_position(struct wlr_box *geometry,
-    int screen_width,
-    int screen_height,
-    int x,
-    int y);
+hikari_geometry_constrain_absolute(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int x, int y);
+
+void
+hikari_geometry_constrain_relative(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int x, int y);
 
 #endif

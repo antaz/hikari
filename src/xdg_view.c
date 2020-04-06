@@ -109,10 +109,6 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   struct wlr_box *geometry = &xdg_view->view.geometry;
   struct hikari_output *output = hikari_server.workspace->output;
 
-  int screen_width, screen_height;
-  wlr_output_effective_resolution(
-      output->output, &screen_width, &screen_height);
-
   wlr_xdg_surface_get_geometry(xdg_view->surface, geometry);
 
   const char *app_id = xdg_view->surface->toplevel->app_id;
@@ -131,8 +127,7 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   hikari_view_manage(view, sheet, group);
   hikari_view_set_title(view, xdg_view->surface->toplevel->title);
 
-  hikari_geometry_constrain_position(
-      geometry, screen_width, screen_height, x, y);
+  hikari_geometry_constrain_absolute(geometry, &output->usable_area, x, y);
 
   hikari_view_refresh_geometry(view, geometry);
 

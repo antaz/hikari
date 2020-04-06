@@ -9,6 +9,7 @@
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_xdg_shell.h>
 #include <wlr/util/region.h>
+
 #ifdef HAVE_XWAYLAND
 #include <wlr/xwayland.h>
 #endif
@@ -24,6 +25,7 @@
 #include <hikari/server.h>
 #include <hikari/workspace.h>
 #include <hikari/xdg_view.h>
+
 #ifdef HAVE_XWAYLAND
 #include <hikari/xwayland_unmanaged_view.h>
 #include <hikari/xwayland_view.h>
@@ -215,6 +217,30 @@ render_background(
       &geometry);
 }
 
+#ifdef HAVE_LAYERSHELL
+static void
+layer_for_each(struct wl_list *layers,
+    void (*func)(struct wlr_surface *, int, int, void *),
+    void *data)
+{
+  struct hikari_layer *layer;
+  wl_list_for_each (layer, layers, layer_surfaces) {
+    wlr_layer_surface_v1_for_each_surface(layer->surface, func, data);
+  }
+}
+
+static void
+render_layer(struct wl_list *layers, struct hikari_render_data *render_data)
+{
+  struct hikari_layer *layer;
+  wl_list_for_each (layer, layers, layer_surfaces) {
+    render_data->geometry = &layer->geometry;
+    wlr_layer_surface_v1_for_each_surface(
+        layer->surface, render_surface, render_data);
+  }
+}
+#endif
+
 static void
 render_output(struct hikari_output *output,
     pixman_region32_t *damage,
@@ -254,6 +280,12 @@ render_output(struct hikari_output *output,
 
   render_background(output, &render_data);
 
+#ifdef HAVE_LAYERSHELL
+  render_layer(
+      &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], &render_data);
+  render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM], &render_data);
+#endif
+
   struct hikari_view *view = NULL;
   wl_list_for_each_reverse (view, &output->workspace->views, workspace_views) {
     render_data.geometry = hikari_view_border_geometry(view);
@@ -267,6 +299,10 @@ render_output(struct hikari_output *output,
     hikari_view_interface_for_each_surface(
         (struct hikari_view_interface *)view, render_surface, &render_data);
   }
+
+#ifdef HAVE_LAYERSHELL
+  render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &render_data);
+#endif
 
 #ifdef HAVE_XWAYLAND
   struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = NULL;
@@ -283,6 +319,11 @@ render_output(struct hikari_output *output,
 #endif
 
   hikari_server.mode->render(output, &render_data);
+
+#ifdef HAVE_LAYERSHELL
+  render_layer(
+      &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &render_data);
+#endif
 
 render_end:
   wlr_renderer_scissor(renderer, NULL);
@@ -354,6 +395,12 @@ buffer_damage_end:
       unmanaged_server_views) {
     wlr_surface_for_each_surface(
         xwayland_unmanaged_view->surface->surface, send_frame_done, &now);
+  }
+#endif
+
+#ifdef HAVE_LAYERSHELL
+  for (int i = 0; i < 4; i++) {
+    layer_for_each(&output->layers[i], send_frame_done, &now);
   }
 #endif
 }
@@ -431,6 +478,10 @@ output_geometry(struct hikari_output *output)
   output->geometry.y = output_box->y;
   output->geometry.width = output_box->width;
   output->geometry.height = output_box->height;
+
+  output->usable_area = (struct wlr_box){
+    .x = 0, .y = 0, .width = output_box->width, .height = output_box->height
+  };
 }
 
 /* static void */
@@ -492,6 +543,12 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
   wl_list_init(&output->unmanaged_xwayland_views);
 #endif
   wl_list_init(&output->views);
+
+#ifdef HAVE_LAYERSHELL
+  for (int i = 0; i < 4; i++) {
+    wl_list_init(&output->layers[i]);
+  }
+#endif
 
   hikari_workspace_init(output->workspace, output);
 

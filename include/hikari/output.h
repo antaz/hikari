@@ -23,6 +23,10 @@ struct hikari_output {
   struct wl_listener damage_destroy;
   /* struct wl_listener mode; */
 
+#ifdef HAVE_LAYERSHELL
+  struct wl_list layers[4];
+#endif
+
   struct wl_list views;
 #ifdef HAVE_XWAYLAND
   struct wl_list unmanaged_xwayland_views;
@@ -30,6 +34,7 @@ struct hikari_output {
   struct wl_list server_outputs;
 
   struct wlr_box geometry;
+  struct wlr_box usable_area;
 
   struct wlr_texture *background;
 };

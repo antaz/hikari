@@ -7,6 +7,7 @@
 
 #include <hikari/color.h>
 #include <hikari/configuration.h>
+#include <hikari/geometry.h>
 #include <hikari/group.h>
 #include <hikari/indicator.h>
 #include <hikari/layout.h>
@@ -102,37 +103,17 @@ move_view(struct hikari_view *view, struct wlr_box *geometry, int x, int y)
   wlr_output_effective_resolution(
       view->output->output, &screen_width, &screen_height);
 
-  int constrained_x = x;
-  int constrained_y = y;
-  int border = hikari_configuration->border;
-
-  if (constrained_x != 0) {
-    if (constrained_x > screen_width - 10) {
-      constrained_x = screen_width - 10;
-    } else if (constrained_x + geometry->width + border * 2 < 10) {
-      constrained_x = -geometry->width - 2 * border + 10;
-    }
-  }
-
-  if (constrained_y != 0) {
-    if (geometry->y > screen_height - 10) {
-      constrained_y = screen_height - 10;
-    } else if (constrained_y + geometry->height + border * 2 < 10) {
-      constrained_y = -geometry->height - 2 * border + 10;
-    }
-  }
-
-  if (view->move != NULL) {
-    view->move(view, constrained_x, constrained_y);
-  }
-
   if (!hikari_view_is_hidden(view)) {
     hikari_view_damage_whole(view);
     hikari_indicator_damage(&hikari_server.indicator, view);
   }
 
-  geometry->x = constrained_x;
-  geometry->y = constrained_y;
+  hikari_geometry_constrain_relative(
+      geometry, &view->output->usable_area, x, y);
+
+  if (view->move != NULL) {
+    view->move(view, geometry->x, geometry->x);
+  }
 
   refresh_border_geometry(view);
 
@@ -706,15 +687,10 @@ queue_full_maximize(struct hikari_view *view)
   assert(!hikari_view_is_hidden(view));
 
   struct hikari_operation *op = &view->pending_operation;
-
-  int width, height;
-  wlr_output_effective_resolution(view->output->output, &width, &height);
+  struct hikari_output *output = view->output;
 
   op->type = HIKARI_OPERATION_TYPE_FULL_MAXIMIZE;
-  op->geometry.x = 0;
-  op->geometry.y = 0;
-  op->geometry.width = width;
-  op->geometry.height = height;
+  op->geometry = output->usable_area;
   op->center = true;
 
   if (view->move_resize != NULL) {
@@ -783,17 +759,15 @@ queue_horizontal_maximize(struct hikari_view *view)
   assert(!hikari_view_is_hidden(view));
 
   struct hikari_operation *op = &view->pending_operation;
-
-  int width, height;
-  wlr_output_effective_resolution(view->output->output, &width, &height);
+  struct hikari_output *output = view->output;
 
   struct wlr_box *geometry = view->current_unmaximized_geometry;
 
   op->type = HIKARI_OPERATION_TYPE_HORIZONTAL_MAXIMIZE;
-  op->geometry.x = 0;
+  op->geometry.x = output->usable_area.x;
   op->geometry.y = geometry->y;
   op->geometry.height = geometry->height;
-  op->geometry.width = width;
+  op->geometry.width = output->usable_area.width;
   op->center = true;
 
   if (view->move_resize != NULL) {
@@ -815,16 +789,14 @@ queue_vertical_maximize(struct hikari_view *view)
   assert(!hikari_view_is_hidden(view));
 
   struct hikari_operation *op = &view->pending_operation;
-
-  int width, height;
-  wlr_output_effective_resolution(view->output->output, &width, &height);
+  struct hikari_output *output = view->output;
 
   struct wlr_box *geometry = view->current_unmaximized_geometry;
 
   op->type = HIKARI_OPERATION_TYPE_VERTICAL_MAXIMIZE;
   op->geometry.x = geometry->x;
-  op->geometry.y = 0;
-  op->geometry.height = height;
+  op->geometry.y = output->usable_area.y;
+  op->geometry.height = output->usable_area.height;
   op->geometry.width = geometry->width;
   op->center = true;
 

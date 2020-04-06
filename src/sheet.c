@@ -409,11 +409,9 @@ hikari_sheet_apply_split(struct hikari_sheet *sheet, struct hikari_split *split)
     hikari_layout_init(sheet->layout, split, sheet);
   }
 
-  struct wlr_box geometry = { .x = 0, .y = 0 };
+  struct hikari_output *output = sheet->workspace->output;
+  struct wlr_box geometry = output->usable_area;
   struct hikari_view *first = hikari_sheet_first_tileable_view(sheet);
-
-  wlr_output_effective_resolution(
-      sheet->workspace->output->output, &geometry.width, &geometry.height);
 
   sheet->layout->split = split;
 

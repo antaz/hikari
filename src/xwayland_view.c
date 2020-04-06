@@ -161,12 +161,7 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
   hikari_view_set_title(view, xwayland_view->surface->title);
   hikari_view_manage(view, sheet, group);
 
-  int screen_width, screen_height;
-  wlr_output_effective_resolution(
-      output->output, &screen_width, &screen_height);
-
-  hikari_geometry_constrain_position(
-      geometry, screen_width, screen_height, x, y);
+  hikari_geometry_constrain_absolute(geometry, &output->usable_area, x, y);
 
   wlr_xwayland_surface_configure(xwayland_view->surface,
       output->geometry.x + view->geometry.x,
@@ -290,17 +285,15 @@ request_configure_handler(struct wl_listener *listener, void *data)
 
   struct hikari_sheet *sheet = xwayland_view->view.sheet;
 
-  int screen_width, screen_height;
+  struct wlr_box *usable_area;
   if (sheet != NULL) {
-    wlr_output_effective_resolution(
-        xwayland_view->view.output->output, &screen_width, &screen_height);
+    usable_area = &xwayland_view->view.output->usable_area;
   } else {
-    wlr_output_effective_resolution(
-        hikari_server.workspace->output->output, &screen_width, &screen_height);
+    usable_area = &hikari_server.workspace->output->usable_area;
   }
 
-  hikari_geometry_constrain_position(
-      &geometry, screen_width, screen_height, event->x, event->y);
+  hikari_geometry_constrain_absolute(
+      &geometry, usable_area, event->x, event->y);
 
   wlr_xwayland_surface_configure(xwayland_surface,
       geometry.x,

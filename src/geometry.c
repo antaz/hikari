@@ -37,19 +37,57 @@ hikari_geometry_shrink(struct wlr_box *geometry, int gap)
 }
 
 void
-hikari_geometry_constrain_position(
-    struct wlr_box *geometry, int screen_width, int screen_height, int x, int y)
+hikari_geometry_constrain_absolute(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int x, int y)
 {
   int border = hikari_configuration->border;
 
-  if (x + geometry->width + border > screen_width) {
-    geometry->x = screen_width - geometry->width - border;
+  int usable_max_x = usable_area->x + usable_area->width;
+  int usable_min_x = usable_area->x;
+  int usable_max_y = usable_area->y + usable_area->height;
+  int usable_min_y = usable_area->y;
+
+  if (x + geometry->width + border > usable_max_x) {
+    geometry->x = usable_max_x - geometry->width - border;
+  } else if (x - border < usable_min_x) {
+    geometry->x = usable_min_x + border;
   } else {
     geometry->x = x;
   }
 
-  if (y + geometry->height + border > screen_height) {
-    geometry->y = screen_height - geometry->height - border;
+  if (y + geometry->height + border > usable_max_y) {
+    geometry->y = usable_max_y - geometry->height - border;
+  } else if (y - border < usable_min_y) {
+    geometry->y = usable_min_y + border;
+  } else {
+    geometry->y = y;
+  }
+}
+
+void
+hikari_geometry_constrain_relative(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int x, int y)
+{
+  int border = hikari_configuration->border;
+  int gap = hikari_configuration->gap * 2 - border;
+
+  int usable_max_x = usable_area->x + usable_area->width - gap;
+  int usable_min_x = usable_area->x - geometry->width + gap;
+  int usable_max_y = usable_area->y + usable_area->height - gap;
+  int usable_min_y = usable_area->y - geometry->height + gap;
+
+  if (x > usable_max_x) {
+    geometry->x = usable_max_x;
+  } else if (x < usable_min_x) {
+    geometry->x = usable_min_x;
+  } else {
+    geometry->x = x;
+  }
+
+  if (y > usable_max_y) {
+    geometry->y = usable_max_y;
+  } else if (y < usable_min_y) {
+    geometry->y = usable_min_y;
   } else {
     geometry->y = y;
   }

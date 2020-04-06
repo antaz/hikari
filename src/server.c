@@ -9,23 +9,30 @@
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_data_device.h>
-#ifdef HAVE_GAMMACONTROL
-#include <wlr/types/wlr_gamma_control_v1.h>
-#endif
 #include <wlr/types/wlr_gtk_primary_selection.h>
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_keyboard.h>
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_primary_selection.h>
 #include <wlr/types/wlr_primary_selection_v1.h>
-#ifdef HAVE_SCREENCOPY
-#include <wlr/types/wlr_screencopy_v1.h>
-#endif
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_server_decoration.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
+
+#ifdef HAVE_LAYERSHELL
+#include <wlr/types/wlr_layer_shell_v1.h>
+#endif
+
+#ifdef HAVE_GAMMACONTROL
+#include <wlr/types/wlr_gamma_control_v1.h>
+#endif
+
+#ifdef HAVE_SCREENCOPY
+#include <wlr/types/wlr_screencopy_v1.h>
+#endif
+
 #ifdef HAVE_XWAYLAND
 #include <wlr/xwayland.h>
 #endif
@@ -45,6 +52,7 @@
 #include <hikari/unlocker.h>
 #include <hikari/workspace.h>
 #include <hikari/xdg_view.h>
+
 #ifdef HAVE_XWAYLAND
 #include <hikari/xwayland_unmanaged_view.h>
 #include <hikari/xwayland_view.h>
@@ -157,6 +165,39 @@ surface_at(struct hikari_view_interface *view_interface,
   return false;
 }
 
+#ifdef HAVE_LAYERSHELL
+static bool
+layer_at(struct wl_list *layers,
+    double ox,
+    double oy,
+    struct wlr_surface **surface,
+    double *sx,
+    double *sy,
+    struct hikari_view_interface **view_interface)
+{
+  double out_sx, out_sy;
+
+  struct hikari_layer *layer;
+  wl_list_for_each (layer, layers, layer_surfaces) {
+    struct hikari_view_interface *out_view_interface =
+        (struct hikari_view_interface *)layer;
+
+    struct wlr_surface *out_surface = hikari_view_interface_surface_at(
+        out_view_interface, ox, oy, &out_sx, &out_sy);
+
+    if (out_surface != NULL) {
+      *sx = out_sx;
+      *sy = out_sy;
+      *surface = out_surface;
+      *view_interface = out_view_interface;
+      return true;
+    }
+  }
+
+  return false;
+}
+#endif
+
 static struct hikari_view_interface *
 view_interface_at(
     double lx, double ly, struct wlr_surface **surface, double *sx, double *sy)
@@ -172,6 +213,7 @@ view_interface_at(
 
   struct hikari_output *output = wlr_output->data;
   struct hikari_workspace *workspace;
+  struct hikari_view_interface *view_interface;
 
   if (hikari_server.workspace != output->workspace) {
     if (hikari_server.workspace->focus_view != NULL) {
@@ -191,13 +233,24 @@ view_interface_at(
   double ox = lx - output->geometry.x;
   double oy = ly - output->geometry.y;
 
+#ifdef HAVE_LAYERSHELL
+  if (layer_at(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
+          ox,
+          oy,
+          surface,
+          sx,
+          sy,
+          &view_interface)) {
+    return view_interface;
+  }
+#endif
+
 #ifdef HAVE_XWAYLAND
   struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = NULL;
   wl_list_for_each (xwayland_unmanaged_view,
       &output->unmanaged_xwayland_views,
       unmanaged_server_views) {
-    struct hikari_view_interface *view_interface =
-        (struct hikari_view_interface *)xwayland_unmanaged_view;
+    view_interface = (struct hikari_view_interface *)xwayland_unmanaged_view;
 
     if (surface_at(view_interface, ox, oy, surface, sx, sy)) {
       return view_interface;
@@ -205,15 +258,38 @@ view_interface_at(
   }
 #endif
 
+#ifdef HAVE_LAYERSHELL
+  if (layer_at(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+          ox,
+          oy,
+          surface,
+          sx,
+          sy,
+          &view_interface)) {
+    return view_interface;
+  }
+#endif
+
   struct hikari_view *view = NULL;
   wl_list_for_each (view, &workspace->views, workspace_views) {
-    struct hikari_view_interface *view_interface =
-        (struct hikari_view_interface *)view;
+    view_interface = (struct hikari_view_interface *)view;
 
     if (surface_at(view_interface, ox, oy, surface, sx, sy)) {
       return view_interface;
     }
   }
+
+#ifdef HAVE_LAYERSHELL
+  if (layer_at(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
+          ox,
+          oy,
+          surface,
+          sx,
+          sy,
+          &view_interface)) {
+    return view_interface;
+  }
+#endif
 
   return NULL;
 }
@@ -557,6 +633,30 @@ setup_xdg_shell(struct hikari_server *server)
       &server->xdg_shell->events.new_surface, &server->new_xdg_surface);
 }
 
+#ifdef HAVE_LAYERSHELL
+static void
+new_layer_shell_surface_handler(struct wl_listener *listener, void *data)
+{
+  printf("NEW LAYER SURFACE\n");
+
+  struct wlr_layer_surface_v1 *wlr_layer_surface =
+      (struct wlr_layer_surface_v1 *)data;
+  struct hikari_layer *layer = hikari_malloc(sizeof(struct hikari_layer));
+
+  hikari_layer_init(layer, wlr_layer_surface);
+}
+
+static void
+setup_layer_shell(struct hikari_server *server)
+{
+  server->layer_shell = wlr_layer_shell_v1_create(server->display);
+
+  wl_signal_add(&server->layer_shell->events.new_surface,
+      &server->new_layer_shell_surface);
+  server->new_layer_shell_surface.notify = new_layer_shell_surface_handler;
+}
+#endif
+
 struct hikari_server hikari_server;
 
 static void
@@ -702,6 +802,9 @@ server_init(struct hikari_server *server, char *config_path)
   setup_decorations(server);
   setup_selection(server);
   setup_xdg_shell(server);
+#ifdef HAVE_LAYERSHELL
+  setup_layer_shell(server);
+#endif
 
   wl_list_init(&server->keyboards);
   wl_list_init(&server->groups);

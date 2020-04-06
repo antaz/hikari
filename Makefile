@@ -39,6 +39,7 @@ OBJS = \
 	input_buffer.o \
 	input_grab_mode.o \
 	keyboard.o \
+	layer_shell.o \
 	layout.o \
 	layout_config.o \
 	layout_select_mode.o \
@@ -93,6 +94,10 @@ CFLAGS += -DHAVE_GAMMACONTROL=1
 
 .ifdef WITH_SCREENCOPY
 CFLAGS += -DHAVE_SCREENCOPY=1
+.endif
+
+.ifdef WITH_LAYERSHELL
+CFLAGS += -DHAVE_LAYERSHELL=1
 .endif
 
 CFLAGS += -Wall -I. -Iinclude
@@ -153,11 +158,14 @@ all: hikari hikari-unlocker
 version.h:
 	echo "#define HIKARI_VERSION \"${VERSION}\"" >> version.h
 
-hikari: version.h xdg-shell-protocol.h ${OBJS}
+hikari: version.h xdg-shell-protocol.h wlr-layer-shell-unstable-v1-protocol.h ${OBJS}
 	${CC} ${LDFLAGS} ${CFLAGS} ${INCLUDES} ${LIBS} ${OBJS} -o ${.TARGET}
 
 xdg-shell-protocol.h:
 	wayland-scanner server-header ${WAYLAND_PROTOCOLS}/stable/xdg-shell/xdg-shell.xml ${.TARGET}
+
+wlr-layer-shell-unstable-v1-protocol.h:
+	wayland-scanner server-header protocol/wlr-layer-shell-unstable-v1.xml ${.TARGET}
 
 hikari-unlocker: hikari_unlocker.c
 	${CC} -lpam hikari_unlocker.c -o hikari-unlocker
@@ -170,6 +178,7 @@ clean: clean-doc
 	@echo "cleaning headers"
 	@test -e _darcs && rm version.h ||:
 	@rm xdg-shell-protocol.h 2> /dev/null ||:
+	@rm wlr-layer-shell-unstable-v1-protocol.h 2> /dev/null ||:
 	@echo "cleaning object files"
 	@rm ${OBJS} 2> /dev/null ||:
 	@echo "cleaning executables"
@@ -190,6 +199,7 @@ hikari-${VERSION}.tar.gz: version.h share/man/man1/hikari.1
 		hikari_unlocker.c \
 		include/hikari/*.h \
 		src/*.c \
+		protocol/*.xml \
 		Makefile \
 		LICENSE \
 		README.md \
