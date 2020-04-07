@@ -23,11 +23,6 @@ and each group can have an arbitrary name. Views from one group can be spread
 among all available sheets. Some operations act on entire groups rather than
 individual views.
 
-Please note that `hikari` is currently in `alpha` state and Wayland still
-requires some work on FreeBSD. This release is targeted towards people who want
-to help improving `hikari` by either providing feedback, patches
-and/or help improving Wayland on FreeBSD.
-
 ## Setting up Wayland on FreeBSD
 
 Wayland currently requires some care to work properly on FreeBSD. This section
