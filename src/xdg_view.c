@@ -25,6 +25,15 @@
 #include <hikari/workspace.h>
 
 static void
+new_popup_handler(struct wl_listener *listener, void *data);
+
+static void
+new_subsurface_handler(struct wl_listener *listener, void *data);
+
+static void
+request_fullscreen_handler(struct wl_listener *listener, void *data);
+
+static void
 set_title_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_xdg_view *xdg_view =
@@ -134,9 +143,6 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   xdg_view->set_title.notify = set_title_handler;
   wl_signal_add(
       &xdg_view->surface->toplevel->events.set_title, &xdg_view->set_title);
-
-  xdg_view->commit.notify = commit_handler;
-  wl_signal_add(&xdg_view->surface->surface->events.commit, &xdg_view->commit);
 }
 
 static struct wlr_surface *
@@ -166,8 +172,23 @@ map(struct hikari_view *view, bool focus)
 #endif
 
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
+  struct wlr_xdg_surface *xdg_surface = xdg_view->surface;
 
-  view->surface = xdg_view->surface->surface;
+  view->surface = xdg_surface->surface;
+
+  xdg_view->new_popup.notify = new_popup_handler;
+  wl_signal_add(&xdg_surface->events.new_popup, &xdg_view->new_popup);
+
+  xdg_view->new_subsurface.notify = new_subsurface_handler;
+  wl_signal_add(
+      &xdg_surface->surface->events.new_subsurface, &xdg_view->new_subsurface);
+
+  xdg_view->request_fullscreen.notify = request_fullscreen_handler;
+  wl_signal_add(&xdg_surface->toplevel->events.request_fullscreen,
+      &xdg_view->request_fullscreen);
+
+  xdg_view->commit.notify = commit_handler;
+  wl_signal_add(&xdg_view->surface->surface->events.commit, &xdg_view->commit);
 
   hikari_view_show(view);
 
@@ -207,12 +228,14 @@ unmap(struct hikari_view *view)
 
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
 
-  if (xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-    wl_list_remove(&xdg_view->set_title.link);
-  }
+  assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
   view->surface = NULL;
 
+  wl_list_remove(&xdg_view->set_title.link);
+  wl_list_remove(&xdg_view->request_fullscreen.link);
+  wl_list_remove(&xdg_view->new_popup.link);
+  wl_list_remove(&xdg_view->new_subsurface.link);
   wl_list_remove(&xdg_view->commit.link);
 }
 
@@ -271,9 +294,6 @@ destroy_handler(struct wl_listener *listener, void *data)
   wl_list_remove(&xdg_view->map.link);
   wl_list_remove(&xdg_view->unmap.link);
   wl_list_remove(&xdg_view->destroy.link);
-  wl_list_remove(&xdg_view->new_popup.link);
-  wl_list_remove(&xdg_view->new_subsurface.link);
-  wl_list_remove(&xdg_view->request_fullscreen.link);
 
   hikari_view_fini(view);
   hikari_free(xdg_view);
@@ -496,17 +516,6 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
 
   xdg_view->destroy.notify = destroy_handler;
   wl_signal_add(&xdg_surface->events.destroy, &xdg_view->destroy);
-
-  xdg_view->new_popup.notify = new_popup_handler;
-  wl_signal_add(&xdg_surface->events.new_popup, &xdg_view->new_popup);
-
-  xdg_view->new_subsurface.notify = new_subsurface_handler;
-  wl_signal_add(
-      &xdg_surface->surface->events.new_subsurface, &xdg_view->new_subsurface);
-
-  xdg_view->request_fullscreen.notify = request_fullscreen_handler;
-  wl_signal_add(&xdg_surface->toplevel->events.request_fullscreen,
-      &xdg_view->request_fullscreen);
 
   assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
