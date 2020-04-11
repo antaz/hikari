@@ -154,10 +154,6 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
   geometry->width = xwayland_view->surface->width;
   geometry->height = xwayland_view->surface->height;
 
-  xwayland_view->commit.notify = commit_handler;
-  wl_signal_add(
-      &xwayland_view->surface->surface->events.commit, &xwayland_view->commit);
-
   hikari_view_set_title(view, xwayland_view->surface->title);
   hikari_view_manage(view, sheet, group);
 
@@ -184,6 +180,10 @@ map(struct hikari_view *view, bool focus)
 
   view->surface = xwayland_view->surface->surface;
   view->surface->data = (struct hikari_view_interface *)view;
+
+  xwayland_view->commit.notify = commit_handler;
+  wl_signal_add(
+      &xwayland_view->surface->surface->events.commit, &xwayland_view->commit);
 
   hikari_view_show(view);
 
