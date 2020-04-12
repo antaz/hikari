@@ -325,7 +325,7 @@ View actions
   just wraps around. Once a view is selected it will be raised to the top of the
   stacking order. Selecting happens by releasing the modifier key.
 
-* **view-decrease-size-[up|left]**
+* **view-decrease-size-[up|down|left|right]**
 
   Decreases the size of the focused view by the amount of pixels set as **step**
   value into the given direction
@@ -334,7 +334,7 @@ View actions
 
   Hides the focused view.
 
-* **view-increase-size-[down|right]**
+* **view-increase-size-[up|down|left|right]**
 
   Increases the size of the focused view by the amount of pixels set as **step**
   value into the given direction

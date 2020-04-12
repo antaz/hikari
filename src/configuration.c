@@ -1227,14 +1227,26 @@ parse_binding(struct hikari_configuration *configuration,
   } else if (!strcmp(str, "view-decrease-size-up")) {
     *action = hikari_server_decrease_view_size_up;
     *arg = NULL;
+  } else if (!strcmp(str, "view-increase-size-up")) {
+    *action = hikari_server_increase_view_size_up;
+    *arg = NULL;
+  } else if (!strcmp(str, "view-decrease-size-down")) {
+    *action = hikari_server_decrease_view_size_down;
+    *arg = NULL;
   } else if (!strcmp(str, "view-increase-size-down")) {
     *action = hikari_server_increase_view_size_down;
     *arg = NULL;
   } else if (!strcmp(str, "view-decrease-size-left")) {
     *action = hikari_server_decrease_view_size_left;
     *arg = NULL;
+  } else if (!strcmp(str, "view-increase-size-left")) {
+    *action = hikari_server_increase_view_size_left;
+    *arg = NULL;
   } else if (!strcmp(str, "view-increase-size-right")) {
     *action = hikari_server_increase_view_size_right;
+    *arg = NULL;
+  } else if (!strcmp(str, "view-decrease-size-right")) {
+    *action = hikari_server_decrease_view_size_right;
     *arg = NULL;
 
 #define PARSE_WORKSPACE_BINDING(n)                                             \

@@ -48,8 +48,11 @@ void
 hikari_workspace_move_view(struct hikari_workspace *workspace, int dx, int dy);
 
 void
-hikari_workspace_resize_view(
-    struct hikari_workspace *workspace, int dwidth, int dheight);
+hikari_workspace_move_resize_view(struct hikari_workspace *workspace,
+    int dx,
+    int dy,
+    int dwidth,
+    int dheight);
 
 #define WORKSPACE_CYCLE_ACTION(name)                                           \
   struct hikari_view *hikari_workspace_##name(                                 \

@@ -189,32 +189,103 @@ SHEET_ACTIONS(next)
 SHEET_ACTIONS(prev)
 #undef SHEET_ACTIONS
 
-#define MOVE_RESIZE_ACTIONS(dir, x, y)                                         \
-  static inline void hikari_server_move_view_##dir(void *arg)                  \
-  {                                                                            \
-    hikari_workspace_move_view(hikari_server.workspace, x, y);                 \
-  }                                                                            \
-                                                                               \
-  static inline void hikari_server_decrease_view_size_##dir(void *arg)         \
-  {                                                                            \
-    hikari_workspace_resize_view(hikari_server.workspace, x, y);               \
-  }                                                                            \
-                                                                               \
-  static inline void hikari_server_increase_view_size_##dir(void *arg)         \
-  {                                                                            \
-    hikari_workspace_resize_view(hikari_server.workspace, x, y);               \
-  }                                                                            \
-                                                                               \
-  static inline void hikari_server_snap_view_##dir(void *arg)                  \
-  {                                                                            \
-    hikari_workspace_snap_view_##dir(hikari_server.workspace);                 \
-  }
+#define STEP hikari_configuration->step
+static inline void
+hikari_server_move_view_up(void *arg)
+{
+  hikari_workspace_move_view(hikari_server.workspace, 0, -STEP);
+}
 
-MOVE_RESIZE_ACTIONS(up, 0, -hikari_configuration->step)
-MOVE_RESIZE_ACTIONS(down, 0, hikari_configuration->step)
-MOVE_RESIZE_ACTIONS(left, -hikari_configuration->step, 0)
-MOVE_RESIZE_ACTIONS(right, hikari_configuration->step, 0)
-#undef MOVE_RESIZE_ACTIONS
+static inline void
+hikari_server_move_view_down(void *arg)
+{
+  hikari_workspace_move_view(hikari_server.workspace, 0, STEP);
+}
+
+static inline void
+hikari_server_move_view_left(void *arg)
+{
+  hikari_workspace_move_view(hikari_server.workspace, -STEP, 0);
+}
+
+static inline void
+hikari_server_move_view_right(void *arg)
+{
+  hikari_workspace_move_view(hikari_server.workspace, STEP, 0);
+}
+
+static inline void
+hikari_server_decrease_view_size_up(void *arg)
+{
+  hikari_workspace_move_resize_view(hikari_server.workspace, 0, 0, 0, -STEP);
+}
+
+static inline void
+hikari_server_decrease_view_size_down(void *arg)
+{
+  hikari_workspace_move_resize_view(hikari_server.workspace, 0, STEP, 0, -STEP);
+}
+
+static inline void
+hikari_server_decrease_view_size_left(void *arg)
+{
+  hikari_workspace_move_resize_view(hikari_server.workspace, 0, 0, -STEP, 0);
+}
+
+static inline void
+hikari_server_decrease_view_size_right(void *arg)
+{
+  hikari_workspace_move_resize_view(hikari_server.workspace, STEP, 0, -STEP, 0);
+}
+
+static inline void
+hikari_server_increase_view_size_up(void *arg)
+{
+  hikari_workspace_move_resize_view(hikari_server.workspace, 0, -STEP, 0, STEP);
+}
+
+static inline void
+hikari_server_increase_view_size_down(void *arg)
+{
+  hikari_workspace_move_resize_view(hikari_server.workspace, 0, 0, 0, STEP);
+}
+
+static inline void
+hikari_server_increase_view_size_left(void *arg)
+{
+  hikari_workspace_move_resize_view(hikari_server.workspace, -STEP, 0, STEP, 0);
+}
+
+static inline void
+hikari_server_increase_view_size_right(void *arg)
+{
+  hikari_workspace_move_resize_view(hikari_server.workspace, 0, 0, STEP, 0);
+}
+#undef STEP
+
+static inline void
+hikari_server_snap_view_up(void *arg)
+{
+  hikari_workspace_snap_view_up(hikari_server.workspace);
+}
+
+static inline void
+hikari_server_snap_view_down(void *arg)
+{
+  hikari_workspace_snap_view_down(hikari_server.workspace);
+}
+
+static inline void
+hikari_server_snap_view_left(void *arg)
+{
+  hikari_workspace_snap_view_left(hikari_server.workspace);
+}
+
+static inline void
+hikari_server_snap_view_right(void *arg)
+{
+  hikari_workspace_snap_view_right(hikari_server.workspace);
+}
 
 #define CYCLE_ACTION(n) void hikari_server_cycle_##n(void *arg);
 

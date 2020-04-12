@@ -188,7 +188,8 @@ void
 hikari_view_group(struct hikari_view *view, struct hikari_group *group);
 
 void
-hikari_view_resize(struct hikari_view *view, int width, int height);
+hikari_view_move_resize(
+    struct hikari_view *view, int x, int y, int width, int height);
 
 void
 hikari_view_move(struct hikari_view *view, int x, int y);

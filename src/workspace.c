@@ -541,14 +541,14 @@ hikari_workspace_only_view(struct hikari_workspace *workspace)
 }
 
 void
-hikari_workspace_resize_view(
-    struct hikari_workspace *workspace, int dwidth, int dheight)
+hikari_workspace_move_resize_view(
+    struct hikari_workspace *workspace, int dx, int dy, int dwidth, int dheight)
 {
   FOCUS_GUARD(workspace, focus_view)
 
   hikari_server_set_cycling();
 
-  hikari_view_resize(focus_view, dwidth, dheight);
+  hikari_view_move_resize(focus_view, dx, dy, dwidth, dheight);
 }
 
 void
