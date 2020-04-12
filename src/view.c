@@ -99,10 +99,6 @@ move_view(struct hikari_view *view, struct wlr_box *geometry, int x, int y)
     }
   }
 
-  int screen_width, screen_height;
-  wlr_output_effective_resolution(
-      view->output->output, &screen_width, &screen_height);
-
   if (!hikari_view_is_hidden(view)) {
     hikari_view_damage_whole(view);
     hikari_indicator_damage(&hikari_server.indicator, view);
@@ -112,7 +108,7 @@ move_view(struct hikari_view *view, struct wlr_box *geometry, int x, int y)
       geometry, &view->output->usable_area, x, y);
 
   if (view->move != NULL) {
-    view->move(view, geometry->x, geometry->x);
+    view->move(view, geometry->x, geometry->y);
   }
 
   refresh_border_geometry(view);
