@@ -151,43 +151,6 @@ hikari_split_horizontal_init(struct hikari_split_horizontal *split_horizontal,
   split_horizontal->bottom = bottom;
 }
 
-static void
-rect_render(float color[static 4],
-    struct wlr_box *box,
-    struct hikari_render_data *render_data)
-{
-  pixman_region32_t damage;
-  pixman_region32_init(&damage);
-  pixman_region32_union_rect(
-      &damage, &damage, box->x, box->y, box->width, box->height);
-
-  pixman_region32_intersect(&damage, &damage, render_data->damage);
-  bool damaged = pixman_region32_not_empty(&damage);
-  if (!damaged) {
-    goto buffer_damage_finish;
-  }
-
-  struct wlr_renderer *renderer = render_data->renderer;
-  assert(renderer);
-
-  float matrix[9];
-  wlr_matrix_project_box(matrix,
-      box,
-      WL_OUTPUT_TRANSFORM_NORMAL,
-      0,
-      render_data->output->transform_matrix);
-
-  int nrects;
-  pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
-  for (int i = 0; i < nrects; i++) {
-    hikari_output_scissor_render(render_data->output, renderer, &rects[i]);
-    wlr_render_quad_with_matrix(renderer, color, matrix);
-  }
-
-buffer_damage_finish:
-  pixman_region32_fini(&damage);
-}
-
 void
 hikari_split_fini(struct hikari_split *split)
 {
@@ -217,47 +180,4 @@ hikari_split_fini(struct hikari_split *split)
       hikari_free(container);
     } break;
   }
-}
-
-void
-hikari_split_render(
-    struct hikari_split *split, struct hikari_render_data *render_data)
-{
-  switch (split->type) {
-    case HIKARI_SPLIT_TYPE_VERTICAL: {
-      struct hikari_split_vertical *split_vertical =
-          (struct hikari_split_vertical *)split;
-
-      hikari_split_render(split_vertical->left, render_data);
-      hikari_split_render(split_vertical->right, render_data);
-    } break;
-
-    case HIKARI_SPLIT_TYPE_HORIZONTAL: {
-      struct hikari_split_horizontal *split_horizontal =
-          (struct hikari_split_horizontal *)split;
-
-      hikari_split_render(split_horizontal->top, render_data);
-      hikari_split_render(split_horizontal->bottom, render_data);
-    } break;
-
-    case HIKARI_SPLIT_TYPE_CONTAINER: {
-      struct hikari_split_container *container =
-          (struct hikari_split_container *)split;
-
-      hikari_split_container_render(container, render_data);
-    } break;
-  }
-}
-
-void
-hikari_split_container_render(struct hikari_split_container *container,
-    struct hikari_render_data *render_data)
-{
-  float color[4];
-  hikari_color_convert(color, 0xAE81FF);
-  color[3] = 0.5;
-
-  render_data->geometry = &container->geometry;
-
-  rect_render(color, &container->geometry, render_data);
 }

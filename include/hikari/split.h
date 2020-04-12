@@ -86,12 +86,4 @@ hikari_split_horizontal_init(struct hikari_split_horizontal *split_horizontal,
     struct hikari_split *left,
     struct hikari_split *right);
 
-void
-hikari_split_render(
-    struct hikari_split *split, struct hikari_render_data *render_data);
-
-void
-hikari_split_container_render(struct hikari_split_container *container,
-    struct hikari_render_data *render_data);
-
 #endif
