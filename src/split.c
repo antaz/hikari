@@ -87,7 +87,8 @@ apply_split(struct hikari_split *split,
     } break;
 
     case HIKARI_SPLIT_TYPE_CONTAINER: {
-      struct hikari_container *container = (struct hikari_container *)split;
+      struct hikari_split_container *container =
+          (struct hikari_split_container *)split;
       container->geometry = *geometry;
       view = container->layout(view->sheet, view, geometry, container->max);
     } break;
@@ -112,8 +113,9 @@ hikari_split_apply(struct hikari_split *split,
 }
 
 void
-hikari_container_init(
-    struct hikari_container *container, int nr_of_views, layout_func_t layout)
+hikari_split_container_init(struct hikari_split_container *container,
+    int nr_of_views,
+    layout_func_t layout)
 {
   container->split.type = HIKARI_SPLIT_TYPE_CONTAINER;
   container->max = nr_of_views;
@@ -209,7 +211,8 @@ hikari_split_fini(struct hikari_split *split)
     } break;
 
     case HIKARI_SPLIT_TYPE_CONTAINER: {
-      struct hikari_container *container = (struct hikari_container *)split;
+      struct hikari_split_container *container =
+          (struct hikari_split_container *)split;
 
       hikari_free(container);
     } break;
@@ -238,16 +241,17 @@ hikari_split_render(
     } break;
 
     case HIKARI_SPLIT_TYPE_CONTAINER: {
-      struct hikari_container *container = (struct hikari_container *)split;
+      struct hikari_split_container *container =
+          (struct hikari_split_container *)split;
 
-      hikari_container_render(container, render_data);
+      hikari_split_container_render(container, render_data);
     } break;
   }
 }
 
 void
-hikari_container_render(
-    struct hikari_container *container, struct hikari_render_data *render_data)
+hikari_split_container_render(struct hikari_split_container *container,
+    struct hikari_render_data *render_data)
 {
   float color[4];
   hikari_color_convert(color, 0xAE81FF);

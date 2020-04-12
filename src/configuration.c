@@ -110,7 +110,7 @@ parse_container(
     const ucl_object_t *container_obj, struct hikari_split **container)
 {
   bool success = false;
-  struct hikari_container *ret = NULL;
+  struct hikari_split_container *ret = NULL;
   layout_func_t layout_func = NULL;
   int64_t views = 256;
   bool explicit_nr_of_views = false;
@@ -175,8 +175,8 @@ parse_container(
     goto done;
   }
 
-  ret = hikari_malloc(sizeof(struct hikari_container));
-  hikari_container_init(ret, views, layout_func);
+  ret = hikari_malloc(sizeof(struct hikari_split_container));
+  hikari_split_container_init(ret, views, layout_func);
 
   success = true;
 
@@ -250,8 +250,9 @@ parse_split(const ucl_object_t *split_obj, struct hikari_split **split)
       goto done;
     }
 
-    ret = hikari_malloc(sizeof(struct hikari_container));
-    hikari_container_init((struct hikari_container *)ret, views, layout_func);
+    ret = hikari_malloc(sizeof(struct hikari_split_container));
+    hikari_split_container_init(
+        (struct hikari_split_container *)ret, views, layout_func);
 
   } else if (type == UCL_OBJECT) {
     const ucl_object_t *left = ucl_object_lookup(split_obj, "left");

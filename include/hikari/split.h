@@ -50,7 +50,7 @@ struct hikari_split_horizontal {
   struct hikari_split *bottom;
 };
 
-struct hikari_container {
+struct hikari_split_container {
   struct hikari_split split;
   struct wlr_box geometry;
 
@@ -65,8 +65,9 @@ hikari_split_apply(struct hikari_split *split,
     struct hikari_view *first);
 
 void
-hikari_container_init(
-    struct hikari_container *container, int nr_of_views, layout_func_t layout);
+hikari_split_container_init(struct hikari_split_container *container,
+    int nr_of_views,
+    layout_func_t layout);
 
 void
 hikari_split_fini(struct hikari_split *split);
@@ -90,7 +91,7 @@ hikari_split_render(
     struct hikari_split *split, struct hikari_render_data *render_data);
 
 void
-hikari_container_render(
-    struct hikari_container *container, struct hikari_render_data *render_data);
+hikari_split_container_render(struct hikari_split_container *container,
+    struct hikari_render_data *render_data);
 
 #endif
