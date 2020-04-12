@@ -16,12 +16,12 @@ enum hikari_split_type {
   HIKARI_SPLIT_TYPE_CONTAINER
 };
 
-enum hikari_vertical_split_orientation {
+enum hikari_split_vertical_orientation {
   HIKARI_VERTICAL_SPLIT_ORIENTATION_LEFT,
   HIKARI_VERTICAL_SPLIT_ORIENTATION_RIGHT
 };
 
-enum hikari_horizontal_split_orientation {
+enum hikari_split_horizontal_orientation {
   HIKARI_HORIZONTAL_SPLIT_ORIENTATION_TOP,
   HIKARI_HORIZONTAL_SPLIT_ORIENTATION_BOTTOM
 };
@@ -30,9 +30,9 @@ struct hikari_split {
   enum hikari_split_type type;
 };
 
-struct hikari_vertical_split {
+struct hikari_split_vertical {
   struct hikari_split split;
-  enum hikari_vertical_split_orientation orientation;
+  enum hikari_split_vertical_orientation orientation;
 
   float scale;
 
@@ -40,9 +40,9 @@ struct hikari_vertical_split {
   struct hikari_split *right;
 };
 
-struct hikari_horizontal_split {
+struct hikari_split_horizontal {
   struct hikari_split split;
-  enum hikari_horizontal_split_orientation orientation;
+  enum hikari_split_horizontal_orientation orientation;
 
   float scale;
 
@@ -72,16 +72,16 @@ void
 hikari_split_fini(struct hikari_split *split);
 
 void
-hikari_vertical_split_init(struct hikari_vertical_split *vertical_split,
+hikari_split_vertical_init(struct hikari_split_vertical *split_vertical,
     float scale,
-    enum hikari_vertical_split_orientation orientation,
+    enum hikari_split_vertical_orientation orientation,
     struct hikari_split *left,
     struct hikari_split *right);
 
 void
-hikari_horizontal_split_init(struct hikari_horizontal_split *horizontal_split,
+hikari_split_horizontal_init(struct hikari_split_horizontal *split_horizontal,
     float scale,
-    enum hikari_horizontal_split_orientation orientation,
+    enum hikari_split_horizontal_orientation orientation,
     struct hikari_split *left,
     struct hikari_split *right);
 

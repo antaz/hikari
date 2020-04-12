@@ -332,9 +332,9 @@ done:
     bool success = false;                                                      \
     bool found_orientation = false;                                            \
     const ucl_object_t *cur;                                                   \
-    struct hikari_##name##_split *ret = NULL;                                  \
+    struct hikari_split_##name *ret = NULL;                                    \
     double scale = 0.5;                                                        \
-    enum hikari_##name##_split_orientation orientation =                       \
+    enum hikari_split_##name##_orientation orientation =                       \
         HIKARI_##NAME##_SPLIT_ORIENTATION_##FIRST;                             \
     struct hikari_split *first = NULL;                                         \
     struct hikari_split *second = NULL;                                        \
@@ -398,8 +398,8 @@ done:
       goto done;                                                               \
     }                                                                          \
                                                                                \
-    ret = hikari_malloc(sizeof(struct hikari_##name##_split));                 \
-    hikari_##name##_split_init(ret, scale, orientation, first, second);        \
+    ret = hikari_malloc(sizeof(struct hikari_split_##name));                   \
+    hikari_split_##name##_init(ret, scale, orientation, first, second);        \
                                                                                \
     success = true;                                                            \
                                                                                \

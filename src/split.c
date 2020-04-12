@@ -22,30 +22,30 @@ apply_split(struct hikari_split *split,
   switch (split->type) {
     case HIKARI_SPLIT_TYPE_VERTICAL: {
       struct wlr_box left, right;
-      struct hikari_vertical_split *vertical_split =
-          (struct hikari_vertical_split *)split;
+      struct hikari_split_vertical *split_vertical =
+          (struct hikari_split_vertical *)split;
 
-      switch (vertical_split->orientation) {
+      switch (split_vertical->orientation) {
         case HIKARI_VERTICAL_SPLIT_ORIENTATION_LEFT:
           hikari_geometry_split_vertical(geometry,
-              vertical_split->scale,
+              split_vertical->scale,
               hikari_configuration->gap + hikari_configuration->border * 2,
               &left,
               &right);
 
-          view = apply_split(vertical_split->left, &left, view);
-          view = apply_split(vertical_split->right, &right, view);
+          view = apply_split(split_vertical->left, &left, view);
+          view = apply_split(split_vertical->right, &right, view);
           break;
 
         case HIKARI_VERTICAL_SPLIT_ORIENTATION_RIGHT:
           hikari_geometry_split_vertical(geometry,
-              1.0 - vertical_split->scale,
+              1.0 - split_vertical->scale,
               hikari_configuration->gap + hikari_configuration->border * 2,
               &left,
               &right);
 
-          view = apply_split(vertical_split->right, &right, view);
-          view = apply_split(vertical_split->left, &left, view);
+          view = apply_split(split_vertical->right, &right, view);
+          view = apply_split(split_vertical->left, &left, view);
           break;
 
         default:
@@ -55,30 +55,30 @@ apply_split(struct hikari_split *split,
 
     case HIKARI_SPLIT_TYPE_HORIZONTAL: {
       struct wlr_box top, bottom;
-      struct hikari_horizontal_split *horizontal_split =
-          (struct hikari_horizontal_split *)split;
+      struct hikari_split_horizontal *split_horizontal =
+          (struct hikari_split_horizontal *)split;
 
-      switch (horizontal_split->orientation) {
+      switch (split_horizontal->orientation) {
         case HIKARI_HORIZONTAL_SPLIT_ORIENTATION_TOP:
           hikari_geometry_split_horizontal(geometry,
-              horizontal_split->scale,
+              split_horizontal->scale,
               hikari_configuration->gap + hikari_configuration->border * 2,
               &top,
               &bottom);
 
-          view = apply_split(horizontal_split->top, &top, view);
-          view = apply_split(horizontal_split->bottom, &bottom, view);
+          view = apply_split(split_horizontal->top, &top, view);
+          view = apply_split(split_horizontal->bottom, &bottom, view);
           break;
 
         case HIKARI_HORIZONTAL_SPLIT_ORIENTATION_BOTTOM:
           hikari_geometry_split_horizontal(geometry,
-              1.0 - horizontal_split->scale,
+              1.0 - split_horizontal->scale,
               hikari_configuration->gap + hikari_configuration->border * 2,
               &top,
               &bottom);
 
-          view = apply_split(horizontal_split->bottom, &bottom, view);
-          view = apply_split(horizontal_split->top, &top, view);
+          view = apply_split(split_horizontal->bottom, &bottom, view);
+          view = apply_split(split_horizontal->top, &top, view);
           break;
 
         default:
@@ -122,31 +122,31 @@ hikari_container_init(
 }
 
 void
-hikari_vertical_split_init(struct hikari_vertical_split *vertical_split,
+hikari_split_vertical_init(struct hikari_split_vertical *split_vertical,
     float scale,
-    enum hikari_vertical_split_orientation orientation,
+    enum hikari_split_vertical_orientation orientation,
     struct hikari_split *left,
     struct hikari_split *right)
 {
-  vertical_split->split.type = HIKARI_SPLIT_TYPE_VERTICAL;
-  vertical_split->scale = scale;
-  vertical_split->orientation = orientation;
-  vertical_split->left = left;
-  vertical_split->right = right;
+  split_vertical->split.type = HIKARI_SPLIT_TYPE_VERTICAL;
+  split_vertical->scale = scale;
+  split_vertical->orientation = orientation;
+  split_vertical->left = left;
+  split_vertical->right = right;
 }
 
 void
-hikari_horizontal_split_init(struct hikari_horizontal_split *horizontal_split,
+hikari_split_horizontal_init(struct hikari_split_horizontal *split_horizontal,
     float scale,
-    enum hikari_horizontal_split_orientation orientation,
+    enum hikari_split_horizontal_orientation orientation,
     struct hikari_split *top,
     struct hikari_split *bottom)
 {
-  horizontal_split->split.type = HIKARI_SPLIT_TYPE_HORIZONTAL;
-  horizontal_split->scale = scale;
-  horizontal_split->orientation = orientation;
-  horizontal_split->top = top;
-  horizontal_split->bottom = bottom;
+  split_horizontal->split.type = HIKARI_SPLIT_TYPE_HORIZONTAL;
+  split_horizontal->scale = scale;
+  split_horizontal->orientation = orientation;
+  split_horizontal->top = top;
+  split_horizontal->bottom = bottom;
 }
 
 static void
@@ -191,21 +191,21 @@ hikari_split_fini(struct hikari_split *split)
 {
   switch (split->type) {
     case HIKARI_SPLIT_TYPE_VERTICAL: {
-      struct hikari_vertical_split *vertical_split =
-          (struct hikari_vertical_split *)split;
+      struct hikari_split_vertical *split_vertical =
+          (struct hikari_split_vertical *)split;
 
-      hikari_split_fini(vertical_split->left);
-      hikari_split_fini(vertical_split->right);
-      hikari_free(vertical_split);
+      hikari_split_fini(split_vertical->left);
+      hikari_split_fini(split_vertical->right);
+      hikari_free(split_vertical);
     } break;
 
     case HIKARI_SPLIT_TYPE_HORIZONTAL: {
-      struct hikari_horizontal_split *horizontal_split =
-          (struct hikari_horizontal_split *)split;
+      struct hikari_split_horizontal *split_horizontal =
+          (struct hikari_split_horizontal *)split;
 
-      hikari_split_fini(horizontal_split->top);
-      hikari_split_fini(horizontal_split->bottom);
-      hikari_free(horizontal_split);
+      hikari_split_fini(split_horizontal->top);
+      hikari_split_fini(split_horizontal->bottom);
+      hikari_free(split_horizontal);
     } break;
 
     case HIKARI_SPLIT_TYPE_CONTAINER: {
@@ -222,19 +222,19 @@ hikari_split_render(
 {
   switch (split->type) {
     case HIKARI_SPLIT_TYPE_VERTICAL: {
-      struct hikari_vertical_split *vertical_split =
-          (struct hikari_vertical_split *)split;
+      struct hikari_split_vertical *split_vertical =
+          (struct hikari_split_vertical *)split;
 
-      hikari_split_render(vertical_split->left, render_data);
-      hikari_split_render(vertical_split->right, render_data);
+      hikari_split_render(split_vertical->left, render_data);
+      hikari_split_render(split_vertical->right, render_data);
     } break;
 
     case HIKARI_SPLIT_TYPE_HORIZONTAL: {
-      struct hikari_horizontal_split *horizontal_split =
-          (struct hikari_horizontal_split *)split;
+      struct hikari_split_horizontal *split_horizontal =
+          (struct hikari_split_horizontal *)split;
 
-      hikari_split_render(horizontal_split->top, render_data);
-      hikari_split_render(horizontal_split->bottom, render_data);
+      hikari_split_render(split_horizontal->top, render_data);
+      hikari_split_render(split_horizontal->bottom, render_data);
     } break;
 
     case HIKARI_SPLIT_TYPE_CONTAINER: {
