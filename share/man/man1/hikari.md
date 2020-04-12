@@ -327,7 +327,8 @@ View actions
 
 * **view-decrease-size-[up|left]**
 
-  Decreases the size of the focused view by 100 pixels into the given direction
+  Decreases the size of the focused view by the amount of pixels set as **step**
+  value into the given direction
 
 * **view-hide**
 
@@ -335,7 +336,8 @@ View actions
 
 * **view-increase-size-[down|right]**
 
-  Increases the size of the focused view by 100 pixels into the given direction
+  Increases the size of the focused view by the amount of pixels set as **step**
+  value into the given direction
 
 * **view-lower**
 
@@ -343,7 +345,7 @@ View actions
 
 * **view-move-[up|down|left|right]**
 
-  Moves the focused view 100 pixels into the given direction.
+  Moves the focused view **step** pixels into the given direction.
 
 * **view-only**
 
