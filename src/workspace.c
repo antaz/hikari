@@ -302,7 +302,8 @@ CYCLE_VIEW(prev, next)
       struct hikari_workspace *workspace)                                      \
   {                                                                            \
     struct hikari_layout *layout = workspace->sheet->layout;                   \
-    if (workspace->sheet->layout == NULL) {                                    \
+                                                                               \
+    if (layout == NULL) {                                                      \
       return NULL;                                                             \
     }                                                                          \
                                                                                \
