@@ -313,13 +313,15 @@ CYCLE_VIEW(prev, next)
       struct hikari_workspace *workspace)                                      \
   {                                                                            \
     struct hikari_layout *layout = workspace->sheet->layout;                   \
-    if (workspace->sheet->layout == NULL) {                                    \
+                                                                               \
+    if (layout == NULL) {                                                      \
       return NULL;                                                             \
     }                                                                          \
                                                                                \
     struct hikari_view *focus_view = workspace->focus_view;                    \
                                                                                \
-    if (focus_view == NULL || !hikari_view_is_tiled(focus_view)) {             \
+    if (focus_view == NULL || !hikari_view_is_tiled(focus_view) ||             \
+        focus_view->sheet->layout != layout) {                                 \
       return hikari_layout_##fallback##_view(layout);                          \
     } else {                                                                   \
       return hikari_tile_##link##_view(focus_view->tile);                      \
