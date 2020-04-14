@@ -9,6 +9,59 @@
 #include <hikari/render_data.h>
 #include <hikari/view.h>
 
+const double hikari_split_scale_min = 0.1;
+const double hikari_split_scale_max = 0.9;
+const double hikari_split_scale_default = 0.5;
+
+static void
+flip_scale(struct hikari_split_scale *scale)
+{
+  switch (scale->type) {
+    case HIKARI_SPLIT_SCALE_TYPE_FIXED:
+      scale->scale.fixed = 1.0 - scale->scale.fixed;
+      break;
+
+    case HIKARI_SPLIT_SCALE_TYPE_DYNAMIC:
+      scale->scale.dynamic.min = 1.0 - scale->scale.dynamic.min;
+      scale->scale.dynamic.max = 1.0 - scale->scale.dynamic.max;
+      break;
+  }
+}
+
+#define SCALE(name)                                                            \
+  static int split_scale_##name(struct hikari_split_scale *scale,              \
+      struct wlr_box *src,                                                     \
+      struct hikari_view *first)                                               \
+  {                                                                            \
+    int gap = hikari_configuration->gap;                                       \
+    struct wlr_box *geometry;                                                  \
+    int name = 0;                                                              \
+                                                                               \
+    switch (scale->type) {                                                     \
+      case HIKARI_SPLIT_SCALE_TYPE_FIXED:                                      \
+        name =                                                                 \
+            hikari_geometry_scale_fixed_##name(src, scale->scale.fixed, gap);  \
+        break;                                                                 \
+                                                                               \
+      case HIKARI_SPLIT_SCALE_TYPE_DYNAMIC:                                    \
+        geometry = hikari_view_geometry(first);                                \
+        name = hikari_geometry_scale_dynamic_##name(src,                       \
+            geometry,                                                          \
+            scale->scale.dynamic.min,                                          \
+            scale->scale.dynamic.max,                                          \
+            gap);                                                              \
+        break;                                                                 \
+    }                                                                          \
+                                                                               \
+    assert(name != 0);                                                         \
+                                                                               \
+    return name;                                                               \
+  }
+
+SCALE(width)
+SCALE(height)
+#undef SCALE
+
 static struct hikari_view *
 apply_split(struct hikari_split *split,
     struct wlr_box *geometry,
@@ -25,30 +78,20 @@ apply_split(struct hikari_split *split,
       struct hikari_split_vertical *split_vertical =
           (struct hikari_split_vertical *)split;
 
+      int width = split_scale_width(&split_vertical->scale, geometry, first);
+      int gap = hikari_configuration->gap + hikari_configuration->border * 2;
+
+      hikari_geometry_split_vertical(geometry, width, gap, &left, &right);
+
       switch (split_vertical->orientation) {
         case HIKARI_VERTICAL_SPLIT_ORIENTATION_LEFT:
-          hikari_geometry_split_vertical(geometry,
-              split_vertical->scale,
-              hikari_configuration->gap + hikari_configuration->border * 2,
-              &left,
-              &right);
-
           view = apply_split(split_vertical->left, &left, view);
           view = apply_split(split_vertical->right, &right, view);
           break;
 
         case HIKARI_VERTICAL_SPLIT_ORIENTATION_RIGHT:
-          hikari_geometry_split_vertical(geometry,
-              1.0 - split_vertical->scale,
-              hikari_configuration->gap + hikari_configuration->border * 2,
-              &left,
-              &right);
-
           view = apply_split(split_vertical->right, &right, view);
           view = apply_split(split_vertical->left, &left, view);
-          break;
-
-        default:
           break;
       }
     } break;
@@ -58,30 +101,21 @@ apply_split(struct hikari_split *split,
       struct hikari_split_horizontal *split_horizontal =
           (struct hikari_split_horizontal *)split;
 
+      int height =
+          split_scale_height(&split_horizontal->scale, geometry, first);
+      int gap = hikari_configuration->gap + hikari_configuration->border * 2;
+
+      hikari_geometry_split_horizontal(geometry, height, gap, &top, &bottom);
+
       switch (split_horizontal->orientation) {
         case HIKARI_HORIZONTAL_SPLIT_ORIENTATION_TOP:
-          hikari_geometry_split_horizontal(geometry,
-              split_horizontal->scale,
-              hikari_configuration->gap + hikari_configuration->border * 2,
-              &top,
-              &bottom);
-
           view = apply_split(split_horizontal->top, &top, view);
           view = apply_split(split_horizontal->bottom, &bottom, view);
           break;
 
         case HIKARI_HORIZONTAL_SPLIT_ORIENTATION_BOTTOM:
-          hikari_geometry_split_horizontal(geometry,
-              1.0 - split_horizontal->scale,
-              hikari_configuration->gap + hikari_configuration->border * 2,
-              &top,
-              &bottom);
-
           view = apply_split(split_horizontal->bottom, &bottom, view);
           view = apply_split(split_horizontal->top, &top, view);
-          break;
-
-        default:
           break;
       }
     } break;
@@ -125,30 +159,41 @@ hikari_split_container_init(struct hikari_split_container *container,
 
 void
 hikari_split_vertical_init(struct hikari_split_vertical *split_vertical,
-    float scale,
+    struct hikari_split_scale *scale,
     enum hikari_split_vertical_orientation orientation,
     struct hikari_split *left,
     struct hikari_split *right)
 {
   split_vertical->split.type = HIKARI_SPLIT_TYPE_VERTICAL;
-  split_vertical->scale = scale;
   split_vertical->orientation = orientation;
   split_vertical->left = left;
   split_vertical->right = right;
+
+  memcpy(&split_vertical->scale, scale, sizeof(struct hikari_split_scale));
+
+  if (split_vertical->orientation == HIKARI_VERTICAL_SPLIT_ORIENTATION_RIGHT) {
+    flip_scale(&split_vertical->scale);
+  }
 }
 
 void
 hikari_split_horizontal_init(struct hikari_split_horizontal *split_horizontal,
-    float scale,
+    struct hikari_split_scale *scale,
     enum hikari_split_horizontal_orientation orientation,
     struct hikari_split *top,
     struct hikari_split *bottom)
 {
   split_horizontal->split.type = HIKARI_SPLIT_TYPE_HORIZONTAL;
-  split_horizontal->scale = scale;
   split_horizontal->orientation = orientation;
   split_horizontal->top = top;
   split_horizontal->bottom = bottom;
+
+  memcpy(&split_horizontal->scale, scale, sizeof(struct hikari_split_scale));
+
+  if (split_horizontal->orientation ==
+      HIKARI_HORIZONTAL_SPLIT_ORIENTATION_BOTTOM) {
+    flip_scale(&split_horizontal->scale);
+  }
 }
 
 void

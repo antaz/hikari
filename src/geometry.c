@@ -4,28 +4,51 @@
 
 #define SPLIT(n, x, y, width, height)                                          \
   void hikari_geometry_split_##n(struct wlr_box *src,                          \
-      float scale,                                                             \
+      int width,                                                               \
       int gap,                                                                 \
       struct wlr_box *dst1,                                                    \
       struct wlr_box *dst2)                                                    \
   {                                                                            \
-    int width = (src->width - gap) * (1.0 - scale);                            \
-    int rest = src->width - gap - width * 2;                                   \
+    int rest = src->width - gap - width;                                       \
                                                                                \
     dst1->x = src->x;                                                          \
     dst1->y = src->y;                                                          \
-    dst1->width = width + rest;                                                \
+    dst1->width = width;                                                       \
     dst1->height = src->height;                                                \
                                                                                \
-    dst2->x = src->x + dst1->width + gap;                                      \
+    dst2->x = src->x + width + gap;                                            \
     dst2->y = src->y;                                                          \
-    dst2->width = width;                                                       \
+    dst2->width = rest;                                                        \
     dst2->height = src->height;                                                \
   }
 
 SPLIT(vertical, x, y, width, height)
 SPLIT(horizontal, y, x, height, width)
 #undef SPLIT
+
+#define DYNAMIC_SCALE(name)                                                    \
+  int hikari_geometry_scale_dynamic_##name(struct wlr_box *src,                \
+      struct wlr_box *geometry,                                                \
+      double min_scale,                                                        \
+      double max_scale,                                                        \
+      int gap)                                                                 \
+  {                                                                            \
+    int min_##name = (src->name - gap) * min_scale;                            \
+    int max_##name = (src->name - gap) * max_scale;                            \
+    int name = geometry->name;                                                 \
+                                                                               \
+    if (name < min_##name) {                                                   \
+      return min_##name;                                                       \
+    } else if (name > max_##name) {                                            \
+      return max_##name;                                                       \
+    } else {                                                                   \
+      return name;                                                             \
+    }                                                                          \
+  }
+
+DYNAMIC_SCALE(width)
+DYNAMIC_SCALE(height)
+#undef DYNAMIC_SCALE
 
 void
 hikari_geometry_shrink(struct wlr_box *geometry, int gap)

@@ -619,6 +619,24 @@ should take up 75% would be specified like so:
 }
 ```
 
+Additionally to setting a fixed *scale* value, **hikari** allows to specify a
+*scale* object with *min* and *max* values. This is called dynamic scaling, and
+it uses the size of the first view inside the container to determine the size of
+the entire container. The *min* and *max* values are used to specify possible
+minimum and maximum scale values for the container. Omitting the values for
+*min* or *max* sets the former to **0.1** and the latter to **0.9**.
+
+```
+{
+  scale = {
+    min = 0.5
+    max = 0.75
+  }
+  left = single
+  right = stack
+}
+```
+
 Containers
 ----------
 Containers consume a number of views and arrange them according to a tiling

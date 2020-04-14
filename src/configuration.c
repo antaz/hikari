@@ -298,30 +298,99 @@ done:
 }
 
 static bool
-parse_scale(const ucl_object_t *scale_obj, double *scale)
+parse_scale_value(
+    const ucl_object_t *scale_value_obj, const char *name, double *scale)
 {
   bool success = false;
-  double ret = 0.5;
-  if (scale_obj != NULL) {
-    if (!ucl_object_todouble_safe(scale_obj, &ret)) {
-      fprintf(stderr, "configuration error: expected float for \"scale\"\n");
-      goto done;
-    }
+  double ret;
 
-    if (ret < 0.1 || ret > 0.9) {
-      fprintf(stderr,
-          "configuration error: \"scale\" of \"%.2f\" is not between \"0.1\" "
-          "and "
-          "\"0.9\"\n",
-          ret);
-      goto done;
-    }
+  if (!ucl_object_todouble_safe(scale_value_obj, &ret)) {
+    fprintf(stderr, "configuration error: expected float for \"%s\"\n", name);
+    goto done;
+  }
+
+  if (ret < hikari_split_scale_min || ret > hikari_split_scale_max) {
+    fprintf(stderr,
+        "configuration error: \"%s\" of \"%.2f\" is not between \"0.1\" "
+        "and "
+        "\"0.9\"\n",
+        name,
+        ret);
+    goto done;
   }
 
   success = true;
 
 done:
   *scale = ret;
+
+  return success;
+}
+
+static bool
+parse_scale_dynamic(
+    const ucl_object_t *scale_obj, struct hikari_split_scale_dynamic *scale)
+{
+  bool success = false;
+
+  const ucl_object_t *min_obj = ucl_object_lookup(scale_obj, "min");
+  const ucl_object_t *max_obj = ucl_object_lookup(scale_obj, "max");
+
+  if (min_obj != NULL) {
+    if (!parse_scale_value(min_obj, "min", &scale->min)) {
+      goto done;
+    }
+  } else {
+    scale->min = hikari_split_scale_min;
+  }
+
+  if (max_obj != NULL) {
+    if (!parse_scale_value(max_obj, "max", &scale->max)) {
+      goto done;
+    }
+  } else {
+    scale->max = hikari_split_scale_max;
+  }
+
+  success = true;
+
+done:
+
+  return success;
+}
+
+static bool
+parse_scale(const ucl_object_t *scale_obj, struct hikari_split_scale *scale)
+{
+  bool success = false;
+
+  if (scale_obj != NULL) {
+    ucl_type_t type = ucl_object_type(scale_obj);
+
+    switch (type) {
+      case UCL_FLOAT:
+        scale->type = HIKARI_SPLIT_SCALE_TYPE_FIXED;
+        if (!parse_scale_value(scale_obj, "scale", &scale->scale.fixed)) {
+          goto done;
+        }
+        break;
+
+      case UCL_OBJECT:
+        scale->type = HIKARI_SPLIT_SCALE_TYPE_DYNAMIC;
+
+        if (!parse_scale_dynamic(scale_obj, &scale->scale.dynamic)) {
+          goto done;
+        }
+        break;
+
+      default:
+        goto done;
+    }
+  }
+
+  success = true;
+
+done:
 
   return success;
 }
@@ -334,11 +403,13 @@ done:
     bool found_orientation = false;                                            \
     const ucl_object_t *cur;                                                   \
     struct hikari_split_##name *ret = NULL;                                    \
-    double scale = 0.5;                                                        \
     enum hikari_split_##name##_orientation orientation =                       \
         HIKARI_##NAME##_SPLIT_ORIENTATION_##FIRST;                             \
     struct hikari_split *first = NULL;                                         \
     struct hikari_split *second = NULL;                                        \
+    struct hikari_split_scale scale;                                           \
+    scale.type = HIKARI_SPLIT_SCALE_TYPE_FIXED;                                \
+    scale.scale.fixed = hikari_split_scale_default;                            \
                                                                                \
     ucl_object_iter_t it = ucl_object_iterate_new(name##_obj);                 \
                                                                                \
@@ -400,7 +471,7 @@ done:
     }                                                                          \
                                                                                \
     ret = hikari_malloc(sizeof(struct hikari_split_##name));                   \
-    hikari_split_##name##_init(ret, scale, orientation, first, second);        \
+    hikari_split_##name##_init(ret, &scale, orientation, first, second);       \
                                                                                \
     success = true;                                                            \
                                                                                \
