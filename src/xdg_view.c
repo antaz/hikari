@@ -139,10 +139,6 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   hikari_geometry_constrain_absolute(geometry, &output->usable_area, x, y);
 
   hikari_view_refresh_geometry(view, geometry);
-
-  xdg_view->set_title.notify = set_title_handler;
-  wl_signal_add(
-      &xdg_view->surface->toplevel->events.set_title, &xdg_view->set_title);
 }
 
 static struct wlr_surface *
@@ -176,16 +172,20 @@ map(struct hikari_view *view, bool focus)
 
   view->surface = xdg_surface->surface;
 
+  xdg_view->set_title.notify = set_title_handler;
+  wl_signal_add(
+      &xdg_view->surface->toplevel->events.set_title, &xdg_view->set_title);
+
+  xdg_view->request_fullscreen.notify = request_fullscreen_handler;
+  wl_signal_add(&xdg_surface->toplevel->events.request_fullscreen,
+      &xdg_view->request_fullscreen);
+
   xdg_view->new_popup.notify = new_popup_handler;
   wl_signal_add(&xdg_surface->events.new_popup, &xdg_view->new_popup);
 
   xdg_view->new_subsurface.notify = new_subsurface_handler;
   wl_signal_add(
       &xdg_surface->surface->events.new_subsurface, &xdg_view->new_subsurface);
-
-  xdg_view->request_fullscreen.notify = request_fullscreen_handler;
-  wl_signal_add(&xdg_surface->toplevel->events.request_fullscreen,
-      &xdg_view->request_fullscreen);
 
   xdg_view->commit.notify = commit_handler;
   wl_signal_add(&xdg_view->surface->surface->events.commit, &xdg_view->commit);
