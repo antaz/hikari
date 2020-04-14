@@ -640,7 +640,8 @@ hikari_view_lower(struct hikari_view *view)
 static void
 queue_tile(struct hikari_view *view,
     struct hikari_layout *layout,
-    struct hikari_tile *tile)
+    struct hikari_tile *tile,
+    bool center)
 {
   assert(!hikari_view_is_dirty(view));
 
@@ -651,7 +652,7 @@ queue_tile(struct hikari_view *view,
   op->type = HIKARI_OPERATION_TYPE_TILE;
   op->tile = tile;
   op->geometry = tile->view_geometry;
-  op->center = false;
+  op->center = center;
 
   hikari_view_set_dirty(view);
 
@@ -683,7 +684,7 @@ hikari_view_tile(struct hikari_view *view, struct wlr_box *geometry)
   struct hikari_tile *tile = hikari_malloc(sizeof(struct hikari_tile));
   hikari_tile_init(tile, view, layout, geometry, geometry);
 
-  queue_tile(view, layout, tile);
+  queue_tile(view, layout, tile, false);
 
   wl_list_insert(layout->tiles.prev, &tile->layout_tiles);
 }
@@ -1065,8 +1066,8 @@ hikari_view_exchange(struct hikari_view *from, struct hikari_view *to)
   wl_list_insert(&from->tile->layout_tiles, &to_tile->layout_tiles);
   wl_list_insert(&to->tile->layout_tiles, &from_tile->layout_tiles);
 
-  queue_tile(from, layout, from_tile);
-  queue_tile(to, layout, to_tile);
+  queue_tile(from, layout, from_tile, true);
+  queue_tile(to, layout, to_tile, false);
 }
 
 static void
@@ -1454,6 +1455,9 @@ commit_tile(struct hikari_view *view,
 
   if (!hikari_view_is_hidden(view)) {
     commit_pending_geometry(view, &operation->geometry, geometry_before);
+    if (operation->center) {
+      hikari_view_center_cursor(view);
+    }
     hikari_server_cursor_focus();
   } else {
     hikari_view_refresh_geometry(view, &operation->geometry);

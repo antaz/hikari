@@ -889,7 +889,6 @@ hikari_workspace_reset_view_geometry(struct hikari_workspace *workspace)
     }                                                                          \
                                                                                \
     hikari_view_exchange(focus_view, link);                                    \
-    hikari_view_center_cursor(link);                                           \
   }
 
 VIEW_EXCHANGE(prev)
