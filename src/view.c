@@ -1224,28 +1224,22 @@ hikari_view_refresh_geometry(struct hikari_view *view, struct wlr_box *geometry)
 }
 
 static void
-commit_pending_geometry(struct hikari_view *view,
-    struct wlr_box *pending_geometry,
-    struct wlr_box *geometry_before)
+commit_pending_geometry(
+    struct hikari_view *view, struct wlr_box *pending_geometry)
 {
-  struct hikari_output *output = view->output;
-
-  hikari_indicator_damage(&hikari_server.indicator, view);
   hikari_view_refresh_geometry(view, pending_geometry);
-  hikari_indicator_damage(&hikari_server.indicator, view);
 
-  hikari_output_add_damage(output, geometry_before);
+  hikari_indicator_damage(&hikari_server.indicator, view);
   hikari_view_damage_whole(view);
 }
 
 static void
-commit_pending_operation(struct hikari_view *view,
-    struct hikari_operation *operation,
-    struct wlr_box *geometry_before)
+commit_pending_operation(
+    struct hikari_view *view, struct hikari_operation *operation)
 {
   if (!hikari_view_is_hidden(view)) {
     raise_view(view);
-    commit_pending_geometry(view, &operation->geometry, geometry_before);
+    commit_pending_geometry(view, &operation->geometry);
     if (operation->center) {
       hikari_view_center_cursor(view);
       hikari_server_cursor_focus();
@@ -1257,24 +1251,18 @@ commit_pending_operation(struct hikari_view *view,
 }
 
 static void
-commit_resize(struct hikari_view *view,
-    struct hikari_operation *operation,
-    struct wlr_box *geometry_before)
+commit_resize(struct hikari_view *view, struct hikari_operation *operation)
 {
-  commit_pending_operation(view, operation, geometry_before);
+  commit_pending_operation(view, operation);
 }
 
 static void
-commit_migrate(struct hikari_view *view,
-    struct hikari_operation *operation,
-    struct wlr_box *geometry_before)
+commit_migrate(struct hikari_view *view, struct hikari_operation *operation)
 {
   hikari_view_refresh_geometry(view, &operation->geometry);
 
   struct hikari_sheet *sheet = view->sheet;
   struct wlr_box *geometry = hikari_view_geometry(view);
-
-  hikari_output_add_damage(view->output, geometry_before);
 
   move_view(view, geometry, geometry->x, geometry->y);
 
@@ -1292,9 +1280,7 @@ commit_migrate(struct hikari_view *view,
 }
 
 static void
-commit_reset(struct hikari_view *view,
-    struct hikari_operation *operation,
-    struct wlr_box *geometry_before)
+commit_reset(struct hikari_view *view, struct hikari_operation *operation)
 {
   hikari_indicator_damage(&hikari_server.indicator, view);
 
@@ -1318,16 +1304,14 @@ commit_reset(struct hikari_view *view,
   }
 
   if (operation->migrate) {
-    commit_migrate(view, &view->pending_operation, geometry_before);
+    commit_migrate(view, &view->pending_operation);
   } else {
-    commit_pending_operation(view, operation, geometry_before);
+    commit_pending_operation(view, operation);
   }
 }
 
 static void
-commit_unmaximize(struct hikari_view *view,
-    struct hikari_operation *operation,
-    struct wlr_box *geometry_before)
+commit_unmaximize(struct hikari_view *view, struct hikari_operation *operation)
 {
   hikari_free(view->maximized_state);
   view->maximized_state = NULL;
@@ -1336,13 +1320,12 @@ commit_unmaximize(struct hikari_view *view,
     view->border.state = HIKARI_BORDER_ACTIVE;
   }
 
-  commit_pending_operation(view, operation, geometry_before);
+  commit_pending_operation(view, operation);
 }
 
 static void
-commit_full_maximize(struct hikari_view *view,
-    struct hikari_operation *operation,
-    struct wlr_box *geometry_before)
+commit_full_maximize(
+    struct hikari_view *view, struct hikari_operation *operation)
 {
   if (!view->maximized_state) {
     view->maximized_state =
@@ -1356,13 +1339,12 @@ commit_full_maximize(struct hikari_view *view,
     view->border.state = HIKARI_BORDER_NONE;
   }
 
-  commit_pending_operation(view, operation, geometry_before);
+  commit_pending_operation(view, operation);
 }
 
 static void
-commit_vertical_maximize(struct hikari_view *view,
-    struct hikari_operation *operation,
-    struct wlr_box *geometry_before)
+commit_vertical_maximize(
+    struct hikari_view *view, struct hikari_operation *operation)
 {
   if (!view->maximized_state) {
     view->maximized_state =
@@ -1370,7 +1352,7 @@ commit_vertical_maximize(struct hikari_view *view,
   } else {
     switch (view->maximized_state->maximization) {
       case HIKARI_MAXIMIZATION_HORIZONTALLY_MAXIMIZED:
-        commit_full_maximize(view, operation, geometry_before);
+        commit_full_maximize(view, operation);
         return;
 
       case HIKARI_MAXIMIZATION_FULLY_MAXIMIZED:
@@ -1389,13 +1371,12 @@ commit_vertical_maximize(struct hikari_view *view,
       HIKARI_MAXIMIZATION_VERTICALLY_MAXIMIZED;
   view->maximized_state->geometry = operation->geometry;
 
-  commit_pending_operation(view, operation, geometry_before);
+  commit_pending_operation(view, operation);
 }
 
 static void
-commit_horizontal_maximize(struct hikari_view *view,
-    struct hikari_operation *operation,
-    struct wlr_box *geometry_before)
+commit_horizontal_maximize(
+    struct hikari_view *view, struct hikari_operation *operation)
 {
   if (!view->maximized_state) {
     view->maximized_state =
@@ -1403,7 +1384,7 @@ commit_horizontal_maximize(struct hikari_view *view,
   } else {
     switch (view->maximized_state->maximization) {
       case HIKARI_MAXIMIZATION_HORIZONTALLY_MAXIMIZED:
-        commit_full_maximize(view, operation, geometry_before);
+        commit_full_maximize(view, operation);
         return;
 
       case HIKARI_MAXIMIZATION_FULLY_MAXIMIZED:
@@ -1422,13 +1403,11 @@ commit_horizontal_maximize(struct hikari_view *view,
       HIKARI_MAXIMIZATION_HORIZONTALLY_MAXIMIZED;
   view->maximized_state->geometry = operation->geometry;
 
-  commit_pending_operation(view, operation, geometry_before);
+  commit_pending_operation(view, operation);
 }
 
 static void
-commit_tile(struct hikari_view *view,
-    struct hikari_operation *operation,
-    struct wlr_box *geometry_before)
+commit_tile(struct hikari_view *view, struct hikari_operation *operation)
 {
   if (view->maximized_state) {
     hikari_maximized_state_destroy(view->maximized_state);
@@ -1454,7 +1433,7 @@ commit_tile(struct hikari_view *view,
   operation->tile = NULL;
 
   if (!hikari_view_is_hidden(view)) {
-    commit_pending_geometry(view, &operation->geometry, geometry_before);
+    commit_pending_geometry(view, &operation->geometry);
     if (operation->center) {
       hikari_view_center_cursor(view);
     }
@@ -1467,35 +1446,33 @@ commit_tile(struct hikari_view *view,
 static void
 commit_operation(struct hikari_operation *operation, struct hikari_view *view)
 {
-  struct wlr_box geometry_before = *hikari_view_border_geometry(view);
-
   switch (operation->type) {
     case HIKARI_OPERATION_TYPE_RESIZE:
-      commit_resize(view, operation, &geometry_before);
+      commit_resize(view, operation);
       break;
 
     case HIKARI_OPERATION_TYPE_RESET:
-      commit_reset(view, operation, &geometry_before);
+      commit_reset(view, operation);
       break;
 
     case HIKARI_OPERATION_TYPE_UNMAXIMIZE:
-      commit_unmaximize(view, operation, &geometry_before);
+      commit_unmaximize(view, operation);
       break;
 
     case HIKARI_OPERATION_TYPE_FULL_MAXIMIZE:
-      commit_full_maximize(view, operation, &geometry_before);
+      commit_full_maximize(view, operation);
       break;
 
     case HIKARI_OPERATION_TYPE_VERTICAL_MAXIMIZE:
-      commit_vertical_maximize(view, operation, &geometry_before);
+      commit_vertical_maximize(view, operation);
       break;
 
     case HIKARI_OPERATION_TYPE_HORIZONTAL_MAXIMIZE:
-      commit_horizontal_maximize(view, operation, &geometry_before);
+      commit_horizontal_maximize(view, operation);
       break;
 
     case HIKARI_OPERATION_TYPE_TILE:
-      commit_tile(view, operation, &geometry_before);
+      commit_tile(view, operation);
       break;
   }
 }
@@ -1509,6 +1486,9 @@ hikari_view_commit_pending_operation(
 
   view->pending_operation.geometry.width = geometry->width;
   view->pending_operation.geometry.height = geometry->height;
+
+  hikari_indicator_damage(&hikari_server.indicator, view);
+  hikari_view_damage_whole(view);
 
   commit_operation(&view->pending_operation, view);
   hikari_view_unset_dirty(view);
