@@ -79,6 +79,7 @@ struct hikari_view {
 
 struct hikari_view_child {
   struct wl_list link;
+
   struct wlr_surface *surface;
   struct hikari_view *parent;
 

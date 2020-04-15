@@ -339,11 +339,12 @@ hikari_view_set_id(struct hikari_view *view, const char *id)
   strcpy(view->id, id);
 }
 
-struct damage_data_t {
+struct hikari_damage_data {
   struct wlr_box *geometry;
-  struct hikari_output *output;
   struct wlr_surface *surface;
+
   struct hikari_view *view;
+  struct hikari_output *output;
 
   bool whole;
 };
@@ -351,18 +352,18 @@ struct damage_data_t {
 static void
 damage_whole_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 {
-  struct damage_data_t *damage_data = data;
-  struct hikari_view *view = damage_data->view;
+  struct hikari_damage_data *damage_data = data;
   struct hikari_output *output = damage_data->output;
+  struct hikari_view *view = damage_data->view;
 
   if (view->surface == surface) {
     hikari_output_add_damage(output, hikari_view_border_geometry(view));
   } else {
-    struct wlr_box geometry = *damage_data->geometry;
+    struct wlr_box geometry;
+    memcpy(&geometry, damage_data->geometry, sizeof(struct wlr_box));
 
     geometry.x += sx;
     geometry.y += sy;
-
     geometry.width = surface->current.width;
     geometry.height = surface->current.height;
 
@@ -383,17 +384,17 @@ hikari_view_damage_whole(struct hikari_view *view)
 {
   assert(view != NULL);
 
+  struct hikari_output *output = view->output;
+
   // TODO I know, this needs to be done A LOT better
   if (view->use_csd) {
-    hikari_output_damage_whole(view->output);
+    hikari_output_damage_whole(output);
     return;
   }
 
-  struct wlr_box geometry = *hikari_view_geometry(view);
-  struct hikari_output *output = view->output;
-  struct damage_data_t damage_data;
+  struct hikari_damage_data damage_data;
 
-  damage_data.geometry = &geometry;
+  damage_data.geometry = hikari_view_geometry(view);
   damage_data.output = output;
   damage_data.view = view;
 
@@ -1136,7 +1137,7 @@ new_subsurface_handler(struct wl_listener *listener, void *data)
 static void
 damage_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 {
-  struct damage_data_t *damage_data = data;
+  struct hikari_damage_data *damage_data = data;
 
   if (damage_data->whole) {
     damage_whole_surface(surface, sx, sy, data);
@@ -1146,15 +1147,9 @@ damage_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 
     pixman_region32_t damage;
     pixman_region32_init(&damage);
-
     wlr_surface_get_effective_damage(surface, &damage);
-    if (pixman_region32_not_empty(&damage)) {
-      pixman_region32_translate(&damage, geometry->x + sx, geometry->y + sy);
-      wlr_output_damage_add(output->damage, &damage);
-    } else {
-      damage_whole_surface(surface, sx, sy, data);
-    }
-
+    pixman_region32_translate(&damage, geometry->x + sx, geometry->y + sy);
+    wlr_output_damage_add(output->damage, &damage);
     pixman_region32_fini(&damage);
   }
 }
@@ -1162,7 +1157,7 @@ damage_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 static void
 damage_single_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 {
-  struct damage_data_t *damage_data = data;
+  struct hikari_damage_data *damage_data = data;
 
   if (damage_data->surface == surface) {
     damage_surface(surface, sx, sy, data);
@@ -1211,7 +1206,7 @@ hikari_view_damage_surface(
     return;
   }
 
-  struct damage_data_t damage_data;
+  struct hikari_damage_data damage_data;
 
   damage_data.geometry = hikari_view_geometry(view);
   damage_data.output = view->output;
