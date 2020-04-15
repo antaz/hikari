@@ -1175,7 +1175,13 @@ commit_view_child_handler(struct wl_listener *listener, void *data)
   struct hikari_view_child *view_child =
       wl_container_of(listener, view_child, commit);
 
-  hikari_view_damage_surface(view_child->parent, view_child->surface, false);
+  struct hikari_view *parent = view_child->parent;
+
+  if (!hikari_view_is_hidden(parent)) {
+    struct wlr_surface *surface = view_child->surface;
+
+    hikari_view_damage_surface(parent, surface, false);
+  }
 }
 
 void
