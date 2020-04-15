@@ -371,6 +371,14 @@ damage_whole_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 }
 
 void
+hikari_view_damage_border(struct hikari_view *view)
+{
+  struct wlr_box *geometry = hikari_view_border_geometry(view);
+
+  hikari_output_add_damage(view->output, geometry);
+}
+
+void
 hikari_view_damage_whole(struct hikari_view *view)
 {
   assert(view != NULL);
