@@ -90,3 +90,16 @@ hikari_move_mode_init(struct hikari_move_mode *move_mode)
   move_mode->mode.cancel = cancel;
   move_mode->mode.cursor_move = cursor_move;
 }
+
+void
+hikari_move_mode_enter(struct hikari_view *view)
+{
+  hikari_indicator_update(
+      &hikari_server.indicator, view, hikari_configuration->indicator_insert);
+
+  hikari_view_raise(view);
+  hikari_view_top_left_cursor(view);
+
+  hikari_server.mode = (struct hikari_mode *)&hikari_server.move_mode;
+  hikari_server_refresh_indication();
+}

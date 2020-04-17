@@ -96,3 +96,13 @@ hikari_layout_select_mode_init(
   layout_select_mode->mode.cancel = cancel;
   layout_select_mode->mode.cursor_move = cursor_move;
 }
+
+void
+hikari_layout_select_mode_enter(void)
+{
+  struct hikari_server *server = &hikari_server;
+
+  server->mode = (struct hikari_mode *)&server->layout_select_mode;
+
+  hikari_server_refresh_indication();
+}

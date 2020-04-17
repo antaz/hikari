@@ -135,3 +135,11 @@ hikari_input_grab_mode_init(struct hikari_input_grab_mode *input_grab_mode)
   input_grab_mode->mode.cancel = cancel;
   input_grab_mode->mode.cursor_move = cursor_move;
 }
+
+void
+hikari_input_grab_mode_enter(struct hikari_view *view)
+{
+  hikari_server.mode = (struct hikari_mode *)&hikari_server.input_grab_mode;
+
+  hikari_server_refresh_indication();
+}

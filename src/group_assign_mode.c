@@ -348,3 +348,23 @@ hikari_group_assign_mode_init(
   group_assign_mode->group = NULL;
   group_assign_mode->completion = NULL;
 }
+
+void
+hikari_group_assign_mode_enter(struct hikari_view *view)
+{
+  struct hikari_group_assign_mode *mode = &hikari_server.group_assign_mode;
+
+  mode->group = view->group;
+  hikari_server.mode = (struct hikari_mode *)mode;
+
+  struct wlr_box *geometry = hikari_view_border_geometry(view);
+  struct hikari_output *output = hikari_server.workspace->output;
+
+  hikari_input_buffer_replace(&mode->input_buffer, view->group->name);
+
+  hikari_indicator_update_group(&hikari_server.indicator,
+      geometry,
+      output,
+      view->group->name,
+      hikari_configuration->indicator_insert);
+}

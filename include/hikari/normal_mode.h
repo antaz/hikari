@@ -13,4 +13,7 @@ struct hikari_normal_mode {
 void
 hikari_normal_mode_init(struct hikari_normal_mode *normal_mode);
 
+void
+hikari_normal_mode_enter(void);
+
 #endif

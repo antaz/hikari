@@ -5,6 +5,7 @@
 #include <hikari/mode.h>
 
 struct hikari_mark;
+struct hikari_view;
 
 struct hikari_mark_assign_mode {
   struct hikari_mode mode;
@@ -17,5 +18,8 @@ hikari_mark_assign_mode_init(struct hikari_mark_assign_mode *mark_assign_mode);
 
 void
 hikari_mark_assign_mode_fini(struct hikari_mark_assign_mode *mark_assign_mode);
+
+void
+hikari_mark_assign_mode_enter(struct hikari_view *view);
 
 #endif

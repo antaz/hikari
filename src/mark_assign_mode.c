@@ -273,3 +273,31 @@ hikari_mark_assign_mode_fini(struct hikari_mark_assign_mode *mark_assign_mode)
 {
   hikari_indicator_fini(&mark_assign_mode->indicator);
 }
+
+void
+hikari_mark_assign_mode_enter(struct hikari_view *view)
+{
+  hikari_server.mark_assign_mode.pending_mark = NULL;
+  hikari_server.mode = (struct hikari_mode *)&hikari_server.mark_assign_mode;
+
+  struct wlr_box *geometry = hikari_view_border_geometry(view);
+  struct hikari_output *output = hikari_server.workspace->output;
+
+  struct hikari_mark *mark = view->mark;
+
+  if (mark == NULL) {
+    hikari_indicator_update_mark(&hikari_server.indicator,
+        geometry,
+        output,
+        " ",
+        hikari_configuration->indicator_insert);
+  } else {
+    hikari_indicator_update_mark(&hikari_server.indicator,
+        geometry,
+        output,
+        mark->name,
+        hikari_configuration->indicator_insert);
+  }
+
+  hikari_server_refresh_indication();
+}

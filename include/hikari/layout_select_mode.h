@@ -12,5 +12,7 @@ struct hikari_layout_select_mode {
 void
 hikari_layout_select_mode_init(
     struct hikari_layout_select_mode *layout_select_mode);
+void
+hikari_layout_select_mode_enter(void);
 
 #endif

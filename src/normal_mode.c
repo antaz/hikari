@@ -273,3 +273,16 @@ hikari_normal_mode_init(struct hikari_normal_mode *normal_mode)
   normal_mode->mode.cursor_move = NULL;
   normal_mode->pending_action = NULL;
 }
+
+void
+hikari_normal_mode_enter(void)
+{
+  struct hikari_server *server = &hikari_server;
+
+  assert(server->workspace != NULL);
+
+  server->mode->cancel();
+  server->mode = (struct hikari_mode *)&server->normal_mode;
+
+  hikari_server_refresh_indication();
+}

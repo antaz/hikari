@@ -1052,14 +1052,9 @@ hikari_server_enter_normal_mode(void *arg)
 {
   struct hikari_server *server = &hikari_server;
 
-  assert(server->workspace != NULL);
-
-  server->mode->cancel();
-  server->mode = (struct hikari_mode *)&server->normal_mode;
-
   set_cursor_image(server, "left_ptr");
 
-  hikari_server_refresh_indication();
+  hikari_normal_mode_enter();
 }
 
 void
@@ -1074,19 +1069,7 @@ hikari_server_enter_sheet_assign_mode(void *arg)
     return;
   }
 
-  struct wlr_box *geometry = hikari_view_geometry(focus_view);
-
-  hikari_indicator_update_sheet(&hikari_server.indicator,
-      geometry,
-      workspace->output,
-      focus_view->sheet,
-      hikari_configuration->indicator_insert,
-      hikari_view_is_invisible(focus_view),
-      hikari_view_is_floating(focus_view));
-
-  hikari_server.sheet_assign_mode.sheet = focus_view->sheet;
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.sheet_assign_mode;
-  hikari_server_refresh_indication();
+  hikari_sheet_assign_mode_enter(focus_view);
 }
 
 void
@@ -1098,15 +1081,7 @@ hikari_server_enter_move_mode(void *arg)
     return;
   }
 
-  hikari_indicator_update(&hikari_server.indicator,
-      focus_view,
-      hikari_configuration->indicator_insert);
-
-  hikari_view_raise(focus_view);
-  hikari_view_top_left_cursor(focus_view);
-
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.move_mode;
-  hikari_server_refresh_indication();
+  hikari_move_mode_enter(focus_view);
 }
 
 void
@@ -1118,15 +1093,7 @@ hikari_server_enter_resize_mode(void *arg)
     return;
   }
 
-  hikari_indicator_update(&hikari_server.indicator,
-      focus_view,
-      hikari_configuration->indicator_insert);
-
-  hikari_view_raise(focus_view);
-  hikari_view_bottom_right_cursor(focus_view);
-
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.resize_mode;
-  hikari_server_refresh_indication();
+  hikari_resize_mode_enter(focus_view);
 }
 
 void
@@ -1138,52 +1105,30 @@ hikari_server_enter_group_assign_mode(void *arg)
     return;
   }
 
-  struct hikari_group_assign_mode *mode = &hikari_server.group_assign_mode;
-
-  mode->group = focus_view->group;
-  hikari_server.mode = (struct hikari_mode *)mode;
-
-  struct wlr_box *geometry = hikari_view_border_geometry(focus_view);
-  struct hikari_output *output = hikari_server.workspace->output;
-
-  hikari_input_buffer_replace(&mode->input_buffer, focus_view->group->name);
-
-  hikari_indicator_update_group(&hikari_server.indicator,
-      geometry,
-      output,
-      focus_view->group->name,
-      hikari_configuration->indicator_insert);
+  hikari_group_assign_mode_enter(focus_view);
 }
 
 void
 hikari_server_enter_input_grab_mode(void *arg)
 {
   struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_view *focus_view = workspace->focus_view;
 
-  assert(workspace != NULL);
-
-  if (workspace->focus_view == NULL) {
+  if (focus_view == NULL) {
     return;
   }
 
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.input_grab_mode;
-
-  hikari_server_refresh_indication();
+  hikari_input_grab_mode_enter(focus_view);
 }
 
 static void
-enter_mark_select(bool swtch)
+enter_mark_select(bool switch_workspace)
 {
   struct hikari_server *server = &hikari_server;
 
-  assert(server->workspace != NULL);
-
-  server->mark_select_mode.switch_workspace = swtch;
-  server->mode = (struct hikari_mode *)&server->mark_select_mode;
-
   set_cursor_image(server, "link");
 
-  hikari_server_refresh_indication();
+  hikari_mark_select_mode_enter(switch_workspace);
 }
 
 void
@@ -1203,13 +1148,9 @@ hikari_server_enter_layout_select_mode(void *arg)
 {
   struct hikari_server *server = &hikari_server;
 
-  assert(server->workspace != NULL);
-
-  server->mode = (struct hikari_mode *)&server->layout_select_mode;
-
   set_cursor_image(server, "context-menu");
 
-  hikari_server_refresh_indication();
+  hikari_layout_select_mode_enter();
 }
 
 void
@@ -1218,34 +1159,13 @@ hikari_server_enter_mark_assign_mode(void *arg)
   assert(hikari_server.workspace != NULL);
 
   struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_view *focus_view = workspace->focus_view;
 
-  if (workspace->focus_view == NULL) {
+  if (focus_view == NULL) {
     return;
   }
 
-  hikari_server.mark_assign_mode.pending_mark = NULL;
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.mark_assign_mode;
-
-  struct wlr_box *geometry = hikari_view_border_geometry(workspace->focus_view);
-  struct hikari_output *output = hikari_server.workspace->output;
-
-  struct hikari_mark *mark = workspace->focus_view->mark;
-
-  if (mark == NULL) {
-    hikari_indicator_update_mark(&hikari_server.indicator,
-        geometry,
-        output,
-        " ",
-        hikari_configuration->indicator_insert);
-  } else {
-    hikari_indicator_update_mark(&hikari_server.indicator,
-        geometry,
-        output,
-        mark->name,
-        hikari_configuration->indicator_insert);
-  }
-
-  hikari_server_refresh_indication();
+  hikari_mark_assign_mode_enter(focus_view);
 }
 
 void

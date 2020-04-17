@@ -14,4 +14,7 @@ struct hikari_mark_select_mode {
 void
 hikari_mark_select_mode_init(struct hikari_mark_select_mode *mark_select_mode);
 
+void
+hikari_mark_select_mode_enter(bool swith_workspace);
+
 #endif

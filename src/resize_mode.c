@@ -98,3 +98,16 @@ hikari_resize_mode_init(struct hikari_resize_mode *resize_mode)
   resize_mode->mode.cancel = cancel;
   resize_mode->mode.cursor_move = cursor_move;
 }
+
+void
+hikari_resize_mode_enter(struct hikari_view *view)
+{
+  hikari_indicator_update(
+      &hikari_server.indicator, view, hikari_configuration->indicator_insert);
+
+  hikari_view_raise(view);
+  hikari_view_bottom_right_cursor(view);
+
+  hikari_server.mode = (struct hikari_mode *)&hikari_server.resize_mode;
+  hikari_server_refresh_indication();
+}

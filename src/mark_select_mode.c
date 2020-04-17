@@ -75,3 +75,16 @@ hikari_mark_select_mode_init(struct hikari_mark_select_mode *mark_select_mode)
 
   mark_select_mode->switch_workspace = false;
 }
+
+void
+hikari_mark_select_mode_enter(bool switch_workspace)
+{
+  struct hikari_server *server = &hikari_server;
+
+  assert(server->workspace != NULL);
+
+  server->mark_select_mode.switch_workspace = switch_workspace;
+  server->mode = (struct hikari_mode *)&server->mark_select_mode;
+
+  hikari_server_refresh_indication();
+}

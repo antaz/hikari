@@ -241,3 +241,21 @@ hikari_sheet_assign_mode_init(
   sheet_assign_mode->mode.cursor_move = cursor_move;
   sheet_assign_mode->sheet = NULL;
 }
+
+void
+hikari_sheet_assign_mode_enter(struct hikari_view *view)
+{
+  struct wlr_box *geometry = hikari_view_geometry(view);
+
+  hikari_indicator_update_sheet(&hikari_server.indicator,
+      geometry,
+      view->output,
+      view->sheet,
+      hikari_configuration->indicator_insert,
+      hikari_view_is_invisible(view),
+      hikari_view_is_floating(view));
+
+  hikari_server.sheet_assign_mode.sheet = view->sheet;
+  hikari_server.mode = (struct hikari_mode *)&hikari_server.sheet_assign_mode;
+  hikari_server_refresh_indication();
+}
