@@ -39,7 +39,6 @@ lookup_layout(struct hikari_configuration *configuration,
 
 static void
 apply_layout(struct hikari_configuration *configuration,
-    struct hikari_sheet *sheet,
     struct wlr_event_keyboard_key *event,
     struct hikari_keyboard *keyboard)
 {
@@ -48,7 +47,9 @@ apply_layout(struct hikari_configuration *configuration,
   hikari_server_enter_normal_mode(NULL);
 
   if (split != NULL) {
-    hikari_sheet_apply_split(sheet, split);
+    struct hikari_workspace *workspace = hikari_server.workspace;
+
+    hikari_workspace_apply_split(workspace, split);
   }
 }
 
@@ -58,10 +59,8 @@ key_handler(struct wl_listener *listener, void *data)
   struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
   struct wlr_event_keyboard_key *event = data;
 
-  struct hikari_sheet *sheet = hikari_server.workspace->sheet;
-
   if (event->state == WLR_KEY_PRESSED) {
-    apply_layout(hikari_configuration, sheet, event, keyboard);
+    apply_layout(hikari_configuration, event, keyboard);
   }
 }
 

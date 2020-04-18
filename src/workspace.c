@@ -1022,4 +1022,15 @@ hikari_workspace_show_all_sheet_views(struct hikari_workspace *workspace)
   hikari_server_cursor_focus();
 }
 
+void
+hikari_workspace_apply_split(
+    struct hikari_workspace *workspace, struct hikari_split *split)
+{
+  assert(workspace != NULL);
+  assert(split != NULL);
+
+  hikari_workspace_display_sheet_current(workspace);
+  hikari_sheet_apply_split(workspace->sheet, split);
+}
+
 #undef FOCUS_GUARD

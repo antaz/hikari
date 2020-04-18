@@ -10,6 +10,7 @@ struct hikari_layer;
 struct hikari_output;
 struct hikari_render_data;
 struct hikari_sheet;
+struct hikari_split;
 struct hikari_view;
 
 struct wlr_texture;
@@ -152,5 +153,9 @@ WORKSPACE_ACTION(show_all_sheet_views)
 void
 hikari_workspace_switch_sheet(
     struct hikari_workspace *workspace, struct hikari_sheet *sheet);
+
+void
+hikari_workspace_apply_split(
+    struct hikari_workspace *workspace, struct hikari_split *split);
 
 #endif
