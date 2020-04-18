@@ -205,7 +205,9 @@ Layout actions
 * **layout-apply-[a-z]**
 
   Applies the layout in the according register to the current **workspace
-  sheet**. If the register happens to be empty this is a no-op.
+  sheet**. If the register happens to be empty this is a no-op. If the view that
+  currently has focus can be tiled and is not borrowed it will get raised to the
+  top of the stack.
 
 * **layout-cycle-view-[next|prev|first|last]**
 
@@ -260,7 +262,9 @@ Mode actions
 
   Layout selection awaits one of the layout registers **a** to **z** to be
   selected. *ESC* cancels this mode without selecting a layout. If the layout
-  register happens to be empty this action is a no-op.
+  register happens to be empty this action is a no-op. If the view that
+  currently has focus can be tiled and is not borrowed it will get raised to the
+  top of the stack.
 
 * **mode-enter-mark-assign**
 

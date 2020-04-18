@@ -1029,8 +1029,18 @@ hikari_workspace_apply_split(
   assert(workspace != NULL);
   assert(split != NULL);
 
+  struct hikari_view *focus_view = workspace->focus_view;
+  struct hikari_sheet *sheet = workspace->sheet;
+
+  if (focus_view != NULL && focus_view->sheet == sheet &&
+      hikari_view_is_tileable(focus_view)) {
+    hikari_view_raise(focus_view);
+
+    assert(focus_view == hikari_sheet_first_tileable_view(sheet));
+  }
+
   hikari_workspace_display_sheet_current(workspace);
-  hikari_sheet_apply_split(workspace->sheet, split);
+  hikari_sheet_apply_split(sheet, split);
 }
 
 #undef FOCUS_GUARD
