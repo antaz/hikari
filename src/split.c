@@ -149,7 +149,7 @@ hikari_split_apply(struct hikari_split *split,
 void
 hikari_split_container_init(struct hikari_split_container *container,
     int nr_of_views,
-    layout_func_t layout)
+    hikari_layout_func layout)
 {
   container->split.type = HIKARI_SPLIT_TYPE_CONTAINER;
   container->max = nr_of_views;

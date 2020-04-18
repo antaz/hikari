@@ -7,7 +7,7 @@ struct hikari_render_data;
 struct hikari_sheet;
 struct hikari_view;
 
-typedef struct hikari_view *(*layout_func_t)(
+typedef struct hikari_view *(*hikari_layout_func)(
     struct hikari_sheet *, struct hikari_view *, struct wlr_box *, int);
 
 enum hikari_split_type {
@@ -80,7 +80,7 @@ struct hikari_split_container {
 
   int max;
 
-  layout_func_t layout;
+  hikari_layout_func layout;
 };
 
 void
@@ -91,7 +91,7 @@ hikari_split_apply(struct hikari_split *split,
 void
 hikari_split_container_init(struct hikari_split_container *container,
     int nr_of_views,
-    layout_func_t layout);
+    hikari_layout_func layout);
 
 void
 hikari_split_fini(struct hikari_split *split);

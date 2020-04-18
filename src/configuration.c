@@ -75,7 +75,7 @@ parse_modifier_mask(const char *str, uint8_t *result, const char **remaining)
 
 static bool
 parse_layout_func(const char *layout_func_name,
-    layout_func_t *layout_func,
+    hikari_layout_func *layout_func,
     int64_t *views,
     bool *explicit_nr_of_views)
 {
@@ -111,7 +111,7 @@ parse_container(
 {
   bool success = false;
   struct hikari_split_container *ret = NULL;
-  layout_func_t layout_func = NULL;
+  hikari_layout_func layout_func = NULL;
   int64_t views = 256;
   bool explicit_nr_of_views = false;
   bool override_nr_of_views = false;
@@ -236,7 +236,7 @@ parse_split(const ucl_object_t *split_obj, struct hikari_split **split)
 
   if (type == UCL_STRING) {
     const char *layout_func_name;
-    layout_func_t layout_func;
+    hikari_layout_func layout_func;
     int64_t views = 256;
     bool explicit_nr_of_views = false;
     if (!ucl_object_tostring_safe(split_obj, &layout_func_name)) {
