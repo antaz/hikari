@@ -114,7 +114,7 @@ order. Each _layout_ can be stored in one of the _layout_ register **a** to
 
 View indicators
 ---------------
-_View indiactors_ show information about the current view as well as views
+_View indicators_ show information about the current view as well as views
 belonging to the same group. They outline the border of the current view as
 well as all view borders belonging to the same group (obscured view borders
 will shine through the obscuring view). The focused view will also display
@@ -123,7 +123,7 @@ information, group and its mark (if one has been set for the view).
 
 Marks
 -----
-_Marks_ can be used to "speed dail" views, even if they are on a sheet other
+_Marks_ can be used to "speed dial" views, even if they are on a sheet other
 than the **current sheet** (note: such views will become **borrowed** in the
 process). _Marks_ are represented by characters from **a** to **z**. When jumping
 to a _mark_ the view will be brought forward and focused. If no view is bound to
@@ -781,7 +781,7 @@ are specified using hexadecimal RGB values (e.g. 0xE6DB74).
 
   Signals that the indicated view is the topmost view of a group.
 
-* **forefound**
+* **foreground**
 
   Font color for indicator bars.
 
