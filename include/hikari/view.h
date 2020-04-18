@@ -206,7 +206,8 @@ void
 hikari_view_assign_sheet(struct hikari_view *view, struct hikari_sheet *sheet);
 
 void
-hikari_view_tile(struct hikari_view *view, struct wlr_box *geometry);
+hikari_view_tile(
+    struct hikari_view *view, struct wlr_box *geometry, bool center);
 
 void
 hikari_view_exchange(struct hikari_view *from, struct hikari_view *to);

@@ -43,37 +43,43 @@ struct hikari_view *
 hikari_sheet_queue_layout(struct hikari_sheet *sheet,
     struct hikari_view *first,
     struct wlr_box *frame,
-    int max);
+    int max,
+    bool *center);
 
 struct hikari_view *
 hikari_sheet_stack_layout(struct hikari_sheet *sheet,
     struct hikari_view *first,
     struct wlr_box *frame,
-    int max);
+    int max,
+    bool *center);
 
 struct hikari_view *
 hikari_sheet_grid_layout(struct hikari_sheet *sheet,
     struct hikari_view *first,
     struct wlr_box *frame,
-    int max);
+    int max,
+    bool *center);
 
 struct hikari_view *
 hikari_sheet_full_layout(struct hikari_sheet *sheet,
     struct hikari_view *first,
     struct wlr_box *frame,
-    int max);
+    int max,
+    bool *center);
 
 struct hikari_view *
 hikari_sheet_single_layout(struct hikari_sheet *sheet,
     struct hikari_view *first,
     struct wlr_box *frame,
-    int max);
+    int max,
+    bool *center);
 
 struct hikari_view *
 hikari_sheet_empty_layout(struct hikari_sheet *sheet,
     struct hikari_view *first,
     struct wlr_box *frame,
-    int max);
+    int max,
+    bool *center);
 
 int
 hikari_sheet_tileable_views(struct hikari_sheet *sheet);

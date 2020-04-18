@@ -8,7 +8,7 @@ struct hikari_sheet;
 struct hikari_view;
 
 typedef struct hikari_view *(*hikari_layout_func)(
-    struct hikari_sheet *, struct hikari_view *, struct wlr_box *, int);
+    struct hikari_sheet *, struct hikari_view *, struct wlr_box *, int, bool *);
 
 enum hikari_split_type {
   HIKARI_SPLIT_TYPE_VERTICAL,

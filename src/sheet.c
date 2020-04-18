@@ -89,20 +89,30 @@ tileable_views(struct hikari_view *view)
 }
 
 static struct hikari_view *
-single_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
+single_layout(struct wlr_box *frame,
+    struct hikari_view *first,
+    int nr_of_views,
+    bool *center)
 {
-  hikari_view_tile(first, frame);
+  hikari_view_tile(first, frame, *center);
+  *center = false;
   return scan_next_tileable_view(first);
 }
 
 static struct hikari_view *
-empty_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
+empty_layout(struct wlr_box *frame,
+    struct hikari_view *first,
+    int nr_of_views,
+    bool *center)
 {
   return first;
 }
 
 static struct hikari_view *
-full_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
+full_layout(struct wlr_box *frame,
+    struct hikari_view *first,
+    int nr_of_views,
+    bool *center)
 {
   struct hikari_view *view = first;
   for (int i = 0; i < nr_of_views && view != NULL; i++) {
@@ -110,7 +120,8 @@ full_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
       if (hikari_view_is_hidden(view)) {
         hikari_view_show(view);
       }
-      hikari_view_tile(view, frame);
+      hikari_view_tile(view, frame, *center);
+      *center = false;
     }
     view = scan_next_tileable_view(view);
   }
@@ -118,15 +129,19 @@ full_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
   return view;
 }
 
-#define LAYOUT_VIEWS(nr_of_views, view, frame)                                 \
+#define LAYOUT_VIEWS(nr_of_views, view, frame, center)                         \
   if (nr_of_views == 0) {                                                      \
     return NULL;                                                               \
   } else if (nr_of_views == 1) {                                               \
-    hikari_view_tile(view, frame);                                             \
+    hikari_view_tile(view, frame, *center);                                    \
+    *center = false;                                                           \
   } else
 
 static struct hikari_view *
-grid_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
+grid_layout(struct wlr_box *frame,
+    struct hikari_view *first,
+    int nr_of_views,
+    bool *center)
 {
   int nr_of_rows = 1;
   int nr_of_cols = 1;
@@ -143,7 +158,7 @@ grid_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
   }
 
   struct hikari_view *view = first;
-  LAYOUT_VIEWS(nr_of_views, first, frame)
+  LAYOUT_VIEWS(nr_of_views, first, frame, center)
   {
     int border_width = hikari_configuration->border;
     int gap = hikari_configuration->gap;
@@ -176,7 +191,8 @@ grid_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
         if (g_x == 1) {
           geometry.width = width;
         }
-        hikari_view_tile(view, &geometry);
+        hikari_view_tile(view, &geometry, *center);
+        *center = false;
 
         view = scan_next_tileable_view(view);
         if (view == NULL) {
@@ -194,8 +210,10 @@ grid_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
 }
 
 #define SPLIT_LAYOUT(name, x, y, width, height)                                \
-  static struct hikari_view *name##_layout(                                    \
-      struct wlr_box *frame, struct hikari_view *first, int nr_of_views)       \
+  static struct hikari_view *name##_layout(struct wlr_box *frame,              \
+      struct hikari_view *first,                                               \
+      int nr_of_views,                                                         \
+      bool *center)                                                            \
   {                                                                            \
     struct hikari_view *view = first;                                          \
     int border_width = hikari_configuration->border;                           \
@@ -204,7 +222,7 @@ grid_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
     int gaps = nr_of_views - 1;                                                \
     int gaps_##width = gap * gaps;                                             \
                                                                                \
-    LAYOUT_VIEWS(nr_of_views, first, frame)                                    \
+    LAYOUT_VIEWS(nr_of_views, first, frame, center)                            \
     {                                                                          \
       int views_width = frame->width - border * gaps - gaps_##width;           \
       int width = views_width / nr_of_views;                                   \
@@ -215,13 +233,15 @@ grid_layout(struct wlr_box *frame, struct hikari_view *first, int nr_of_views)
         .width = width + rest,                                                 \
         .height = frame->height };                                             \
                                                                                \
-      hikari_view_tile(first, &geometry);                                      \
+      hikari_view_tile(first, &geometry, *center);                             \
+      *center = false;                                                         \
                                                                                \
       geometry.x += gap + border + width + rest;                               \
       geometry.width = width;                                                  \
       for (int n = 1; n < nr_of_views; n++) {                                  \
         view = scan_next_tileable_view(view);                                  \
-        hikari_view_tile(view, &geometry);                                     \
+        hikari_view_tile(view, &geometry, *center);                            \
+        *center = false;                                                       \
         geometry.x += gap + border + width;                                    \
       }                                                                        \
     }                                                                          \
@@ -237,7 +257,8 @@ SPLIT_LAYOUT(stack, y, x, height, width)
   struct hikari_view *hikari_sheet_##name##_layout(struct hikari_sheet *sheet, \
       struct hikari_view *first,                                               \
       struct wlr_box *frame,                                                   \
-      int max)                                                                 \
+      int max,                                                                 \
+      bool *center)                                                            \
   {                                                                            \
     int nr_of_views = tileable_views(first);                                   \
     if (nr_of_views > max) {                                                   \
@@ -247,7 +268,7 @@ SPLIT_LAYOUT(stack, y, x, height, width)
       return NULL;                                                             \
     }                                                                          \
                                                                                \
-    return name##_layout(frame, first, nr_of_views);                           \
+    return name##_layout(frame, first, nr_of_views, center);                   \
   }
 
 LAYOUT(queue)

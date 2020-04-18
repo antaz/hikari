@@ -65,7 +65,8 @@ SCALE(height)
 static struct hikari_view *
 apply_split(struct hikari_split *split,
     struct wlr_box *geometry,
-    struct hikari_view *first)
+    struct hikari_view *first,
+    bool *center)
 {
   if (first == NULL) {
     return NULL;
@@ -85,13 +86,13 @@ apply_split(struct hikari_split *split,
 
       switch (split_vertical->orientation) {
         case HIKARI_VERTICAL_SPLIT_ORIENTATION_LEFT:
-          view = apply_split(split_vertical->left, &left, view);
-          view = apply_split(split_vertical->right, &right, view);
+          view = apply_split(split_vertical->left, &left, view, center);
+          view = apply_split(split_vertical->right, &right, view, center);
           break;
 
         case HIKARI_VERTICAL_SPLIT_ORIENTATION_RIGHT:
-          view = apply_split(split_vertical->right, &right, view);
-          view = apply_split(split_vertical->left, &left, view);
+          view = apply_split(split_vertical->right, &right, view, center);
+          view = apply_split(split_vertical->left, &left, view, center);
           break;
       }
     } break;
@@ -109,13 +110,13 @@ apply_split(struct hikari_split *split,
 
       switch (split_horizontal->orientation) {
         case HIKARI_HORIZONTAL_SPLIT_ORIENTATION_TOP:
-          view = apply_split(split_horizontal->top, &top, view);
-          view = apply_split(split_horizontal->bottom, &bottom, view);
+          view = apply_split(split_horizontal->top, &top, view, center);
+          view = apply_split(split_horizontal->bottom, &bottom, view, center);
           break;
 
         case HIKARI_HORIZONTAL_SPLIT_ORIENTATION_BOTTOM:
-          view = apply_split(split_horizontal->bottom, &bottom, view);
-          view = apply_split(split_horizontal->top, &top, view);
+          view = apply_split(split_horizontal->bottom, &bottom, view, center);
+          view = apply_split(split_horizontal->top, &top, view, center);
           break;
       }
     } break;
@@ -124,7 +125,8 @@ apply_split(struct hikari_split *split,
       struct hikari_split_container *container =
           (struct hikari_split_container *)split;
       container->geometry = *geometry;
-      view = container->layout(view->sheet, view, geometry, container->max);
+      view = container->layout(
+          view->sheet, view, geometry, container->max, center);
     } break;
   }
 
@@ -140,10 +142,12 @@ hikari_split_apply(struct hikari_split *split,
     return;
   }
 
+  bool center = true;
+
   hikari_geometry_shrink(
       geometry, hikari_configuration->gap + hikari_configuration->border);
 
-  apply_split(split, geometry, first);
+  apply_split(split, geometry, first, &center);
 }
 
 void

@@ -685,7 +685,8 @@ queue_tile(struct hikari_view *view,
 }
 
 void
-hikari_view_tile(struct hikari_view *view, struct wlr_box *geometry)
+hikari_view_tile(
+    struct hikari_view *view, struct wlr_box *geometry, bool center)
 {
   assert(!hikari_view_is_dirty(view));
   assert(hikari_view_is_tileable(view));
@@ -695,7 +696,7 @@ hikari_view_tile(struct hikari_view *view, struct wlr_box *geometry)
   struct hikari_tile *tile = hikari_malloc(sizeof(struct hikari_tile));
   hikari_tile_init(tile, view, layout, geometry, geometry);
 
-  queue_tile(view, layout, tile, false);
+  queue_tile(view, layout, tile, center);
 
   wl_list_insert(layout->tiles.prev, &tile->layout_tiles);
 }
