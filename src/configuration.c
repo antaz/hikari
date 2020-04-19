@@ -818,13 +818,6 @@ parse_autoconf(struct hikari_configuration *configuration,
             "configuration error: expected non-empty string for \"views\" "
             "\"group\"\n");
         goto done;
-      } else if (isdigit(group_name[0])) {
-        fprintf(stderr,
-            "configuration error: \"views\" "
-            "\"group\" \"%s\" starts with digit\n",
-            group_name);
-        hikari_free(group_name);
-        goto done;
       }
 
       (*autoconf)->group_name = group_name;
