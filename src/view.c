@@ -334,6 +334,8 @@ void
 hikari_view_set_id(struct hikari_view *view, const char *id)
 {
   assert(view->id == NULL);
+  assert(id != NULL);
+
   view->id = hikari_malloc(strlen(id) + 1);
 
   strcpy(view->id, id);

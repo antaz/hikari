@@ -513,6 +513,8 @@ hikari_configuration_resolve_view_autoconf(
     int *y,
     bool *focus)
 {
+  assert(app_id != NULL);
+
   struct hikari_view_autoconf *view_autoconf =
       resolve_autoconf(configuration, app_id);
 

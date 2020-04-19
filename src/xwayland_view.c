@@ -122,6 +122,18 @@ set_title_handler(struct wl_listener *listener, void *data)
   hikari_view_set_title(view, xwayland_view->surface->title);
 }
 
+static const char *
+get_class(struct wlr_xwayland_surface *surface)
+{
+  const char *app_id = surface->class;
+
+  if (app_id == NULL) {
+    return "";
+  } else {
+    return app_id;
+  }
+}
+
 static void
 first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
 {
@@ -136,7 +148,7 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
   int x;
   int y;
 
-  const char *app_id = xwayland_view->surface->class;
+  const char *app_id = get_class(xwayland_view->surface);
 
   hikari_view_set_id(view, app_id);
 
