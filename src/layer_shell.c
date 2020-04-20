@@ -176,7 +176,9 @@ hikari_layer_init(
   printf("LAYER INIT %p\n", layer);
 #endif
 
-  struct hikari_output *output = hikari_server.workspace->output;
+  struct hikari_output *output = wlr_layer_surface->output != NULL
+                                     ? wlr_layer_surface->output->data
+                                     : hikari_server.workspace->output;
 
   layer->view_interface.surface_at = surface_at;
   layer->view_interface.focus = focus;
