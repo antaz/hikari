@@ -510,7 +510,19 @@ damage_destroy_handler(struct wl_listener *listener, void *data)
   }
 }
 
+#ifdef HAVE_LAYERSHELL
 static void
+close_layers(struct wl_list *layers)
+{
+  struct hikari_layer *layer, *layer_temp;
+  wl_list_for_each_safe (layer, layer_temp, layers, layer_surfaces) {
+    wlr_layer_surface_v1_close(layer->surface);
+    layer->output = NULL;
+  }
+}
+#endif
+
+void
 destroy_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_output *output = wl_container_of(listener, output, destroy);
@@ -520,6 +532,13 @@ destroy_handler(struct wl_listener *listener, void *data)
 
 #ifndef NDEBUG
   printf("DESTORY OUTPUT %p\n", output);
+#endif
+
+#ifdef HAVE_LAYERSHELL
+  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY]);
+  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP]);
+  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM]);
+  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND]);
 #endif
 
   if (workspace != next) {
@@ -545,9 +564,10 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
   wl_list_init(&output->views);
 
 #ifdef HAVE_LAYERSHELL
-  for (int i = 0; i < 4; i++) {
-    wl_list_init(&output->layers[i]);
-  }
+  wl_list_init(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY]);
+  wl_list_init(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP]);
+  wl_list_init(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM]);
+  wl_list_init(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND]);
 #endif
 
   hikari_workspace_init(output->workspace, output);
