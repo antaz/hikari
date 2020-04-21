@@ -13,7 +13,13 @@
 #include <hikari/server.h>
 
 static void
+map(struct hikari_layer *layer);
+
+static void
 map_handler(struct wl_listener *listener, void *data);
+
+static void
+unmap(struct hikari_layer *layer);
 
 static void
 unmap_handler(struct wl_listener *listener, void *data);
@@ -146,6 +152,8 @@ apply_layer_state(struct wlr_box *usable_area,
 static void
 calculate_exclusive(struct hikari_output *output)
 {
+  assert(output != NULL);
+
   struct wlr_box usable_area = { 0 };
 
   wlr_output_effective_resolution(
@@ -186,11 +194,9 @@ hikari_layer_init(
   layer->output = output;
   layer->layer = wlr_layer_surface->client_pending.layer;
   layer->surface = wlr_layer_surface;
+  layer->mapped = false;
 
   wlr_layer_surface->output = output->output;
-
-  layer->commit.notify = commit_handler;
-  wl_signal_add(&wlr_layer_surface->surface->events.commit, &layer->commit);
 
   layer->destroy.notify = destroy_handler;
   wl_signal_add(&wlr_layer_surface->surface->events.destroy, &layer->destroy);
@@ -201,9 +207,6 @@ hikari_layer_init(
   layer->unmap.notify = unmap_handler;
   wl_signal_add(&wlr_layer_surface->events.unmap, &layer->unmap);
 
-  layer->new_popup.notify = new_popup_handler;
-  wl_signal_add(&wlr_layer_surface->events.new_popup, &layer->new_popup);
-
   wl_list_insert(&output->layers[layer->layer], &layer->layer_surfaces);
 
   calculate_geometry(layer);
@@ -212,13 +215,9 @@ hikari_layer_init(
 void
 hikari_layer_fini(struct hikari_layer *layer)
 {
-  wl_list_remove(&layer->layer_surfaces);
-
-  wl_list_remove(&layer->commit.link);
   wl_list_remove(&layer->destroy.link);
   wl_list_remove(&layer->map.link);
   wl_list_remove(&layer->unmap.link);
-  wl_list_remove(&layer->new_popup.link);
 }
 
 static void
@@ -373,6 +372,8 @@ commit_handler(struct wl_listener *listener, void *data)
   if (updated_geometry || changed_layer) {
     hikari_output_add_damage(output, &old_geometry);
     hikari_output_add_damage(output, &layer->geometry);
+
+    hikari_server_cursor_focus();
   } else {
     damage(layer, false);
   }
@@ -387,11 +388,38 @@ destroy_handler(struct wl_listener *listener, void *data)
   printf("LAYER DESTROY %p\n", layer);
 #endif
 
+  if (layer->mapped) {
+    unmap(layer);
+  }
+
+  assert(!layer->mapped);
+
   hikari_layer_fini(layer);
-
-  calculate_exclusive(layer->output);
-
   hikari_free(layer);
+}
+
+static void
+map(struct hikari_layer *layer)
+{
+#ifndef NDEBUG
+  printf("LAYER MAP %p\n", layer);
+#endif
+
+  assert(!layer->mapped);
+
+  struct wlr_layer_surface_v1 *wlr_layer_surface = layer->surface;
+
+  layer->commit.notify = commit_handler;
+  wl_signal_add(&wlr_layer_surface->surface->events.commit, &layer->commit);
+
+  layer->new_popup.notify = new_popup_handler;
+  wl_signal_add(&wlr_layer_surface->events.new_popup, &layer->new_popup);
+
+  layer->mapped = true;
+
+  damage(layer, true);
+
+  hikari_server_cursor_focus();
 }
 
 static void
@@ -399,11 +427,30 @@ map_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_layer *layer = wl_container_of(listener, layer, map);
 
+  map(layer);
+}
+
+static void
+unmap(struct hikari_layer *layer)
+{
 #ifndef NDEBUG
-  printf("LAYER MAP %p\n", layer);
+  printf("LAYER UNMAP %p\n", layer);
 #endif
 
+  assert(layer->mapped);
+
+  wl_list_remove(&layer->layer_surfaces);
+
+  wl_list_remove(&layer->commit.link);
+  wl_list_remove(&layer->new_popup.link);
+
+  layer->mapped = false;
+
   damage(layer, true);
+
+  calculate_exclusive(layer->output);
+
+  hikari_server_cursor_focus();
 }
 
 static void
@@ -411,11 +458,7 @@ unmap_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_layer *layer = wl_container_of(listener, layer, unmap);
 
-#ifndef NDEBUG
-  printf("LAYER UNMAP %p\n", layer);
-#endif
-
-  damage(layer, true);
+  unmap(layer);
 }
 
 static void
