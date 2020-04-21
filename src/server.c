@@ -197,6 +197,53 @@ layer_at(struct wl_list *layers,
 
   return false;
 }
+
+static bool
+topmost_of(struct wl_list *layers,
+    double ox,
+    double oy,
+    struct wlr_surface **surface,
+    double *sx,
+    double *sy,
+    struct hikari_view_interface **view_interface)
+{
+  double out_sx, out_sy;
+
+  struct hikari_layer *layer;
+  wl_list_for_each (layer, layers, layer_surfaces) {
+    struct hikari_view_interface *out_view_interface =
+        (struct hikari_view_interface *)layer;
+
+    struct wlr_layer_surface_v1_state *state = &layer->surface->current;
+
+    struct wlr_surface *out_surface = hikari_view_interface_surface_at(
+        out_view_interface, ox, oy, &out_sx, &out_sy);
+
+    if (state->keyboard_interactive) {
+      if (out_surface != NULL) {
+        *surface = out_surface;
+      } else {
+        *surface = layer->surface->surface;
+      }
+
+      *sx = out_sx;
+      *sy = out_sy;
+      *view_interface = out_view_interface;
+
+      return true;
+    } else if (out_surface != NULL) {
+      *surface = out_surface;
+
+      *sx = out_sx;
+      *sy = out_sy;
+      *view_interface = out_view_interface;
+
+      return true;
+    }
+  }
+
+  return false;
+}
 #endif
 
 static struct hikari_view_interface *
@@ -235,7 +282,7 @@ view_interface_at(
   double oy = ly - output->geometry.y;
 
 #ifdef HAVE_LAYERSHELL
-  if (layer_at(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
+  if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
           ox,
           oy,
           surface,
@@ -260,7 +307,7 @@ view_interface_at(
 #endif
 
 #ifdef HAVE_LAYERSHELL
-  if (layer_at(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+  if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
           ox,
           oy,
           surface,

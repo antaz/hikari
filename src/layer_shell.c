@@ -437,6 +437,8 @@ unmap(struct hikari_layer *layer)
   printf("LAYER UNMAP %p\n", layer);
 #endif
 
+  struct hikari_workspace *workspace = layer->output->workspace;
+
   assert(layer->mapped);
 
   wl_list_remove(&layer->layer_surfaces);
@@ -449,6 +451,13 @@ unmap(struct hikari_layer *layer)
   damage(layer, true);
 
   calculate_exclusive(layer->output);
+
+  if (layer == workspace->focus_layer) {
+    struct wlr_seat *seat = hikari_server.seat;
+
+    workspace->focus_layer = NULL;
+    wlr_seat_keyboard_clear_focus(seat);
+  }
 
   hikari_server_cursor_focus();
 }
@@ -615,19 +624,27 @@ new_popup_handler(struct wl_listener *listener, void *data)
 static void
 focus(struct hikari_view_interface *view_interface)
 {
+  assert(view_interface != NULL);
+
   struct hikari_layer *layer = (struct hikari_layer *)view_interface;
   struct wlr_layer_surface_v1_state *state = &layer->surface->current;
 
   if (state->keyboard_interactive) {
     struct hikari_workspace *workspace = hikari_server.workspace;
     struct hikari_view *focus_view = workspace->focus_view;
+    struct hikari_layer *focus_layer = workspace->focus_layer;
+    struct wlr_seat *seat = hikari_server.seat;
+    struct wlr_keyboard *keyboard = wlr_seat_get_keyboard(seat);
 
     if (focus_view != NULL) {
       hikari_workspace_focus_view(workspace, NULL);
     }
 
-    struct wlr_seat *seat = hikari_server.seat;
-    struct wlr_keyboard *keyboard = wlr_seat_get_keyboard(seat);
+    if (focus_layer != NULL) {
+      wlr_seat_keyboard_clear_focus(seat);
+    }
+
+    workspace->focus_layer = layer;
 
     wlr_seat_keyboard_notify_enter(seat,
         layer->surface->surface,

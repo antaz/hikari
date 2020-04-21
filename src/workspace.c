@@ -54,6 +54,10 @@ hikari_workspace_init(
   workspace->alternate_sheet = &workspace->sheets[0];
   workspace->sheet = &workspace->sheets[1];
 
+#ifdef HAVE_LAYERSHELL
+  workspace->focus_layer = NULL;
+#endif
+
   wl_list_insert(hikari_server.workspaces.prev, &workspace->server_workspaces);
 }
 
@@ -105,10 +109,26 @@ hikari_workspace_merge(
 void
 hikari_workspace_quit_view(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  struct hikari_view *focus_view = workspace->focus_view;
 
-  hikari_view_quit(focus_view);
-  hikari_server_cursor_focus();
+#ifdef HAVE_LAYERSHELL
+  struct hikari_layer *focus_layer = workspace->focus_layer;
+
+  if (focus_layer != NULL) {
+    assert(focus_view == NULL);
+    wlr_layer_surface_v1_close(focus_layer->surface);
+    return;
+  }
+#endif
+
+  if (focus_view != NULL) {
+#ifdef HAVE_LAYERSHELL
+    assert(focus_layer == NULL);
+#endif
+
+    hikari_view_quit(focus_view);
+    hikari_server_cursor_focus();
+  }
 }
 
 void
@@ -421,7 +441,9 @@ void
 hikari_workspace_focus_view(
     struct hikari_workspace *workspace, struct hikari_view *view)
 {
-  assert(hikari_server.workspace != NULL);
+#ifdef HAVE_LAYERSHELL
+  assert(workspace->focus_layer == NULL);
+#endif
 
   struct wlr_seat *seat = hikari_server.seat;
 

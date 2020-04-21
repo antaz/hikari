@@ -4,6 +4,9 @@
 #include <wayland-server-core.h>
 #include <wayland-util.h>
 
+#ifdef HAVE_LAYERSHELL
+struct hikari_layer;
+#endif
 struct hikari_output;
 struct hikari_render_data;
 struct hikari_sheet;
@@ -17,6 +20,10 @@ struct hikari_workspace {
   struct hikari_output *output;
   struct hikari_sheet *sheets;
   struct hikari_view *focus_view;
+
+#ifdef HAVE_LAYERSHELL
+  struct hikari_layer *focus_layer;
+#endif
 
   struct wl_list views;
 
