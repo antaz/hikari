@@ -9,12 +9,9 @@
 #include <hikari/workspace.h>
 
 static bool
-was_updated(struct wlr_xwayland_surface *surface,
-    struct wlr_box *geometry,
-    struct hikari_output *output)
+was_updated(struct wlr_xwayland_surface *surface, struct wlr_box *geometry)
 {
-  return !((output->geometry.x + surface->x == geometry->x) &&
-           (output->geometry.y + surface->y == geometry->y) &&
+  return !((surface->x == geometry->x) && (surface->y == geometry->y) &&
            (surface->width == geometry->width) &&
            (surface->height == geometry->height));
 }
@@ -29,11 +26,11 @@ commit_handler(struct wl_listener *listener, void *data)
   struct wlr_xwayland_surface *surface = xwayland_unmanaged_view->surface;
   struct wlr_box *geometry = &xwayland_unmanaged_view->geometry;
 
-  if (was_updated(surface, geometry, output)) {
+  if (was_updated(surface, geometry)) {
     hikari_output_add_damage(output, &xwayland_unmanaged_view->geometry);
 
-    geometry->x = surface->x - output->geometry.x;
-    geometry->y = surface->y - output->geometry.y;
+    geometry->x = surface->x;
+    geometry->y = surface->y;
     geometry->width = surface->width;
     geometry->height = surface->height;
 
@@ -68,8 +65,8 @@ map_handler(struct wl_listener *listener, void *data)
 
   xwayland_unmanaged_view->hidden = false;
 
-  geometry->x = xwayland_surface->x - output->geometry.x;
-  geometry->y = xwayland_surface->y - output->geometry.y;
+  geometry->x = xwayland_surface->x;
+  geometry->y = xwayland_surface->y;
   geometry->width = xwayland_surface->width;
   geometry->height = xwayland_surface->height;
 

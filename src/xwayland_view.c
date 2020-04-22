@@ -24,13 +24,9 @@ resize(struct hikari_view *view, int width, int height)
       (struct hikari_xwayland_view *)view;
 
   struct wlr_box *geometry = hikari_view_geometry(view);
-  struct hikari_output *output = view->output;
 
-  wlr_xwayland_surface_configure(xwayland_view->surface,
-      output->geometry.x + geometry->x,
-      output->geometry.y + geometry->y,
-      width,
-      height);
+  wlr_xwayland_surface_configure(
+      xwayland_view->surface, geometry->x, geometry->y, width, height);
 
   return 0;
 }
@@ -41,13 +37,7 @@ move_resize(struct hikari_view *view, int x, int y, int width, int height)
   struct hikari_xwayland_view *xwayland_view =
       (struct hikari_xwayland_view *)view;
 
-  struct hikari_output *output = view->output;
-
-  wlr_xwayland_surface_configure(xwayland_view->surface,
-      output->geometry.x + x,
-      output->geometry.y + y,
-      width,
-      height);
+  wlr_xwayland_surface_configure(xwayland_view->surface, x, y, width, height);
 }
 
 static void
@@ -57,13 +47,9 @@ move(struct hikari_view *view, int x, int y)
       (struct hikari_xwayland_view *)view;
 
   struct wlr_box *geometry = hikari_view_geometry(view);
-  struct hikari_output *output = view->output;
 
-  wlr_xwayland_surface_configure(xwayland_view->surface,
-      output->geometry.x + x,
-      output->geometry.y + y,
-      geometry->width,
-      geometry->height);
+  wlr_xwayland_surface_configure(
+      xwayland_view->surface, x, y, geometry->width, geometry->height);
 }
 
 static void
