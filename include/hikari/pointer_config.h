@@ -15,6 +15,10 @@ struct hikari_pointer_config {
 };
 
 void
+hikari_pointer_config_init(
+    struct hikari_pointer_config *pointer_config, const char *name);
+
+void
 hikari_pointer_config_fini(struct hikari_pointer_config *pointer_config);
 
 #endif

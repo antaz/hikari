@@ -1719,17 +1719,12 @@ parse_pointer_config(struct hikari_configuration *configuration,
 {
   bool success = false;
   const char *pointer_name = ucl_object_key(pointer_config_obj);
-  size_t keylen = strlen(pointer_name);
   const ucl_object_t *cur;
 
   struct hikari_pointer_config *pointer_config =
       hikari_malloc(sizeof(struct hikari_pointer_config));
 
-  pointer_config->name = hikari_malloc(keylen + 1);
-  strcpy(pointer_config->name, pointer_name);
-  pointer_config->accel = 0;
-  pointer_config->scroll_method = LIBINPUT_CONFIG_SCROLL_NO_SCROLL;
-  pointer_config->scroll_button = 0;
+  hikari_pointer_config_init(pointer_config, pointer_name);
 
   wl_list_insert(&configuration->pointer_configs, &pointer_config->link);
 
