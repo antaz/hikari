@@ -29,10 +29,14 @@ Wayland currently requires some care to work properly on FreeBSD. This section
 aims to document the recent state of how to enable Wayland on the FreeBSD
 `STABLE` branch and will change once support is being improved.
 
-### Start `moused`
+### Mouse configuration
+
+To make mice work `kern.evdev.rcpt_mask` should be set to `12`. Depending on
+your version of FreeBSD this is done automatically or via setting the value in
+`/etc/sysctl.conf`.
 
 Some systems might require `moused` for mice to work. Enable it with `service
-moused enable`
+moused enable`. This requires `kern.evdev.rcpt_mask` to `3`.
 
 ### Setting up XDG\_RUNTIME\_DIR
 
