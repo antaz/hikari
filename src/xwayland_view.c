@@ -141,14 +141,6 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
   hikari_configuration_resolve_view_autoconf(
       hikari_configuration, app_id, view, &sheet, &group, &x, &y, focus);
 
-  if (x == -1) {
-    x = hikari_server.cursor->x - output->geometry.x;
-  }
-
-  if (y == -1) {
-    y = hikari_server.cursor->y - output->geometry.y;
-  }
-
   geometry->width = xwayland_view->surface->width;
   geometry->height = xwayland_view->surface->height;
 
@@ -158,8 +150,8 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
   hikari_geometry_constrain_absolute(geometry, &output->usable_area, x, y);
 
   wlr_xwayland_surface_configure(xwayland_view->surface,
-      output->geometry.x + view->geometry.x,
-      output->geometry.y + view->geometry.y,
+      view->geometry.x,
+      view->geometry.y,
       geometry->width,
       geometry->height);
 
