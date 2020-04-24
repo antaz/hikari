@@ -36,7 +36,7 @@ your version of FreeBSD this is done automatically or via setting the value in
 `/etc/sysctl.conf`.
 
 Some systems might require `moused` for mice to work. Enable it with `service
-moused enable`. This requires `kern.evdev.rcpt_mask` to `3`.
+moused enable`. This requires setting `kern.evdev.rcpt_mask` to `3`.
 
 ### Setting up XDG\_RUNTIME\_DIR
 
