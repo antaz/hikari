@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.4
+
+* fix coordinated for XWayland views on multi-monitor setups
+
 ## 1.0.3
 
 * fix Xwayland unmap/map
