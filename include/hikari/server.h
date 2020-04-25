@@ -109,6 +109,12 @@ struct hikari_server {
 extern struct hikari_server hikari_server;
 
 static inline bool
+hikari_server_is_indicating(void)
+{
+  return hikari_server.keyboard_state.mod_pressed;
+}
+
+static inline bool
 hikari_server_is_cycling(void)
 {
   return hikari_server.cycling;
@@ -364,9 +370,6 @@ MODE(sheet_assign)
 void
 hikari_server_enter_mark_select_switch_mode(void *arg);
 #undef MODE
-
-void
-hikari_server_refresh_indication(void);
 
 void
 hikari_server_reset_sheet_layout(void *arg);

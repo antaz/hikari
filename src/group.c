@@ -102,3 +102,12 @@ hikari_group_lower(struct hikari_group *group, struct hikari_view *top)
     }
   }
 }
+
+void
+hikari_group_damage(struct hikari_group *group)
+{
+  struct hikari_view *view;
+  wl_list_for_each (view, &group->visible_views, visible_group_views) {
+    hikari_view_damage_border(view);
+  }
+}

@@ -455,8 +455,12 @@ hikari_workspace_focus_view(
   struct hikari_view *focus_view = current_workspace->focus_view;
 
   if (focus_view != NULL) {
-    hikari_indicator_damage(&hikari_server.indicator, focus_view);
-
+    if (hikari_server_is_indicating()) {
+      hikari_group_damage(focus_view->group);
+      hikari_indicator_damage(&hikari_server.indicator, focus_view);
+    } else {
+      hikari_view_damage_border(focus_view);
+    }
     hikari_view_activate(focus_view, false);
   }
 
@@ -474,6 +478,14 @@ hikari_workspace_focus_view(
         keyboard->num_keycodes,
         &keyboard->modifiers);
 
+    if (hikari_server_is_indicating()) {
+      if (focus_view == NULL || focus_view->group != view->group) {
+        hikari_group_damage(view->group);
+      }
+    } else {
+      hikari_view_damage_border(view);
+    }
+
     hikari_indicator_update(&hikari_server.indicator,
         view,
         hikari_configuration->indicator_selected);
@@ -483,18 +495,20 @@ hikari_workspace_focus_view(
 
   hikari_server.workspace = workspace;
   workspace->focus_view = view;
-
-  hikari_server_refresh_indication();
 }
 
 void
 hikari_workspace_raise_view(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
+
+  struct hikari_group *group = focus_view->group;
+  struct hikari_view *first = hikari_group_first_view(group, workspace);
 
   hikari_view_raise(focus_view);
 
-  hikari_server_refresh_indication();
+  hikari_view_damage_border(first);
+  hikari_indicator_damage(&hikari_server.indicator, focus_view);
 }
 
 void
@@ -503,19 +517,22 @@ hikari_workspace_raise_group(struct hikari_workspace *workspace)
   FOCUS_GUARD(workspace, focus_view);
 
   hikari_group_raise(focus_view->group, focus_view);
-
-  hikari_server_refresh_indication();
+  hikari_indicator_damage(&hikari_server.indicator, focus_view);
 }
 
 void
 hikari_workspace_lower_view(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_view_lower(focus_view);
 
+  struct hikari_group *group = focus_view->group;
+  struct hikari_view *first = hikari_group_first_view(group, workspace);
+
+  hikari_view_damage_border(first);
+
   hikari_server_cursor_focus();
-  hikari_server_refresh_indication();
 }
 
 void
@@ -524,6 +541,7 @@ hikari_workspace_lower_group(struct hikari_workspace *workspace)
   FOCUS_GUARD(workspace, focus_view);
 
   hikari_group_lower(focus_view->group, focus_view);
+  hikari_indicator_damage(&hikari_server.indicator, focus_view);
 
   hikari_server_cursor_focus();
 }
@@ -531,7 +549,7 @@ hikari_workspace_lower_group(struct hikari_workspace *workspace)
 void
 hikari_workspace_hide_view(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_view_hide(focus_view);
 
@@ -541,18 +559,17 @@ hikari_workspace_hide_view(struct hikari_workspace *workspace)
 void
 hikari_workspace_move_view(struct hikari_workspace *workspace, int dx, int dy)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_server_set_cycling();
 
-  // TODO this is the only place we need this
   hikari_view_move(focus_view, dx, dy);
 }
 
 void
 hikari_workspace_only_view(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   struct hikari_view *view = NULL;
   struct hikari_view *view_tmp;
@@ -569,7 +586,7 @@ void
 hikari_workspace_move_resize_view(
     struct hikari_workspace *workspace, int dx, int dy, int dwidth, int dheight)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_server_set_cycling();
 
@@ -579,7 +596,7 @@ hikari_workspace_move_resize_view(
 void
 hikari_workspace_snap_view_up(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_server_set_cycling();
 
@@ -623,7 +640,7 @@ hikari_workspace_snap_view_up(struct hikari_workspace *workspace)
 void
 hikari_workspace_snap_view_down(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_server_set_cycling();
 
@@ -668,7 +685,7 @@ hikari_workspace_snap_view_down(struct hikari_workspace *workspace)
 void
 hikari_workspace_snap_view_left(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_server_set_cycling();
 
@@ -712,7 +729,7 @@ hikari_workspace_snap_view_left(struct hikari_workspace *workspace)
 void
 hikari_workspace_snap_view_right(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_server_set_cycling();
 
@@ -757,24 +774,20 @@ hikari_workspace_snap_view_right(struct hikari_workspace *workspace)
 static void
 pin_to_sheet(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_view_pin_to_sheet(focus_view, sheet);
 
   if (!hikari_view_is_hidden(focus_view)) {
-    struct wlr_box *geometry = hikari_view_geometry(focus_view);
     struct hikari_output *output = workspace->output;
 
     hikari_indicator_update_sheet(&hikari_server.indicator,
-        geometry,
         output,
         focus_view->sheet,
         hikari_configuration->indicator_selected,
         hikari_view_is_invisible(focus_view),
         hikari_view_is_floating(focus_view));
   }
-
-  hikari_server_refresh_indication();
 }
 
 #define PIN_TO_SHEET(name, sheet)                                              \
@@ -804,7 +817,7 @@ PIN_TO_SHEET(prev, hikari_sheet_prev(workspace->sheet))
   void hikari_workspace_toggle_view_##n##_maximize(                            \
       struct hikari_workspace *workspace)                                      \
   {                                                                            \
-    FOCUS_GUARD(workspace, focus_view)                                         \
+    FOCUS_GUARD(workspace, focus_view);                                        \
                                                                                \
     hikari_view_toggle_##n##_maximize(focus_view);                             \
   }
@@ -817,39 +830,55 @@ MAXIMIZE(horizontal)
 void
 hikari_workspace_toggle_view_invisible(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_view_toggle_invisible(focus_view);
 
-  struct wlr_box *geometry = hikari_view_geometry(focus_view);
   struct hikari_output *output = workspace->output;
+  struct hikari_indicator *indicator = &hikari_server.indicator;
+  struct wlr_box *geometry = hikari_view_border_geometry(focus_view);
 
-  hikari_indicator_update_sheet(&hikari_server.indicator,
-      geometry,
+  if (hikari_server_is_indicating()) {
+    hikari_indicator_damage_sheet(indicator, output, geometry);
+  }
+
+  hikari_indicator_update_sheet(indicator,
       output,
       focus_view->sheet,
       hikari_configuration->indicator_selected,
       hikari_view_is_invisible(focus_view),
       hikari_view_is_floating(focus_view));
+
+  if (hikari_server_is_indicating()) {
+    hikari_indicator_damage_sheet(indicator, output, geometry);
+  }
 }
 
 void
 hikari_workspace_toggle_view_floating(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_view_toggle_floating(focus_view);
 
-  struct wlr_box *geometry = hikari_view_geometry(focus_view);
   struct hikari_output *output = workspace->output;
+  struct hikari_indicator *indicator = &hikari_server.indicator;
+  struct wlr_box *geometry = hikari_view_border_geometry(focus_view);
 
-  hikari_indicator_update_sheet(&hikari_server.indicator,
-      geometry,
+  if (hikari_server_is_indicating()) {
+    hikari_indicator_damage_sheet(indicator, output, geometry);
+  }
+
+  hikari_indicator_update_sheet(indicator,
       output,
       focus_view->sheet,
       hikari_configuration->indicator_selected,
       hikari_view_is_invisible(focus_view),
       hikari_view_is_floating(focus_view));
+
+  if (hikari_server_is_indicating()) {
+    hikari_indicator_damage_sheet(indicator, output, geometry);
+  }
 }
 
 void
@@ -885,7 +914,7 @@ hikari_workspace_show_all_invisible_views(struct hikari_workspace *workspace)
 void
 hikari_workspace_reset_view_geometry(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   hikari_view_reset_geometry(focus_view);
 }
@@ -942,7 +971,7 @@ hikari_workspace_exchange_main_layout_view(struct hikari_workspace *workspace)
 void
 hikari_workspace_only_group(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   struct hikari_group *group = focus_view->group;
 
@@ -957,7 +986,7 @@ hikari_workspace_only_group(struct hikari_workspace *workspace)
 void
 hikari_workspace_show_group(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   struct hikari_group *group = focus_view->group;
 
@@ -976,7 +1005,7 @@ hikari_workspace_show_group(struct hikari_workspace *workspace)
 void
 hikari_workspace_hide_group(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   struct hikari_group *group = focus_view->group;
 
@@ -992,7 +1021,7 @@ hikari_workspace_hide_group(struct hikari_workspace *workspace)
 void
 hikari_workspace_show_all_group_views(struct hikari_workspace *workspace)
 {
-  FOCUS_GUARD(workspace, focus_view)
+  FOCUS_GUARD(workspace, focus_view);
 
   struct hikari_group *group = focus_view->group;
 

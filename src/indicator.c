@@ -40,14 +40,11 @@ hikari_indicator_update(struct hikari_indicator *indicator,
 {
   assert(view != NULL);
 
-  struct wlr_box *geometry = hikari_view_geometry(view);
   struct hikari_output *output = view->output;
 
-  hikari_indicator_update_title(
-      indicator, geometry, output, view->title, background);
+  hikari_indicator_update_title(indicator, output, view->title, background);
 
   hikari_indicator_update_sheet(indicator,
-      geometry,
       output,
       view->sheet,
       background,
@@ -55,13 +52,13 @@ hikari_indicator_update(struct hikari_indicator *indicator,
       hikari_view_is_floating(view));
 
   hikari_indicator_update_group(
-      indicator, geometry, output, view->group->name, background);
+      indicator, output, view->group->name, background);
 
   if (view->mark != NULL) {
     hikari_indicator_update_mark(
-        indicator, geometry, output, view->mark->name, background);
+        indicator, output, view->mark->name, background);
   } else {
-    hikari_indicator_update_mark(indicator, geometry, output, "", background);
+    hikari_indicator_update_mark(indicator, output, "", background);
   }
 }
 
@@ -105,7 +102,6 @@ sheet_name(struct hikari_sheet *sheet)
 
 void
 hikari_indicator_update_sheet(struct hikari_indicator *indicator,
-    struct wlr_box *view_geometry,
     struct hikari_output *output,
     struct hikari_sheet *sheet,
     float background[static 4],
@@ -141,8 +137,7 @@ hikari_indicator_update_sheet(struct hikari_indicator *indicator,
 
   strcpy(&text[i], output_name);
 
-  hikari_indicator_bar_update(
-      &indicator->sheet, view_geometry, output, text, background);
+  hikari_indicator_bar_update(&indicator->sheet, output, text, background);
 
   hikari_free(text);
 }
@@ -157,8 +152,8 @@ hikari_indicator_damage(
   struct wlr_box *geometry = hikari_view_border_geometry(view);
   struct hikari_output *output = view->output;
 
-  hikari_indicator_bar_damage(&indicator->title, geometry, output);
-  hikari_indicator_bar_damage(&indicator->sheet, geometry, output);
-  hikari_indicator_bar_damage(&indicator->group, geometry, output);
-  hikari_indicator_bar_damage(&indicator->mark, geometry, output);
+  hikari_indicator_bar_damage(&indicator->title, output, geometry);
+  hikari_indicator_bar_damage(&indicator->sheet, output, geometry);
+  hikari_indicator_bar_damage(&indicator->group, output, geometry);
+  hikari_indicator_bar_damage(&indicator->mark, output, geometry);
 }

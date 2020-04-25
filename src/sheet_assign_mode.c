@@ -43,39 +43,11 @@ confirm_sheet_assign(struct hikari_workspace *workspace)
 {
   struct hikari_sheet_assign_mode *mode = get_mode();
   struct hikari_view *focus_view = workspace->focus_view;
-  struct wlr_box *geometry = hikari_view_geometry(focus_view);
   struct hikari_sheet *sheet = mode->sheet;
 
   assert(sheet != NULL);
 
-  hikari_indicator_update_sheet(&hikari_server.indicator,
-      geometry,
-      workspace->output,
-      sheet,
-      hikari_configuration->indicator_selected,
-      hikari_view_is_invisible(focus_view),
-      hikari_view_is_floating(focus_view));
-
   hikari_view_pin_to_sheet(focus_view, sheet);
-
-  hikari_server_enter_normal_mode(NULL);
-}
-
-static void
-cancel_sheet_assign(struct hikari_workspace *workspace)
-{
-  struct hikari_view *focus_view = workspace->focus_view;
-  struct wlr_box *geometry = hikari_view_geometry(focus_view);
-
-  assert(focus_view->sheet != NULL);
-
-  hikari_indicator_update_sheet(&hikari_server.indicator,
-      geometry,
-      workspace->output,
-      focus_view->sheet,
-      hikari_configuration->indicator_selected,
-      hikari_view_is_invisible(focus_view),
-      hikari_view_is_floating(focus_view));
 
   hikari_server_enter_normal_mode(NULL);
 }
@@ -84,18 +56,23 @@ static void
 update_state(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
 {
   struct hikari_sheet_assign_mode *mode = get_mode();
-  struct hikari_view *focus_view = workspace->focus_view;
-  struct wlr_box *geometry = hikari_view_border_geometry(focus_view);
+  struct hikari_view *view = workspace->focus_view;
+  struct hikari_output *output = view->output;
+  struct hikari_indicator *indicator = &hikari_server.indicator;
+  struct wlr_box *geometry = hikari_view_border_geometry(view);
 
   assert(sheet != NULL);
 
-  hikari_indicator_update_sheet(&hikari_server.indicator,
-      geometry,
-      workspace->output,
+  hikari_indicator_damage_sheet(indicator, output, geometry);
+
+  hikari_indicator_update_sheet(indicator,
+      output,
       sheet,
       hikari_configuration->indicator_insert,
-      hikari_view_is_invisible(focus_view),
-      hikari_view_is_floating(focus_view));
+      hikari_view_is_invisible(view),
+      hikari_view_is_floating(view));
+
+  hikari_indicator_damage_sheet(indicator, output, geometry);
 
   mode->sheet = sheet;
 }
@@ -165,7 +142,7 @@ handle_keysym(
         goto done;
       }
     case XKB_KEY_Escape:
-      cancel_sheet_assign(workspace);
+      hikari_server_enter_normal_mode(workspace);
       goto done;
 
     case XKB_KEY_Return:
@@ -218,7 +195,27 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
 static void
 cancel(void)
 {
-  hikari_server.sheet_assign_mode.sheet = NULL;
+  struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_view *view = workspace->focus_view;
+  struct hikari_sheet_assign_mode *mode = get_mode();
+
+  if (view != NULL) {
+    struct hikari_output *output = view->output;
+    struct hikari_indicator *indicator = &hikari_server.indicator;
+
+    hikari_indicator_damage(indicator, view);
+
+    hikari_indicator_update_sheet(indicator,
+        output,
+        view->sheet,
+        hikari_configuration->indicator_selected,
+        hikari_view_is_invisible(view),
+        hikari_view_is_floating(view));
+
+    hikari_view_damage_border(view);
+  }
+
+  mode->sheet = NULL;
 }
 
 static void
@@ -245,17 +242,19 @@ hikari_sheet_assign_mode_init(
 void
 hikari_sheet_assign_mode_enter(struct hikari_view *view)
 {
-  struct wlr_box *geometry = hikari_view_geometry(view);
+  struct hikari_output *output = hikari_server.workspace->output;
+  struct hikari_indicator *indicator = &hikari_server.indicator;
+  struct wlr_box *geometry = hikari_view_border_geometry(view);
 
-  hikari_indicator_update_sheet(&hikari_server.indicator,
-      geometry,
+  hikari_server.sheet_assign_mode.sheet = view->sheet;
+  hikari_server.mode = (struct hikari_mode *)&hikari_server.sheet_assign_mode;
+
+  hikari_indicator_update_sheet(indicator,
       view->output,
       view->sheet,
       hikari_configuration->indicator_insert,
       hikari_view_is_invisible(view),
       hikari_view_is_floating(view));
 
-  hikari_server.sheet_assign_mode.sheet = view->sheet;
-  hikari_server.mode = (struct hikari_mode *)&hikari_server.sheet_assign_mode;
-  hikari_server_refresh_indication();
+  hikari_indicator_damage_sheet(indicator, output, geometry);
 }

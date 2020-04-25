@@ -196,9 +196,9 @@ modifier_handler(struct wl_listener *listener, void *data)
       wl_container_of(listener, keyboard, modifiers);
 
   wlr_seat_set_keyboard(hikari_server.seat, keyboard->device);
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
   if (hikari_server.keyboard_state.mod_released) {
-    struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
     if (hikari_server_is_cycling() && focus_view != NULL) {
       hikari_view_raise(focus_view);
@@ -209,7 +209,10 @@ modifier_handler(struct wl_listener *listener, void *data)
   }
 
   if (hikari_server.keyboard_state.mod_changed) {
-    hikari_server_refresh_indication();
+    if (focus_view != NULL) {
+      hikari_group_damage(focus_view->group);
+      hikari_indicator_damage(&hikari_server.indicator, focus_view);
+    }
 #ifndef NDEBUG
     dump_debug(&hikari_server);
 #endif
@@ -283,6 +286,4 @@ hikari_normal_mode_enter(void)
 
   server->mode->cancel();
   server->mode = (struct hikari_mode *)&server->normal_mode;
-
-  hikari_server_refresh_indication();
 }

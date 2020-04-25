@@ -91,42 +91,19 @@ confirm_group_assign(void)
 {
   struct hikari_group_assign_mode *mode = get_mode();
   struct hikari_workspace *workspace = hikari_server.workspace;
-  struct hikari_view *focus_view = workspace->focus_view;
-  struct wlr_box *geometry = hikari_view_geometry(focus_view);
-
+  struct hikari_view *view = workspace->focus_view;
   struct hikari_group *group;
+
   char *input = mode->input_buffer.buffer;
   if (!strcmp(input, "")) {
-    group = hikari_server_find_or_create_group(focus_view->id);
+    group = hikari_server_find_or_create_group(view->id);
   } else {
     group = hikari_server_find_or_create_group(input);
   }
 
   assert(group != NULL);
 
-  hikari_indicator_update_group(&hikari_server.indicator,
-      geometry,
-      workspace->output,
-      group->name,
-      hikari_configuration->indicator_selected);
-
-  hikari_view_group(focus_view, group);
-
-  hikari_server_enter_normal_mode(NULL);
-}
-
-static void
-cancel_group_assign(void)
-{
-  struct hikari_workspace *workspace = hikari_server.workspace;
-  struct hikari_view *focus_view = workspace->focus_view;
-  struct wlr_box *geometry = hikari_view_geometry(focus_view);
-
-  hikari_indicator_update_group(&hikari_server.indicator,
-      geometry,
-      workspace->output,
-      focus_view->group->name,
-      hikari_configuration->indicator_selected);
+  hikari_view_group(view, group);
 
   hikari_server_enter_normal_mode(NULL);
 }
@@ -136,28 +113,38 @@ update_state(void)
 {
   struct hikari_group_assign_mode *mode = get_mode();
   struct hikari_workspace *workspace = hikari_server.workspace;
-  struct wlr_box *geometry = hikari_view_border_geometry(workspace->focus_view);
-  struct hikari_group *group =
-      hikari_server_find_group(mode->input_buffer.buffer);
+  struct hikari_view *view = workspace->focus_view;
+  struct hikari_output *output = view->output;
+  struct hikari_indicator *indicator = &hikari_server.indicator;
 
-  if (!strcmp(mode->input_buffer.buffer, "")) {
-    hikari_indicator_update_group(&hikari_server.indicator,
-        geometry,
-        workspace->output,
-        " ",
-        hikari_configuration->indicator_insert);
+  struct wlr_box *geometry = hikari_view_border_geometry(view);
+  char *input = mode->input_buffer.buffer;
+
+  struct hikari_group *group = hikari_server_find_group(input);
+
+  hikari_indicator_damage_group(indicator, output, geometry);
+
+  if (!strcmp(input, "")) {
+    hikari_indicator_update_group(
+        indicator, output, " ", hikari_configuration->indicator_insert);
   } else {
-    hikari_indicator_update_group(&hikari_server.indicator,
-        geometry,
-        workspace->output,
-        mode->input_buffer.buffer,
-        hikari_configuration->indicator_insert);
+    hikari_indicator_update_group(
+        indicator, output, input, hikari_configuration->indicator_insert);
   }
 
-  if (group != mode->group) {
+  if (mode->group != group) {
+    if (mode->group != NULL) {
+      hikari_group_damage(mode->group);
+    }
+
+    if (group != NULL) {
+      hikari_group_damage(group);
+    }
+
     mode->group = group;
-    hikari_server_refresh_indication();
   }
+
+  hikari_indicator_damage_group(indicator, output, geometry);
 }
 
 static void
@@ -165,6 +152,8 @@ handle_keysym(
     struct hikari_keyboard *keyboard, uint32_t keycode, xkb_keysym_t sym)
 {
   struct hikari_group_assign_mode *mode = get_mode();
+  struct hikari_input_buffer *input_buffer = &mode->input_buffer;
+
   char *text;
 
   switch (sym) {
@@ -185,66 +174,66 @@ handle_keysym(
       if (hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
         if (mode->completion != NULL) {
           text = hikari_completion_cancel(mode->completion);
-          hikari_input_buffer_replace(&mode->input_buffer, text);
+          hikari_input_buffer_replace(input_buffer, text);
           fini_completion();
         }
       } else {
-        put_char(&mode->input_buffer, keyboard, keycode);
+        put_char(input_buffer, keyboard, keycode);
       }
       break;
 
     case XKB_KEY_h:
       fini_completion();
       if (hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
-        hikari_input_buffer_remove_char(&mode->input_buffer);
+        hikari_input_buffer_remove_char(input_buffer);
       } else {
-        put_char(&mode->input_buffer, keyboard, keycode);
+        put_char(input_buffer, keyboard, keycode);
       }
       break;
 
     case XKB_KEY_u:
       fini_completion();
       if (hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
-        hikari_input_buffer_clear(&mode->input_buffer);
+        hikari_input_buffer_clear(input_buffer);
       } else {
-        put_char(&mode->input_buffer, keyboard, keycode);
+        put_char(input_buffer, keyboard, keycode);
       }
       break;
 
     case XKB_KEY_w:
       fini_completion();
       if (hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
-        hikari_input_buffer_remove_word(&mode->input_buffer);
+        hikari_input_buffer_remove_word(input_buffer);
       } else {
-        put_char(&mode->input_buffer, keyboard, keycode);
+        put_char(input_buffer, keyboard, keycode);
       }
       break;
 
     case XKB_KEY_BackSpace:
       fini_completion();
-      hikari_input_buffer_remove_char(&mode->input_buffer);
+      hikari_input_buffer_remove_char(input_buffer);
       break;
 
     case XKB_KEY_Tab:
       init_completion();
       text = hikari_completion_next(mode->completion);
-      hikari_input_buffer_replace(&mode->input_buffer, text);
+      hikari_input_buffer_replace(input_buffer, text);
       break;
 
     case XKB_KEY_ISO_Left_Tab:
       init_completion();
       text = hikari_completion_prev(mode->completion);
-      hikari_input_buffer_replace(&mode->input_buffer, text);
+      hikari_input_buffer_replace(input_buffer, text);
       break;
 
     case XKB_KEY_c:
     case XKB_KEY_d:
       if (!hikari_keyboard_check_modifier(keyboard, WLR_MODIFIER_CTRL)) {
-        put_char(&mode->input_buffer, keyboard, keycode);
+        put_char(input_buffer, keyboard, keycode);
         break;
       }
     case XKB_KEY_Escape:
-      cancel_group_assign();
+      hikari_server_enter_normal_mode(NULL);
       goto done;
 
     case XKB_KEY_Return:
@@ -252,7 +241,7 @@ handle_keysym(
       goto done;
 
     default:
-      put_char(&mode->input_buffer, keyboard, keycode);
+      put_char(input_buffer, keyboard, keycode);
       break;
   }
 
@@ -322,9 +311,31 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
 static void
 cancel(void)
 {
-  hikari_input_buffer_clear(&hikari_server.group_assign_mode.input_buffer);
+  struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_view *view = workspace->focus_view;
+  struct hikari_group_assign_mode *mode = get_mode();
+
+  if (view != NULL) {
+    struct hikari_output *output = view->output;
+    struct hikari_indicator *indicator = &hikari_server.indicator;
+
+    hikari_indicator_damage(indicator, view);
+
+    hikari_indicator_update_group(indicator,
+        output,
+        view->group->name,
+        hikari_configuration->indicator_selected);
+
+    hikari_view_damage_border(view);
+  }
+
+  if (mode->group != NULL) {
+    hikari_group_damage(mode->group);
+    mode->group = NULL;
+  }
+
+  hikari_input_buffer_clear(&mode->input_buffer);
   fini_completion();
-  hikari_server.group_assign_mode.group = NULL;
 }
 
 static void
@@ -354,17 +365,19 @@ hikari_group_assign_mode_enter(struct hikari_view *view)
 {
   struct hikari_group_assign_mode *mode = &hikari_server.group_assign_mode;
 
+  struct hikari_output *output = hikari_server.workspace->output;
+  struct hikari_indicator *indicator = &hikari_server.indicator;
+  struct wlr_box *geometry = hikari_view_border_geometry(view);
+
   mode->group = view->group;
   hikari_server.mode = (struct hikari_mode *)mode;
 
-  struct wlr_box *geometry = hikari_view_border_geometry(view);
-  struct hikari_output *output = hikari_server.workspace->output;
-
   hikari_input_buffer_replace(&mode->input_buffer, view->group->name);
 
-  hikari_indicator_update_group(&hikari_server.indicator,
-      geometry,
+  hikari_indicator_update_group(indicator,
       output,
       view->group->name,
       hikari_configuration->indicator_insert);
+
+  hikari_indicator_damage_group(indicator, output, geometry);
 }

@@ -317,10 +317,8 @@ hikari_view_set_title(struct hikari_view *view, const char *title)
 
     if (hikari_server.workspace->focus_view == view) {
       assert(!hikari_view_is_hidden(view));
-      struct wlr_box *geometry = hikari_view_geometry(view);
       struct hikari_output *output = view->output;
       hikari_indicator_update_title(&hikari_server.indicator,
-          geometry,
           output,
           title,
           hikari_configuration->indicator_selected);
@@ -359,7 +357,7 @@ damage_whole_surface(struct wlr_surface *surface, int sx, int sy, void *data)
   struct hikari_view *view = damage_data->view;
 
   if (view->surface == surface) {
-    hikari_output_add_damage(output, hikari_view_border_geometry(view));
+    hikari_view_damage_border(view);
   } else {
     struct wlr_box geometry;
     memcpy(&geometry, damage_data->geometry, sizeof(struct wlr_box));
@@ -371,14 +369,6 @@ damage_whole_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 
     hikari_output_add_damage(output, &geometry);
   }
-}
-
-void
-hikari_view_damage_border(struct hikari_view *view)
-{
-  struct wlr_box *geometry = hikari_view_border_geometry(view);
-
-  hikari_output_add_damage(view->output, geometry);
 }
 
 void

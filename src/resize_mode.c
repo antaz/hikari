@@ -13,14 +13,18 @@
 static void
 cancel(void)
 {
-  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+  struct hikari_view *view = hikari_server.workspace->focus_view;
 
-  if (focus_view != NULL) {
+  if (view != NULL) {
+    struct hikari_indicator *indicator = &hikari_server.indicator;
+
     hikari_indicator_update(&hikari_server.indicator,
-        focus_view,
+        view,
         hikari_configuration->indicator_selected);
 
-    hikari_view_center_cursor(focus_view);
+    hikari_indicator_damage(indicator, view);
+
+    hikari_view_center_cursor(view);
   }
 }
 
@@ -109,5 +113,4 @@ hikari_resize_mode_enter(struct hikari_view *view)
   hikari_view_bottom_right_cursor(view);
 
   hikari_server.mode = (struct hikari_mode *)&hikari_server.resize_mode;
-  hikari_server_refresh_indication();
 }

@@ -167,7 +167,6 @@ VIEW_ACTION(toggle_vertical_maximize)
 VIEW_ACTION(toggle_horizontal_maximize)
 VIEW_ACTION(toggle_floating)
 VIEW_ACTION(damage_whole)
-VIEW_ACTION(damage_border)
 VIEW_ACTION(top_left_cursor)
 VIEW_ACTION(bottom_right_cursor)
 VIEW_ACTION(center_cursor)
@@ -345,6 +344,14 @@ hikari_view_is_tiling(struct hikari_view *view)
 {
   return hikari_view_is_dirty(view) &&
          view->pending_operation.type == HIKARI_OPERATION_TYPE_TILE;
+}
+
+static inline void
+hikari_view_damage_border(struct hikari_view *view)
+{
+  struct wlr_box *geometry = hikari_view_border_geometry(view);
+
+  hikari_output_add_damage(view->output, geometry);
 }
 
 #endif

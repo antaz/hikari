@@ -25,7 +25,6 @@ hikari_indicator_bar_fini(struct hikari_indicator_bar *indicator_bar);
 
 void
 hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
-    struct wlr_box *view_geometry,
     struct hikari_output *output,
     const char *text,
     float background[static 4]);
@@ -36,7 +35,7 @@ hikari_indicator_bar_render(struct hikari_indicator_bar *indicator_bar,
 
 void
 hikari_indicator_bar_damage(struct hikari_indicator_bar *indicator_bar,
-    struct wlr_box *view_geometry,
-    struct hikari_output *output);
+    struct hikari_output *output,
+    struct wlr_box *view_geometry);
 
 #endif

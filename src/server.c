@@ -1047,6 +1047,16 @@ CYCLE_ACTION(next_view)
 CYCLE_ACTION(prev_view)
 #undef CYCLE_ACTION
 
+static void
+update_indication(struct hikari_view *view)
+{
+  assert(view != NULL);
+  assert(view->group != NULL);
+
+  hikari_group_damage(view->group);
+  hikari_indicator_damage(&hikari_server.indicator, view);
+}
+
 void
 hikari_server_enter_normal_mode(void *arg)
 {
@@ -1069,6 +1079,8 @@ hikari_server_enter_sheet_assign_mode(void *arg)
     return;
   }
 
+  update_indication(focus_view);
+
   hikari_sheet_assign_mode_enter(focus_view);
 }
 
@@ -1081,6 +1093,8 @@ hikari_server_enter_move_mode(void *arg)
     return;
   }
 
+  update_indication(focus_view);
+
   hikari_move_mode_enter(focus_view);
 }
 
@@ -1092,6 +1106,8 @@ hikari_server_enter_resize_mode(void *arg)
   if (focus_view == NULL) {
     return;
   }
+
+  update_indication(focus_view);
 
   hikari_resize_mode_enter(focus_view);
 }
@@ -1118,6 +1134,8 @@ hikari_server_enter_input_grab_mode(void *arg)
     return;
   }
 
+  update_indication(focus_view);
+
   hikari_input_grab_mode_enter(focus_view);
 }
 
@@ -1127,6 +1145,13 @@ enter_mark_select(bool switch_workspace)
   struct hikari_server *server = &hikari_server;
 
   set_cursor_image(server, "link");
+
+  struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_view *focus_view = workspace->focus_view;
+
+  if (focus_view != NULL) {
+    update_indication(focus_view);
+  }
 
   hikari_mark_select_mode_enter(switch_workspace);
 }
@@ -1150,6 +1175,13 @@ hikari_server_enter_layout_select_mode(void *arg)
 
   set_cursor_image(server, "context-menu");
 
+  struct hikari_workspace *workspace = hikari_server.workspace;
+  struct hikari_view *focus_view = workspace->focus_view;
+
+  if (focus_view != NULL) {
+    update_indication(focus_view);
+  }
+
   hikari_layout_select_mode_enter();
 }
 
@@ -1165,26 +1197,9 @@ hikari_server_enter_mark_assign_mode(void *arg)
     return;
   }
 
+  update_indication(focus_view);
+
   hikari_mark_assign_mode_enter(focus_view);
-}
-
-void
-hikari_server_refresh_indication(void)
-{
-  struct hikari_view *view = NULL;
-  struct hikari_workspace *workspace = NULL;
-
-  wl_list_for_each (workspace, &hikari_server.workspaces, server_workspaces) {
-    wl_list_for_each (view, &workspace->views, workspace_views) {
-      hikari_view_damage_whole(view);
-    }
-  }
-
-  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
-
-  if (focus_view != NULL) {
-    hikari_indicator_damage(&hikari_server.indicator, focus_view);
-  }
 }
 
 void

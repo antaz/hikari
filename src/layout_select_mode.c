@@ -102,6 +102,4 @@ hikari_layout_select_mode_enter(void)
   struct hikari_server *server = &hikari_server;
 
   server->mode = (struct hikari_mode *)&server->layout_select_mode;
-
-  hikari_server_refresh_indication();
 }

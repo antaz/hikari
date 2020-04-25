@@ -36,7 +36,7 @@ input_grab_key_handler(struct hikari_workspace *workspace,
           if (modifiers ==
               (WLR_MODIFIER_LOGO | WLR_MODIFIER_ALT | WLR_MODIFIER_CTRL)) {
             hikari_server_enter_normal_mode(NULL);
-            hikari_server_refresh_indication();
+            hikari_view_damage_border(workspace->focus_view);
             hikari_server_cursor_focus();
             return;
           }
@@ -140,6 +140,4 @@ void
 hikari_input_grab_mode_enter(struct hikari_view *view)
 {
   hikari_server.mode = (struct hikari_mode *)&hikari_server.input_grab_mode;
-
-  hikari_server_refresh_indication();
 }

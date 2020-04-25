@@ -37,8 +37,8 @@ hikari_indicator_bar_fini(struct hikari_indicator_bar *indicator_bar)
 
 void
 hikari_indicator_bar_damage(struct hikari_indicator_bar *indicator_bar,
-    struct wlr_box *view_geometry,
-    struct hikari_output *output)
+    struct hikari_output *output,
+    struct wlr_box *view_geometry)
 {
   struct wlr_box geometry = { .x = view_geometry->x + 5,
     .y = view_geometry->y + indicator_bar->offset,
@@ -50,7 +50,6 @@ hikari_indicator_bar_damage(struct hikari_indicator_bar *indicator_bar,
 
 void
 hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
-    struct wlr_box *view_geometry,
     struct hikari_output *output,
     const char *text,
     float background[static 4])
@@ -64,18 +63,13 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
   }
 
   size_t len = strlen(text);
+
   struct hikari_font *font = &hikari_configuration->font;
   int width = hikari_configuration->font.character_width * len + 8;
   int height = hikari_configuration->font.height;
+  struct wlr_renderer *renderer =
+      wlr_backend_get_renderer(output->output->backend);
 
-  struct wlr_box geometry = { .x = view_geometry->x + 5,
-    .y = view_geometry->y + indicator_bar->offset,
-    .width = indicator_bar->width,
-    .height = height };
-
-  hikari_output_add_damage(output, &geometry);
-
-  geometry.width = width;
   indicator_bar->width = width;
 
   cairo_surface_t *surface =
@@ -111,17 +105,12 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
   unsigned char *data = cairo_image_surface_get_data(surface);
   int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
 
-  struct wlr_renderer *renderer = wlr_backend_get_renderer(
-      hikari_server.workspace->output->output->backend);
-
   indicator_bar->texture = wlr_texture_from_pixels(
       renderer, WL_SHM_FORMAT_ARGB8888, stride, width, height, data);
 
   cairo_surface_destroy(surface);
   g_object_unref(layout);
   cairo_destroy(cairo);
-
-  hikari_output_add_damage(output, &geometry);
 }
 
 void

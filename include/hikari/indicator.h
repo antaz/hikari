@@ -34,7 +34,6 @@ hikari_indicator_update(struct hikari_indicator *indicator,
 
 void
 hikari_indicator_update_sheet(struct hikari_indicator *indicator,
-    struct wlr_box *view_geometry,
     struct hikari_output *output,
     struct hikari_sheet *sheet,
     float background[static 4],
@@ -45,37 +44,34 @@ void
 hikari_indicator_damage(
     struct hikari_indicator *indicator, struct hikari_view *view);
 
-static inline void
-hikari_indicator_update_title(struct hikari_indicator *indicator,
-    struct wlr_box *view_geometry,
-    struct hikari_output *output,
-    const char *text,
-    float background[static 4])
-{
-  hikari_indicator_bar_update(
-      &indicator->title, view_geometry, output, text, background);
-}
+#define UPDATE(name)                                                           \
+  static inline void hikari_indicator_update_##name(                           \
+      struct hikari_indicator *indicator,                                      \
+      struct hikari_output *output,                                            \
+      const char *text,                                                        \
+      float background[static 4])                                              \
+  {                                                                            \
+    hikari_indicator_bar_update(&indicator->name, output, text, background);   \
+  }
 
-static inline void
-hikari_indicator_update_group(struct hikari_indicator *indicator,
-    struct wlr_box *view_geometry,
-    struct hikari_output *output,
-    const char *text,
-    float background[static 4])
-{
-  hikari_indicator_bar_update(
-      &indicator->group, view_geometry, output, text, background);
-}
+UPDATE(title)
+UPDATE(group)
+UPDATE(mark)
+#undef UPDATE
 
-static inline void
-hikari_indicator_update_mark(struct hikari_indicator *indicator,
-    struct wlr_box *view_geometry,
-    struct hikari_output *output,
-    const char *text,
-    float background[static 4])
-{
-  hikari_indicator_bar_update(
-      &indicator->mark, view_geometry, output, text, background);
-}
+#define DAMAGE(name)                                                           \
+  static inline void hikari_indicator_damage_##name(                           \
+      struct hikari_indicator *indicator,                                      \
+      struct hikari_output *output,                                            \
+      struct wlr_box *geometry)                                                \
+  {                                                                            \
+    hikari_indicator_bar_damage(&indicator->name, output, geometry);           \
+  }
+
+DAMAGE(title)
+DAMAGE(sheet)
+DAMAGE(group)
+DAMAGE(mark)
+#undef DAMAGE
 
 #endif
