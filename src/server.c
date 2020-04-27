@@ -372,8 +372,7 @@ cursor_focus(uint32_t time)
       hikari_view_interface_focus(view_interface);
     }
 
-    bool mouse_focus_changed =
-        seat->pointer_state.focused_surface != surface;
+    bool mouse_focus_changed = seat->pointer_state.focused_surface != surface;
 
     wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
     if (!mouse_focus_changed) {
