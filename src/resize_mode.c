@@ -61,7 +61,7 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
 }
 
 static void
-cursor_move(void)
+cursor_move(uint32_t time_msec)
 {
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 

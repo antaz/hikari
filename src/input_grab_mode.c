@@ -99,7 +99,7 @@ button_handler(struct wl_listener *listener, void *data)
 }
 
 static void
-cursor_move(void)
+cursor_move(uint32_t time_msec)
 {
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
   assert(focus_view != NULL);
@@ -113,16 +113,13 @@ cursor_move(void)
   double ox = lx - output->geometry.x;
   double oy = ly - output->geometry.y;
 
-  struct timespec now;
-  uint32_t time = (uint32_t)clock_gettime(CLOCK_MONOTONIC, &now);
-
   double sx, sy;
 
   struct wlr_surface *surface =
       hikari_view_interface_surface_at(view_interface, ox, oy, &sx, &sy);
 
   wlr_seat_pointer_notify_enter(hikari_server.seat, surface, sx, sy);
-  wlr_seat_pointer_notify_motion(hikari_server.seat, time, sx, sy);
+  wlr_seat_pointer_notify_motion(hikari_server.seat, time_msec, sx, sy);
 }
 
 void

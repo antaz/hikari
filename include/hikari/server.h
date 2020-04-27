@@ -5,6 +5,7 @@
 #include <wayland-util.h>
 
 #include <hikari/configuration.h>
+#include <hikari/dnd_mode.h>
 #include <hikari/group_assign_mode.h>
 #include <hikari/indicator.h>
 #include <hikari/input_grab_mode.h>
@@ -56,7 +57,13 @@ struct hikari_server {
   struct wl_listener output_layout_change;
   struct wl_listener new_decoration;
   struct wl_listener new_toplevel_decoration;
+  struct wl_listener request_start_drag;
+  struct wl_listener start_drag;
+
+#ifdef HAVE_LAYERSHELL
   struct wl_listener new_layer_shell_surface;
+#endif
+
 #ifdef HAVE_XWAYLAND
   struct wl_listener new_xwayland_surface;
 
@@ -97,6 +104,7 @@ struct hikari_server {
   struct hikari_normal_mode normal_mode;
   struct hikari_resize_mode resize_mode;
   struct hikari_sheet_assign_mode sheet_assign_mode;
+  struct hikari_dnd_mode dnd_mode;
 
   struct {
     uint32_t modifiers;
@@ -141,6 +149,9 @@ hikari_server_deactivate_cursor(void);
 void
 hikari_server_start(char *config_path, char *autostart);
 
+struct hikari_view_interface *
+hikari_server_view_interface_at(
+    double x, double y, struct wlr_surface **surface, double *sx, double *sy);
 void
 hikari_server_stop();
 

@@ -81,7 +81,7 @@ cancel(void)
 {}
 
 static void
-cursor_move(void)
+cursor_move(uint32_t time_msec)
 {}
 
 void

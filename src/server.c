@@ -342,6 +342,13 @@ view_interface_at(
   return NULL;
 }
 
+struct hikari_view_interface *
+hikari_server_view_interface_at(
+    double x, double y, struct wlr_surface **surface, double *sx, double *sy)
+{
+  return view_interface_at(x, y, surface, sx, sy);
+}
+
 static void
 cursor_focus(uint32_t time)
 {
@@ -366,7 +373,7 @@ cursor_focus(uint32_t time)
     }
 
     bool mouse_focus_changed =
-        hikari_server.seat->pointer_state.focused_surface != surface;
+        seat->pointer_state.focused_surface != surface;
 
     wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
     if (!mouse_focus_changed) {
@@ -409,7 +416,7 @@ cursor_move(uint32_t time_msec)
   if (hikari_server.mode->cursor_move == NULL) {
     cursor_focus(time_msec);
   } else {
-    hikari_server.mode->cursor_move();
+    hikari_server.mode->cursor_move(time_msec);
   }
 }
 
@@ -480,6 +487,7 @@ request_set_primary_selection_handler(struct wl_listener *listener, void *data)
 
   struct wlr_seat_request_set_primary_selection_event *event = data;
 
+  // CAN FAIL WITH NULL POINTER. HOW?
   wlr_seat_set_primary_selection(server->seat, event->source, event->serial);
 }
 
@@ -649,6 +657,38 @@ setup_decorations(struct hikari_server *server)
 }
 
 static void
+start_drag_handler(struct wl_listener *listener, void *data)
+{
+  printf("START DRAG\n");
+  struct wlr_surface *surface = NULL;
+  double sx, sy;
+
+  (void)view_interface_at(
+      hikari_server.cursor->x, hikari_server.cursor->y, &surface, &sx, &sy);
+
+  if (surface != NULL) {
+    hikari_dnd_mode_enter();
+  }
+}
+
+static void
+request_start_drag_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_server *server =
+      wl_container_of(listener, server, request_start_drag);
+  struct wlr_seat_request_start_drag_event *event = data;
+
+  printf("REQUEST START DRAG\n");
+
+  if (wlr_seat_validate_pointer_grab_serial(
+          server->seat, event->origin, event->serial)) {
+    printf("HERE\n");
+    wlr_seat_start_pointer_drag(server->seat, event->drag, event->serial);
+    return;
+  }
+}
+
+static void
 setup_selection(struct hikari_server *server)
 {
   wlr_gtk_primary_selection_device_manager_create(server->display);
@@ -668,6 +708,13 @@ setup_selection(struct hikari_server *server)
   server->request_set_selection.notify = request_set_selection_handler;
   wl_signal_add(&server->seat->events.request_set_selection,
       &server->request_set_selection);
+
+  server->request_start_drag.notify = request_start_drag_handler;
+  wl_signal_add(
+      &server->seat->events.request_start_drag, &server->request_start_drag);
+
+  server->start_drag.notify = start_drag_handler;
+  wl_signal_add(&server->seat->events.start_drag, &server->start_drag);
 }
 
 static void
@@ -875,6 +922,7 @@ server_init(struct hikari_server *server, char *config_path)
   wl_list_init(&server->workspaces);
   wl_list_init(&server->pointers);
 
+  hikari_dnd_mode_init(&server->dnd_mode);
   hikari_group_assign_mode_init(&server->group_assign_mode);
   hikari_input_grab_mode_init(&server->input_grab_mode);
   hikari_layout_select_mode_init(&server->layout_select_mode);

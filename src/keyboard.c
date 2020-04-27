@@ -71,8 +71,8 @@ static const char *hikari_evdev_xkb_default_rules = "evdev";
 struct xkb_keymap *
 hikari_load_keymap()
 {
-
   struct xkb_rule_names rules = { 0 };
+
   rules.rules = getenv("XKB_DEFAULT_RULES");
   rules.model = getenv("XKB_DEFAULT_MODEL");
   rules.layout = getenv("XKB_DEFAULT_LAYOUT");
@@ -122,6 +122,7 @@ hikari_keyboard_fini(struct hikari_keyboard *keyboard)
   wl_list_remove(&keyboard->modifiers.link);
   wl_list_remove(&keyboard->key.link);
   wl_list_remove(&keyboard->destroy.link);
+
   wl_list_remove(&keyboard->link);
 }
 

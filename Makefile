@@ -29,6 +29,7 @@ OBJS = \
 	completion.o \
 	configuration.o \
 	decoration.o \
+	dnd_mode.o \
 	exec.o \
 	font.o \
 	geometry.o \
