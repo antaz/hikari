@@ -1112,6 +1112,8 @@ hikari_server_enter_normal_mode(void *arg)
   set_cursor_image(server, "left_ptr");
 
   hikari_normal_mode_enter();
+
+  hikari_server_cursor_focus();
 }
 
 void
