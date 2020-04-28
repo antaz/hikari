@@ -1056,8 +1056,8 @@ hikari_view_exchange(struct hikari_view *from, struct hikari_view *to)
 
   struct hikari_layout *layout = from->sheet->workspace->sheet->layout;
 
-  struct wlr_box *from_geometry = hikari_view_geometry(from);
-  struct wlr_box *to_geometry = hikari_view_geometry(to);
+  struct wlr_box *from_geometry = &from->tile->tile_geometry;
+  struct wlr_box *to_geometry = &to->tile->tile_geometry;
 
   struct hikari_tile *from_tile = hikari_malloc(sizeof(struct hikari_tile));
   struct hikari_tile *to_tile = hikari_malloc(sizeof(struct hikari_tile));
