@@ -658,7 +658,6 @@ setup_decorations(struct hikari_server *server)
 static void
 start_drag_handler(struct wl_listener *listener, void *data)
 {
-  printf("START DRAG\n");
   struct wlr_surface *surface = NULL;
   double sx, sy;
 
@@ -677,14 +676,13 @@ request_start_drag_handler(struct wl_listener *listener, void *data)
       wl_container_of(listener, server, request_start_drag);
   struct wlr_seat_request_start_drag_event *event = data;
 
-  printf("REQUEST START DRAG\n");
-
   if (wlr_seat_validate_pointer_grab_serial(
           server->seat, event->origin, event->serial)) {
-    printf("HERE\n");
     wlr_seat_start_pointer_drag(server->seat, event->drag, event->serial);
     return;
   }
+
+  wlr_data_source_destroy(event->drag->source);
 }
 
 static void
@@ -980,6 +978,8 @@ hikari_server_stop(void)
   wl_list_remove(&hikari_server.cursor_axis.link);
   wl_list_remove(&hikari_server.cursor_button.link);
   wl_list_remove(&hikari_server.request_set_primary_selection.link);
+  wl_list_remove(&hikari_server.request_start_drag.link);
+  wl_list_remove(&hikari_server.start_drag.link);
   wl_list_remove(&hikari_server.output_layout_change.link);
 #ifdef HAVE_XWAYLAND
   wl_list_remove(&hikari_server.new_xwayland_surface.link);

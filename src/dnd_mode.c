@@ -14,7 +14,9 @@
 
 static void
 cancel(void)
-{}
+{
+  wlr_seat_pointer_clear_focus(hikari_server.seat);
+}
 
 static void
 key_handler(struct wl_listener *listener, void *data)
@@ -47,11 +49,14 @@ cursor_move(uint32_t time_msec)
   struct hikari_view_interface *view_interface =
       hikari_server_view_interface_at(x, y, &surface, &sx, &sy);
 
-  if (view_interface != NULL) {
-    wlr_seat_pointer_notify_enter(hikari_server.seat, surface, sx, sy);
-  }
+  struct wlr_seat *seat = hikari_server.seat;
 
-  wlr_seat_pointer_notify_motion(hikari_server.seat, time_msec, x, y);
+  if (view_interface != NULL) {
+    wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
+    wlr_seat_pointer_notify_motion(seat, time_msec, sx, sy);
+  } else {
+    wlr_seat_pointer_clear_focus(seat);
+  }
 }
 
 static void
@@ -82,4 +87,5 @@ void
 hikari_dnd_mode_enter(void)
 {
   hikari_server.mode = (struct hikari_mode *)&hikari_server.dnd_mode;
+  cursor_move(0);
 }
