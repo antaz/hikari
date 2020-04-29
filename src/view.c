@@ -263,8 +263,6 @@ hikari_view_init(struct hikari_view *view,
 
   hikari_view_unset_dirty(view);
   view->pending_operation.tile = NULL;
-
-  wl_list_init(&view->children);
 }
 
 void

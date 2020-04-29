@@ -54,8 +54,6 @@ struct hikari_view {
   struct wlr_box geometry;
   struct hikari_maximized_state *maximized_state;
 
-  struct wl_list children;
-
   struct wl_list output_views;
   struct wl_list workspace_views;
   struct wl_list sheet_views;
@@ -78,8 +76,6 @@ struct hikari_view {
 };
 
 struct hikari_view_child {
-  struct wl_list link;
-
   struct wlr_surface *surface;
   struct hikari_view *parent;
 
