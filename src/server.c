@@ -504,7 +504,6 @@ request_set_selection_handler(struct wl_listener *listener, void *data)
 void
 hikari_server_activate_cursor(void)
 {
-
   struct hikari_server *server = &hikari_server;
 
   server->cursor_motion_absolute.notify = cursor_motion_absolute_handler;
