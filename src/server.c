@@ -89,6 +89,9 @@ add_keyboard(struct hikari_server *server, struct wlr_input_device *device)
 static void
 set_cursor_image(struct hikari_server *server, const char *ptr)
 {
+  wl_list_remove(&server->cursor_surface_destroy.link);
+  wl_list_init(&server->cursor_surface_destroy.link);
+
   wlr_xcursor_manager_set_cursor_image(server->cursor_mgr, ptr, server->cursor);
 }
 
@@ -379,6 +382,9 @@ cursor_focus(uint32_t time)
       wlr_seat_pointer_notify_motion(seat, time, sx, sy);
     }
   } else {
+    if (seat->pointer_state.focused_surface != NULL) {
+      set_cursor_image(&hikari_server, "left_ptr");
+    }
     wlr_seat_pointer_clear_focus(seat);
   }
 }
@@ -501,6 +507,47 @@ request_set_selection_handler(struct wl_listener *listener, void *data)
   wlr_seat_set_selection(server->seat, event->source, event->serial);
 }
 
+static void
+cursor_surface_destroy_handler(struct wl_listener *listener, void *data)
+{
+  set_cursor_image(&hikari_server, "left_ptr");
+}
+
+static void
+request_set_cursor_handler(struct wl_listener *listener, void *data)
+{
+  if (!hikari_server_in_normal_mode()) {
+    return;
+  }
+
+  struct hikari_server *server = &hikari_server;
+  struct wlr_seat_pointer_request_set_cursor_event *event = data;
+  struct wlr_seat *seat = server->seat;
+
+  struct wl_client *focused_client = NULL;
+  struct wlr_surface *focused_surface = seat->pointer_state.focused_surface;
+  if (focused_surface != NULL) {
+    focused_client = wl_resource_get_client(focused_surface->resource);
+  }
+
+  if (focused_client == NULL || event->seat_client->client != focused_client) {
+    return;
+  }
+
+  struct wlr_surface *surface = event->surface;
+
+  wl_list_remove(&server->cursor_surface_destroy.link);
+  if (surface != NULL) {
+    server->cursor_surface_destroy.notify = cursor_surface_destroy_handler;
+    wl_signal_add(&surface->events.destroy, &server->cursor_surface_destroy);
+  } else {
+    wl_list_init(&server->cursor_surface_destroy.link);
+  }
+
+  wlr_cursor_set_surface(
+      server->cursor, surface, event->hotspot_x, event->hotspot_y);
+}
+
 void
 hikari_server_activate_cursor(void)
 {
@@ -522,6 +569,10 @@ hikari_server_activate_cursor(void)
   server->cursor_axis.notify = cursor_axis_handler;
   wl_signal_add(&server->cursor->events.axis, &server->cursor_axis);
 
+  server->request_set_cursor.notify = request_set_cursor_handler;
+  wl_signal_add(
+      &server->seat->events.request_set_cursor, &server->request_set_cursor);
+
   set_cursor_image(server, "left_ptr");
 }
 
@@ -533,6 +584,10 @@ hikari_server_deactivate_cursor(void)
   wl_list_remove(&hikari_server.cursor_motion.link);
   wl_list_remove(&hikari_server.cursor_button.link);
   wl_list_remove(&hikari_server.cursor_axis.link);
+  wl_list_remove(&hikari_server.request_set_cursor.link);
+  wl_list_remove(&hikari_server.cursor_surface_destroy.link);
+
+  wl_list_init(&hikari_server.cursor_surface_destroy.link);
 }
 
 #ifdef HAVE_XWAYLAND
@@ -930,6 +985,8 @@ server_init(struct hikari_server *server, char *config_path)
   hikari_sheet_assign_mode_init(&server->sheet_assign_mode);
 
   hikari_marks_init();
+
+  wl_list_init(&server->cursor_surface_destroy.link);
 }
 
 static void
@@ -1364,4 +1421,10 @@ hikari_server_switch_to_mark(void *arg)
   }
 
   show_marked_view(view, mark);
+}
+
+void
+hikari_server_reset_cursor(void)
+{
+  set_cursor_image(&hikari_server, "left_ptr");
 }

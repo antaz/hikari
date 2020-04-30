@@ -52,8 +52,10 @@ struct hikari_server {
   struct wl_listener cursor_frame;
   struct wl_listener cursor_axis;
   struct wl_listener cursor_button;
+  struct wl_listener cursor_surface_destroy;
   struct wl_listener request_set_primary_selection;
   struct wl_listener request_set_selection;
+  struct wl_listener request_set_cursor;
   struct wl_listener output_layout_change;
   struct wl_listener new_decoration;
   struct wl_listener new_toplevel_decoration;
@@ -145,6 +147,9 @@ hikari_server_activate_cursor(void);
 
 void
 hikari_server_deactivate_cursor(void);
+
+void
+hikari_server_reset_cursor(void);
 
 void
 hikari_server_start(char *config_path, char *autostart);
