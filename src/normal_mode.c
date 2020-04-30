@@ -284,12 +284,11 @@ cursor_move(uint32_t time)
 
   struct hikari_workspace *workspace = hikari_server.workspace;
 
-  if (view_interface) {
+  if (view_interface != NULL) {
     struct hikari_view_interface *focus_view_interface =
         (struct hikari_view_interface *)workspace->focus_view;
 
-    if (view_interface != focus_view_interface &&
-        view_interface->focus != NULL) {
+    if (view_interface != focus_view_interface) {
       hikari_view_interface_focus(view_interface);
     }
 

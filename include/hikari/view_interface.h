@@ -1,7 +1,9 @@
 #if !defined(HIKARI_VIEW_INTERFACE_H)
 #define HIKARI_VIEW_INTERFACE_H
 
-struct wlr_surface;
+#include <assert.h>
+
+#include <wlr/types/wlr_surface.h>
 
 struct hikari_view_interface {
   struct wlr_surface *(*surface_at)(
@@ -31,6 +33,7 @@ hikari_view_interface_surface_at(struct hikari_view_interface *view_interface,
 static inline void
 hikari_view_interface_focus(struct hikari_view_interface *view_interface)
 {
+  assert(view_interface->focus != NULL);
   view_interface->focus(view_interface);
 }
 
