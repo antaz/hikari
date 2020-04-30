@@ -105,7 +105,7 @@ hikari_output_load_background(struct hikari_output *output,
   int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, output_width);
 
   struct wlr_renderer *renderer =
-      wlr_backend_get_renderer(output->output->backend);
+      wlr_backend_get_renderer(output->wlr_output->backend);
 
   output->background = wlr_texture_from_pixels(renderer,
       WL_SHM_FORMAT_ARGB8888,
@@ -201,7 +201,7 @@ render_background(
   }
 
   float matrix[9];
-  struct wlr_output *wlr_output = output->output; // render_data->output;
+  struct wlr_output *wlr_output = output->wlr_output;
 
   struct wlr_box geometry = { .x = 0, .y = 0 };
   wlr_output_transformed_resolution(
@@ -246,10 +246,9 @@ render_output(struct hikari_output *output,
     pixman_region32_t *damage,
     struct timespec *now)
 {
-  struct wlr_renderer *renderer =
-      wlr_backend_get_renderer(output->output->backend);
+  struct wlr_output *wlr_output = output->wlr_output;
 
-  struct wlr_output *wlr_output = output->output;
+  struct wlr_renderer *renderer = wlr_backend_get_renderer(wlr_output->backend);
 
   wlr_renderer_begin(renderer, wlr_output->width, wlr_output->height);
 
@@ -419,7 +418,7 @@ hikari_output_disable(struct hikari_output *output)
   assert(output != NULL);
   assert(output->enabled);
 
-  struct wlr_output *wlr_output = output->output;
+  struct wlr_output *wlr_output = output->wlr_output;
 
   wl_list_remove(&output->damage_frame.link);
 
@@ -436,11 +435,13 @@ hikari_output_enable(struct hikari_output *output)
   assert(output != NULL);
   assert(!output->enabled);
 
+  struct wlr_output *wlr_output = output->wlr_output;
+
   output->damage_frame.notify = damage_frame_handler;
   wl_signal_add(&output->damage->events.frame, &output->damage_frame);
 
-  wlr_output_enable(output->output, true);
-  wlr_output_commit(output->output);
+  wlr_output_enable(wlr_output, true);
+  wlr_output_commit(wlr_output);
   hikari_output_damage_whole(output);
 
   output->enabled = true;
@@ -471,8 +472,8 @@ hikari_output_scissor_render(struct wlr_output *wlr_output,
 static void
 output_geometry(struct hikari_output *output)
 {
-  struct wlr_box *output_box =
-      wlr_output_layout_get_box(hikari_server.output_layout, output->output);
+  struct wlr_box *output_box = wlr_output_layout_get_box(
+      hikari_server.output_layout, output->wlr_output);
 
   output->geometry.x = output_box->x;
   output->geometry.y = output_box->y;
@@ -552,7 +553,7 @@ destroy_handler(struct wl_listener *listener, void *data)
 void
 hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 {
-  output->output = wlr_output;
+  output->wlr_output = wlr_output;
   output->damage = wlr_output_damage_create(wlr_output);
   output->background = NULL;
   output->enabled = false;
@@ -650,5 +651,6 @@ hikari_output_fini(struct hikari_output *output)
 void
 hikari_output_move(struct hikari_output *output, double lx, double ly)
 {
-  wlr_output_layout_move(hikari_server.output_layout, output->output, lx, ly);
+  wlr_output_layout_move(
+      hikari_server.output_layout, output->wlr_output, lx, ly);
 }

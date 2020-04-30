@@ -12,7 +12,7 @@
 #include <hikari/output_config.h>
 
 struct hikari_output {
-  struct wlr_output *output;
+  struct wlr_output *wlr_output;
   struct wlr_output_damage *damage;
   struct hikari_workspace *workspace;
 

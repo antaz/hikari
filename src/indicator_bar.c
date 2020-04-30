@@ -68,7 +68,7 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
   int width = hikari_configuration->font.character_width * len + 8;
   int height = hikari_configuration->font.height;
   struct wlr_renderer *renderer =
-      wlr_backend_get_renderer(output->output->backend);
+      wlr_backend_get_renderer(output->wlr_output->backend);
 
   indicator_bar->width = width;
 

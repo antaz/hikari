@@ -157,7 +157,7 @@ calculate_exclusive(struct hikari_output *output)
   struct wlr_box usable_area = { 0 };
 
   wlr_output_effective_resolution(
-      output->output, &usable_area.width, &usable_area.height);
+      output->wlr_output, &usable_area.width, &usable_area.height);
   struct hikari_layer *layer;
   wl_list_for_each (
       layer, &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], layer_surfaces) {
@@ -196,7 +196,7 @@ hikari_layer_init(
   layer->surface = wlr_layer_surface;
   layer->mapped = false;
 
-  wlr_layer_surface->output = output->output;
+  wlr_layer_surface->output = output->wlr_output;
 
   layer->destroy.notify = destroy_handler;
   wl_signal_add(&wlr_layer_surface->surface->events.destroy, &layer->destroy);

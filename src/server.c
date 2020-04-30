@@ -654,7 +654,7 @@ output_layout_change_handler(struct wl_listener *listener, void *data)
 
   struct hikari_output *output = NULL;
   wl_list_for_each (output, &server->outputs, server_outputs) {
-    struct wlr_output *wlr_output = output->output;
+    struct wlr_output *wlr_output = output->wlr_output;
     struct wlr_box *output_box =
         wlr_output_layout_get_box(hikari_server.output_layout, wlr_output);
 

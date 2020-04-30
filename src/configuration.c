@@ -2218,7 +2218,7 @@ hikari_configuration_reload(char *config_path)
     wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
       struct hikari_output_config *output_config =
           hikari_configuration_resolve_output(
-              hikari_configuration, output->output->name);
+              hikari_configuration, output->wlr_output->name);
 
       if (output_config != NULL) {
         if (output_config->explicit_position &&
