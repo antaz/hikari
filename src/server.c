@@ -1,5 +1,6 @@
 #include <hikari/server.h>
 
+#include <errno.h>
 #include <libinput.h>
 #include <unistd.h>
 
@@ -417,6 +418,35 @@ setup_xwayland(struct hikari_server *server)
 }
 #endif
 
+static unsigned long
+get_cursor_size(void)
+{
+  const char *cursor_size = getenv("XCURSOR_SIZE");
+
+  if (cursor_size != NULL && strlen(cursor_size) > 0) {
+    errno = 0;
+    char *end;
+    unsigned long size = strtoul(cursor_size, &end, 10);
+    if (*end == '\0' && errno == 0) {
+      return size;
+    }
+  }
+
+  return 24;
+}
+
+static const char *
+get_cursor_theme(void)
+{
+  char *cursor_theme = getenv("XCURSOR_THEME");
+
+  if (cursor_theme != NULL && strlen(cursor_theme) > 0) {
+    return cursor_theme;
+  }
+
+  return "default";
+}
+
 static void
 setup_cursor(struct hikari_server *server)
 {
@@ -424,9 +454,10 @@ setup_cursor(struct hikari_server *server)
 
   wlr_cursor_attach_output_layout(wlr_cursor, server->output_layout);
 
-  char *cursor_theme = getenv("XCURSOR_THEME");
+  const char *cursor_theme = get_cursor_theme();
+  unsigned long cursor_size = get_cursor_size();
 
-  server->cursor_mgr = wlr_xcursor_manager_create(cursor_theme, 24);
+  server->cursor_mgr = wlr_xcursor_manager_create(cursor_theme, cursor_size);
   wlr_xcursor_manager_load(server->cursor_mgr, 1);
 
   hikari_cursor_init(&hikari_server.cursor, wlr_cursor);
