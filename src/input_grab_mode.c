@@ -108,8 +108,8 @@ cursor_move(uint32_t time_msec)
   struct hikari_output *output = focus_view->output;
   assert(output != NULL);
 
-  double lx = hikari_server.cursor->x;
-  double ly = hikari_server.cursor->y;
+  double lx = hikari_server.cursor.wlr_cursor->x;
+  double ly = hikari_server.cursor.wlr_cursor->y;
   double ox = lx - output->geometry.x;
   double oy = ly - output->geometry.y;
 

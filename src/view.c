@@ -967,7 +967,7 @@ hikari_view_center_cursor(struct hikari_view *view)
   int x = output->geometry.x + geometry->x + geometry->width / 2;
   int y = output->geometry.y + geometry->y + geometry->height / 2;
 
-  wlr_cursor_warp(hikari_server.cursor, NULL, x, y);
+  hikari_cursor_warp(&hikari_server.cursor, x, y);
 }
 
 void
@@ -981,7 +981,7 @@ hikari_view_top_left_cursor(struct hikari_view *view)
   int x = output->geometry.x + geometry->x;
   int y = output->geometry.y + geometry->y;
 
-  wlr_cursor_warp(hikari_server.cursor, NULL, x, y);
+  hikari_cursor_warp(&hikari_server.cursor, x, y);
 }
 
 void
@@ -995,7 +995,7 @@ hikari_view_bottom_right_cursor(struct hikari_view *view)
   int x = output->geometry.x + geometry->x + geometry->width;
   int y = output->geometry.y + geometry->y + geometry->height;
 
-  wlr_cursor_warp(hikari_server.cursor, NULL, x, y);
+  hikari_cursor_warp(&hikari_server.cursor, x, y);
 }
 
 void

@@ -540,8 +540,8 @@ hikari_configuration_resolve_view_autoconf(
     } else {
       struct hikari_output *output = hikari_server.workspace->output;
 
-      *x = hikari_server.cursor->x - output->geometry.x;
-      *y = hikari_server.cursor->y - output->geometry.y;
+      *x = hikari_server.cursor.wlr_cursor->x - output->geometry.x;
+      *y = hikari_server.cursor.wlr_cursor->y - output->geometry.y;
     }
 
     if (view_autoconf->mark != NULL && view_autoconf->mark->view == NULL) {
@@ -552,8 +552,8 @@ hikari_configuration_resolve_view_autoconf(
 
     *sheet = hikari_server.workspace->sheet;
     *group = hikari_server_find_or_create_group(app_id);
-    *x = hikari_server.cursor->x - output->geometry.x;
-    *y = hikari_server.cursor->y - output->geometry.y;
+    *x = hikari_server.cursor.wlr_cursor->x - output->geometry.x;
+    *y = hikari_server.cursor.wlr_cursor->y - output->geometry.y;
   }
 }
 

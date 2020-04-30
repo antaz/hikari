@@ -493,7 +493,7 @@ hikari_workspace_focus_view(
     wlr_seat_keyboard_clear_focus(seat);
     wlr_seat_pointer_clear_focus(seat);
 
-    hikari_server_reset_cursor();
+    hikari_cursor_reset_image(&hikari_server.cursor);
   }
 
   hikari_server.workspace = workspace;

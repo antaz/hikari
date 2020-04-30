@@ -73,8 +73,8 @@ add_pointer(struct hikari_server *server, struct wlr_input_device *device)
     hikari_pointer_configure(pointer, pointer_config);
   }
 
-  wlr_cursor_attach_input_device(server->cursor, device);
-  wlr_cursor_map_input_to_output(server->cursor, device, NULL);
+  wlr_cursor_attach_input_device(server->cursor.wlr_cursor, device);
+  wlr_cursor_map_input_to_output(server->cursor.wlr_cursor, device, NULL);
 }
 
 static void
@@ -84,15 +84,6 @@ add_keyboard(struct hikari_server *server, struct wlr_input_device *device)
       hikari_malloc(sizeof(struct hikari_keyboard));
 
   hikari_keyboard_init(keyboard, device);
-}
-
-static void
-set_cursor_image(struct hikari_server *server, const char *ptr)
-{
-  wl_list_remove(&server->cursor_surface_destroy.link);
-  wl_list_init(&server->cursor_surface_destroy.link);
-
-  wlr_xcursor_manager_set_cursor_image(server->cursor_mgr, ptr, server->cursor);
 }
 
 static void
@@ -122,7 +113,7 @@ new_input_handler(struct wl_listener *listener, void *data)
   wlr_seat_set_capabilities(server->seat, caps);
 
   if ((caps & WL_SEAT_CAPABILITY_POINTER) != 0) {
-    set_cursor_image(server, "left_ptr");
+    hikari_cursor_reset_image(&server->cursor);
   }
 }
 
@@ -139,10 +130,10 @@ new_output_handler(struct wl_listener *listener, void *data)
   hikari_output_init(output, wlr_output);
   if (hikari_server.workspace == NULL) {
     hikari_server.workspace = output->workspace;
-    hikari_server_activate_cursor();
+    hikari_cursor_activate(&hikari_server.cursor);
     hikari_server.mode = (struct hikari_mode *)&hikari_server.normal_mode;
   } else {
-    set_cursor_image(server, "left_ptr");
+    hikari_cursor_reset_image(&server->cursor);
   }
 }
 
@@ -352,136 +343,16 @@ hikari_server_view_interface_at(
   return view_interface_at(x, y, surface, sx, sy);
 }
 
-static void
-cursor_focus(uint32_t time)
-{
-  assert(hikari_server_in_normal_mode());
-
-  double sx, sy;
-  struct wlr_seat *seat = hikari_server.seat;
-  struct wlr_surface *surface = NULL;
-
-  struct hikari_view_interface *view_interface = view_interface_at(
-      hikari_server.cursor->x, hikari_server.cursor->y, &surface, &sx, &sy);
-
-  struct hikari_workspace *workspace = hikari_server.workspace;
-
-  if (view_interface) {
-    struct hikari_view_interface *focus_view_interface =
-        (struct hikari_view_interface *)workspace->focus_view;
-
-    if (view_interface != focus_view_interface &&
-        view_interface->focus != NULL) {
-      hikari_view_interface_focus(view_interface);
-    }
-
-    bool mouse_focus_changed = seat->pointer_state.focused_surface != surface;
-
-    wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
-    if (!mouse_focus_changed) {
-      wlr_seat_pointer_notify_motion(seat, time, sx, sy);
-    }
-  } else {
-    if (seat->pointer_state.focused_surface != NULL) {
-      set_cursor_image(&hikari_server, "left_ptr");
-    }
-    wlr_seat_pointer_clear_focus(seat);
-  }
-}
-
 void
 hikari_server_cursor_focus(void)
 {
-  // TODO assert and check if we are in normal mode before we call this
   if (!hikari_server_in_normal_mode()) {
     return;
   }
 
   struct timespec now;
-  uint32_t time = (uint32_t)clock_gettime(CLOCK_MONOTONIC, &now);
-  cursor_focus(time);
-}
-
-static void
-cursor_button_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_server *server =
-      wl_container_of(listener, server, cursor_button);
-
-  assert(!server->locked);
-
-  hikari_server.mode->button_handler(listener, data);
-}
-
-static void
-cursor_move(uint32_t time_msec)
-{
-  // this is cheaper than calling a function, since this happens quite often, we
-  // for the common case.
-  if (hikari_server.mode->cursor_move == NULL) {
-    cursor_focus(time_msec);
-  } else {
-    hikari_server.mode->cursor_move(time_msec);
-  }
-}
-
-static void
-cursor_motion_absolute_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_server *server =
-      wl_container_of(listener, server, cursor_motion_absolute);
-
-  assert(!server->locked);
-
-  struct wlr_event_pointer_motion_absolute *event = data;
-
-  wlr_cursor_warp_absolute(server->cursor, event->device, event->x, event->y);
-
-  cursor_move(event->time_msec);
-}
-
-static void
-cursor_motion_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_server *server =
-      wl_container_of(listener, server, cursor_motion);
-
-  assert(!server->locked);
-
-  struct wlr_event_pointer_motion *event = data;
-
-  wlr_cursor_move(
-      server->cursor, event->device, event->delta_x, event->delta_y);
-
-  cursor_move(event->time_msec);
-}
-
-static void
-cursor_frame_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_server *server =
-      wl_container_of(listener, server, cursor_frame);
-
-  assert(!server->locked);
-
-  wlr_seat_pointer_notify_frame(server->seat);
-}
-
-static void
-cursor_axis_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_server *server = wl_container_of(listener, server, cursor_axis);
-
-  assert(!server->locked);
-
-  struct wlr_event_pointer_axis *event = data;
-
-  wlr_seat_pointer_notify_axis(server->seat,
-      event->time_msec,
-      event->orientation,
-      event->delta,
-      event->delta_discrete,
-      event->source);
+  uint32_t time_msec = (uint32_t)clock_gettime(CLOCK_MONOTONIC, &now);
+  hikari_server.mode->cursor_move(time_msec);
 }
 
 static void
@@ -505,89 +376,6 @@ request_set_selection_handler(struct wl_listener *listener, void *data)
   struct wlr_seat_request_set_selection_event *event = data;
 
   wlr_seat_set_selection(server->seat, event->source, event->serial);
-}
-
-static void
-cursor_surface_destroy_handler(struct wl_listener *listener, void *data)
-{
-  set_cursor_image(&hikari_server, "left_ptr");
-}
-
-static void
-request_set_cursor_handler(struct wl_listener *listener, void *data)
-{
-  if (!hikari_server_in_normal_mode()) {
-    return;
-  }
-
-  struct hikari_server *server = &hikari_server;
-  struct wlr_seat_pointer_request_set_cursor_event *event = data;
-  struct wlr_seat *seat = server->seat;
-
-  struct wl_client *focused_client = NULL;
-  struct wlr_surface *focused_surface = seat->pointer_state.focused_surface;
-  if (focused_surface != NULL) {
-    focused_client = wl_resource_get_client(focused_surface->resource);
-  }
-
-  if (focused_client == NULL || event->seat_client->client != focused_client) {
-    return;
-  }
-
-  struct wlr_surface *surface = event->surface;
-
-  wl_list_remove(&server->cursor_surface_destroy.link);
-  if (surface != NULL) {
-    server->cursor_surface_destroy.notify = cursor_surface_destroy_handler;
-    wl_signal_add(&surface->events.destroy, &server->cursor_surface_destroy);
-  } else {
-    wl_list_init(&server->cursor_surface_destroy.link);
-  }
-
-  wlr_cursor_set_surface(
-      server->cursor, surface, event->hotspot_x, event->hotspot_y);
-}
-
-void
-hikari_server_activate_cursor(void)
-{
-  struct hikari_server *server = &hikari_server;
-
-  server->cursor_motion_absolute.notify = cursor_motion_absolute_handler;
-  wl_signal_add(
-      &server->cursor->events.motion_absolute, &server->cursor_motion_absolute);
-
-  server->cursor_frame.notify = cursor_frame_handler;
-  wl_signal_add(&server->cursor->events.frame, &server->cursor_frame);
-
-  server->cursor_motion.notify = cursor_motion_handler;
-  wl_signal_add(&server->cursor->events.motion, &server->cursor_motion);
-
-  server->cursor_button.notify = cursor_button_handler;
-  wl_signal_add(&server->cursor->events.button, &server->cursor_button);
-
-  server->cursor_axis.notify = cursor_axis_handler;
-  wl_signal_add(&server->cursor->events.axis, &server->cursor_axis);
-
-  server->request_set_cursor.notify = request_set_cursor_handler;
-  wl_signal_add(
-      &server->seat->events.request_set_cursor, &server->request_set_cursor);
-
-  set_cursor_image(server, "left_ptr");
-}
-
-void
-hikari_server_deactivate_cursor(void)
-{
-  wl_list_remove(&hikari_server.cursor_motion_absolute.link);
-  wl_list_remove(&hikari_server.cursor_frame.link);
-  wl_list_remove(&hikari_server.cursor_motion.link);
-  wl_list_remove(&hikari_server.cursor_button.link);
-  wl_list_remove(&hikari_server.cursor_axis.link);
-  wl_list_remove(&hikari_server.request_set_cursor.link);
-  wl_list_remove(&hikari_server.cursor_surface_destroy.link);
-
-  wl_list_init(&hikari_server.cursor_surface_destroy.link);
 }
 
 #ifdef HAVE_XWAYLAND
@@ -632,13 +420,16 @@ setup_xwayland(struct hikari_server *server)
 static void
 setup_cursor(struct hikari_server *server)
 {
-  server->cursor = wlr_cursor_create();
-  wlr_cursor_attach_output_layout(server->cursor, server->output_layout);
+  struct wlr_cursor *wlr_cursor = wlr_cursor_create();
+
+  wlr_cursor_attach_output_layout(wlr_cursor, server->output_layout);
 
   char *cursor_theme = getenv("XCURSOR_THEME");
 
   server->cursor_mgr = wlr_xcursor_manager_create(cursor_theme, 24);
   wlr_xcursor_manager_load(server->cursor_mgr, 1);
+
+  hikari_cursor_init(&hikari_server.cursor, wlr_cursor);
 }
 
 static void
@@ -715,10 +506,14 @@ start_drag_handler(struct wl_listener *listener, void *data)
   struct wlr_surface *surface = NULL;
   double sx, sy;
 
-  (void)view_interface_at(
-      hikari_server.cursor->x, hikari_server.cursor->y, &surface, &sx, &sy);
+  struct hikari_view_interface *view_interface =
+      view_interface_at(hikari_server.cursor.wlr_cursor->x,
+          hikari_server.cursor.wlr_cursor->y,
+          &surface,
+          &sx,
+          &sy);
 
-  if (surface != NULL) {
+  if (view_interface != NULL) {
     hikari_dnd_mode_enter();
   }
 }
@@ -985,8 +780,6 @@ server_init(struct hikari_server *server, char *config_path)
   hikari_sheet_assign_mode_init(&server->sheet_assign_mode);
 
   hikari_marks_init();
-
-  wl_list_init(&server->cursor_surface_destroy.link);
 }
 
 static void
@@ -1028,11 +821,6 @@ hikari_server_stop(void)
   wl_list_remove(&hikari_server.new_output.link);
   wl_list_remove(&hikari_server.new_input.link);
   wl_list_remove(&hikari_server.new_xdg_surface.link);
-  wl_list_remove(&hikari_server.cursor_motion_absolute.link);
-  wl_list_remove(&hikari_server.cursor_motion.link);
-  wl_list_remove(&hikari_server.cursor_frame.link);
-  wl_list_remove(&hikari_server.cursor_axis.link);
-  wl_list_remove(&hikari_server.cursor_button.link);
   wl_list_remove(&hikari_server.request_set_primary_selection.link);
   wl_list_remove(&hikari_server.request_start_drag.link);
   wl_list_remove(&hikari_server.start_drag.link);
@@ -1041,6 +829,7 @@ hikari_server_stop(void)
   wl_list_remove(&hikari_server.new_xwayland_surface.link);
 #endif
 
+  hikari_cursor_fini(&hikari_server.cursor);
   hikari_indicator_fini(&hikari_server.indicator);
   hikari_mark_assign_mode_fini(&hikari_server.mark_assign_mode);
 
@@ -1089,7 +878,7 @@ hikari_server_lock(void *arg)
 
   hikari_server.locked = true;
 
-  hikari_server_deactivate_cursor();
+  hikari_cursor_deactivate(&hikari_server.cursor);
 
   if (hikari_server.workspace->focus_view != NULL) {
     hikari_workspace_focus_view(hikari_server.workspace, NULL);
@@ -1119,7 +908,7 @@ hikari_server_unlock(void)
     hikari_output_enable(output);
   }
 
-  hikari_server_activate_cursor();
+  hikari_cursor_activate(&hikari_server.cursor);
   hikari_server_cursor_focus();
 }
 
@@ -1165,7 +954,7 @@ hikari_server_enter_normal_mode(void *arg)
 {
   struct hikari_server *server = &hikari_server;
 
-  set_cursor_image(server, "left_ptr");
+  hikari_cursor_reset_image(&server->cursor);
 
   hikari_normal_mode_enter();
 
@@ -1247,9 +1036,7 @@ hikari_server_enter_input_grab_mode(void *arg)
 static void
 enter_mark_select(bool switch_workspace)
 {
-  struct hikari_server *server = &hikari_server;
-
-  set_cursor_image(server, "link");
+  hikari_cursor_set_image(&hikari_server.cursor, "link");
 
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_view *focus_view = workspace->focus_view;
@@ -1278,7 +1065,7 @@ hikari_server_enter_layout_select_mode(void *arg)
 {
   struct hikari_server *server = &hikari_server;
 
-  set_cursor_image(server, "context-menu");
+  hikari_cursor_set_image(&server->cursor, "context-menu");
 
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_view *focus_view = workspace->focus_view;
@@ -1421,10 +1208,4 @@ hikari_server_switch_to_mark(void *arg)
   }
 
   show_marked_view(view, mark);
-}
-
-void
-hikari_server_reset_cursor(void)
-{
-  set_cursor_image(&hikari_server, "left_ptr");
 }

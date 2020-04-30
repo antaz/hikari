@@ -1,5 +1,6 @@
 #include <hikari/normal_mode.h>
 
+#include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_seat.h>
 
 #include <hikari/action.h>
@@ -265,6 +266,47 @@ static void
 cancel(void)
 {}
 
+static void
+cursor_move(uint32_t time)
+{
+  assert(hikari_server_in_normal_mode());
+
+  double sx, sy;
+  struct wlr_seat *seat = hikari_server.seat;
+  struct wlr_surface *surface;
+
+  struct hikari_view_interface *view_interface =
+      hikari_server_view_interface_at(hikari_server.cursor.wlr_cursor->x,
+          hikari_server.cursor.wlr_cursor->y,
+          &surface,
+          &sx,
+          &sy);
+
+  struct hikari_workspace *workspace = hikari_server.workspace;
+
+  if (view_interface) {
+    struct hikari_view_interface *focus_view_interface =
+        (struct hikari_view_interface *)workspace->focus_view;
+
+    if (view_interface != focus_view_interface &&
+        view_interface->focus != NULL) {
+      hikari_view_interface_focus(view_interface);
+    }
+
+    bool mouse_focus_changed = seat->pointer_state.focused_surface != surface;
+
+    wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
+    if (!mouse_focus_changed) {
+      wlr_seat_pointer_notify_motion(seat, time, sx, sy);
+    }
+  } else {
+    if (seat->pointer_state.focused_surface != NULL) {
+      hikari_cursor_reset_image(&hikari_server.cursor);
+    }
+    wlr_seat_pointer_clear_focus(seat);
+  }
+}
+
 void
 hikari_normal_mode_init(struct hikari_normal_mode *normal_mode)
 {
@@ -273,7 +315,7 @@ hikari_normal_mode_init(struct hikari_normal_mode *normal_mode)
   normal_mode->mode.modifier_handler = modifier_handler;
   normal_mode->mode.render = render;
   normal_mode->mode.cancel = cancel;
-  normal_mode->mode.cursor_move = NULL;
+  normal_mode->mode.cursor_move = cursor_move;
   normal_mode->pending_action = NULL;
 }
 

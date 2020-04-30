@@ -41,8 +41,8 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
 static void
 cursor_move(uint32_t time_msec)
 {
-  double x = hikari_server.cursor->x;
-  double y = hikari_server.cursor->y;
+  double x = hikari_server.cursor.wlr_cursor->x;
+  double y = hikari_server.cursor.wlr_cursor->y;
 
   struct wlr_surface *surface = NULL;
   double sx, sy;

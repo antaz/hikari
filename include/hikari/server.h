@@ -5,6 +5,7 @@
 #include <wayland-util.h>
 
 #include <hikari/configuration.h>
+#include <hikari/cursor.h>
 #include <hikari/dnd_mode.h>
 #include <hikari/group_assign_mode.h>
 #include <hikari/indicator.h>
@@ -47,15 +48,8 @@ struct hikari_server {
   struct wl_listener new_output;
   struct wl_listener new_input;
   struct wl_listener new_xdg_surface;
-  struct wl_listener cursor_motion_absolute;
-  struct wl_listener cursor_motion;
-  struct wl_listener cursor_frame;
-  struct wl_listener cursor_axis;
-  struct wl_listener cursor_button;
-  struct wl_listener cursor_surface_destroy;
   struct wl_listener request_set_primary_selection;
   struct wl_listener request_set_selection;
-  struct wl_listener request_set_cursor;
   struct wl_listener output_layout_change;
   struct wl_listener new_decoration;
   struct wl_listener new_toplevel_decoration;
@@ -84,7 +78,7 @@ struct hikari_server {
 
   struct hikari_workspace *workspace;
 
-  struct wlr_cursor *cursor;
+  struct hikari_cursor cursor;
   struct wlr_xcursor_manager *cursor_mgr;
 
   struct wl_list pointers;
@@ -141,15 +135,6 @@ hikari_server_unset_cycling(void)
 {
   hikari_server.cycling = false;
 }
-
-void
-hikari_server_activate_cursor(void);
-
-void
-hikari_server_deactivate_cursor(void);
-
-void
-hikari_server_reset_cursor(void);
 
 void
 hikari_server_start(char *config_path, char *autostart);

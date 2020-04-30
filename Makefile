@@ -28,6 +28,7 @@ OBJS = \
 	command.o \
 	completion.o \
 	configuration.o \
+	cursor.o \
 	decoration.o \
 	dnd_mode.o \
 	exec.o \

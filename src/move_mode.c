@@ -68,8 +68,8 @@ cursor_move(uint32_t time_msec)
   struct hikari_output *output = focus_view->output;
 
   hikari_view_move_absolute(focus_view,
-      hikari_server.cursor->x - output->geometry.x,
-      hikari_server.cursor->y - output->geometry.y);
+      hikari_server.cursor.wlr_cursor->x - output->geometry.x,
+      hikari_server.cursor.wlr_cursor->y - output->geometry.y);
 }
 
 static void

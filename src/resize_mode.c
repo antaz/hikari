@@ -70,8 +70,8 @@ cursor_move(uint32_t time_msec)
   struct hikari_output *output = focus_view->output;
   struct wlr_box *geometry = hikari_view_geometry(focus_view);
 
-  int cursor_x = hikari_server.cursor->x - output->geometry.x;
-  int cursor_y = hikari_server.cursor->y - output->geometry.y;
+  int cursor_x = hikari_server.cursor.wlr_cursor->x - output->geometry.x;
+  int cursor_y = hikari_server.cursor.wlr_cursor->y - output->geometry.y;
 
   int border = hikari_configuration->border;
   int new_width = cursor_x - geometry->x - border;
