@@ -649,9 +649,9 @@ container.
 
 * **empty**
 
-This is one of the simplest algorithms, it does not consume any views. This is
-used if a user desired to have a container of a layout to remain empty e.g.
-preventing the layout to cover up a portion of the workspace.
+  This is one of the simplest algorithms, it does not consume any views. This is
+  used if a user desired to have a container of a layout to remain empty e.g.
+  preventing the layout to cover up a portion of the workspace.
 
 * **single**
 
