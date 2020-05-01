@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.1.0
+
+* add layer-shell support
+* add begin/end action to bindings
+* add "remove word" to input handling
+* allow Ctrl-C and Ctrl-D to cancel modes
+* add `step` configuration
+* support xdg toplevel decoration events (fixes `alacritty` issues)
+* add symmetric resize operations
+* add dynamic layout scaling
+
 ## 1.0.4
 
 * fix coordinated for XWayland views on multi-monitor setups
