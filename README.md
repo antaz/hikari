@@ -97,24 +97,24 @@ on the value of `PREFIX` that was specified during the installation).
 The default configuration expects your default terminal emulator to be specified
 in the `$TERMINAL` environment variable.
 
-The installation destination can be configured by setting`PREFIX` (default is
+The installation destination can be configured by setting `PREFIX` (default is
 `/usr/local` and does not need to be given explicitly). If you want to install
 `hikari` into a directory other than `/usr/local` you always should state the
 `PREFIX` when issuing `make`, since this information is also used to specify
 where `hikari` can find the default configuration on your system and is needed
-during the compilation process.
+during the compilation process. To override installation paths for `etc` specify
+`ETC_PREFIX`.
 
 #### Building on FreeBSD
 
-Simply run `make`. The installation destination can be configured by
-setting`PREFIX` (default is `/usr/local` and does not need to be given
-explicitly).
+Simply run `make`. The installation destination can be configured by setting
+`PREFIX` (default is `/usr/local` and does not need to be given explicitly).
 
 ```
 make
 ```
 
-`uninstall` requires the same value for `PREFIX`.
+`uninstall` requires the same values for prefixes.
 
 #### Building on Linux
 
@@ -132,7 +132,7 @@ explicitly).
 bmake PREFIX=/usr/local install
 ```
 
-`uninstall` requires the same value for `PREFIX`.
+`uninstall` requires the same values for prefixes.
 
 #### Building with XWayland support
 
