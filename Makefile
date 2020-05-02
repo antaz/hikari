@@ -2,6 +2,7 @@ OS != uname
 VERSION ?= "CURRENT"
 INSTALL_GROUP != id -gn
 PREFIX ?= /usr/local
+ETC_PREFIX ?= ${PREFIX}
 
 OBJS = \
 	action.o \
@@ -86,7 +87,7 @@ CFLAGS += -DHAVE_SCREENCOPY=1
 CFLAGS += -DHAVE_LAYERSHELL=1
 .endif
 
-CFLAGS += -Wall -I. -Iinclude -DHIKARI_PREFIX=${PREFIX}
+CFLAGS += -Wall -I. -Iinclude -DHIKARI_ETC_PREFIX=${ETC_PREFIX}
 
 WLROOTS_CFLAGS != pkg-config --cflags wlroots
 WLROOTS_LIBS != pkg-config --libs wlroots
@@ -203,17 +204,17 @@ dist: distclean hikari-${VERSION}.tar.gz
 install: hikari hikari-unlocker share/man/man1/hikari.1
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/share/man/man1
-	mkdir -p ${PREFIX}/etc/hikari
-	mkdir -p ${PREFIX}/etc/pam.d
+	mkdir -p ${ETC_PREFIX}/etc/hikari
+	mkdir -p ${ETC_PREFIX}/etc/pam.d
 	install -m 4555 -g ${INSTALL_GROUP} hikari hikari-unlocker ${PREFIX}/bin
 	install -m 644 -g ${INSTALL_GROUP} share/man/man1/hikari.1 ${PREFIX}/share/man/man1
-	install -m 644 -g ${INSTALL_GROUP} etc/hikari/hikari.conf ${PREFIX}/etc/hikari
-	install -m 644 -g ${INSTALL_GROUP} etc/pam.d/hikari-unlocker.${OS} ${PREFIX}/etc/pam.d/hikari-unlocker
+	install -m 644 -g ${INSTALL_GROUP} etc/hikari/hikari.conf ${ETC_PREFIX}/etc/hikari
+	install -m 644 -g ${INSTALL_GROUP} etc/pam.d/hikari-unlocker.${OS} ${ETC_PREFIX}/etc/pam.d/hikari-unlocker
 
 uninstall:
 	-rm ${PREFIX}/bin/hikari
 	-rm ${PREFIX}/bin/hikari-unlocker
 	-rm ${PREFIX}/share/man/man1/hikari.1
-	-rm ${PREFIX}/etc/pam.d/hikari-unlocker
-	-rm ${PREFIX}/etc/hikari/hikari.conf
-	-rmdir ${PREFIX}/etc/hikari
+	-rm ${ETC_PREFIX}/etc/pam.d/hikari-unlocker
+	-rm ${ETC_PREFIX}/etc/hikari/hikari.conf
+	-rmdir ${ETC_PREFIX}/etc/hikari

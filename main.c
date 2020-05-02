@@ -49,7 +49,7 @@ get_path(const char *path)
 
 #define STR(s) #s
 #define DEFAULT_CONFIG(s) STR(s) "/etc/hikari/hikari.conf"
-#define DEFAULT_CONFIG_FILE DEFAULT_CONFIG(HIKARI_PREFIX)
+#define DEFAULT_CONFIG_FILE DEFAULT_CONFIG(HIKARI_ETC_PREFIX)
 
 static const char *default_config_file = DEFAULT_CONFIG_FILE;
 
@@ -135,7 +135,9 @@ main(int argc, char **argv)
 
     if (config_path == NULL) {
       free(autostart);
-      fprintf(stderr, "could not load default configuration \"%s\"\n", default_config_file);
+      fprintf(stderr,
+          "could not load default configuration \"%s\"\n",
+          default_config_file);
       exit(EXIT_FAILURE);
     }
   }
