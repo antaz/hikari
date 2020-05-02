@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #include <wlr/util/log.h>
@@ -30,10 +31,49 @@ get_default_autostart(void)
 }
 
 static char *
+get_path(const char *path)
+{
+  char *ret = NULL;
+  size_t len = strlen(path) + 1;
+  struct stat s;
+
+  if (stat(path, &s) == 0 && S_ISREG(s.st_mode)) {
+    ret = malloc(len + 1);
+    strcpy(ret, path);
+
+    return ret;
+  }
+
+  return NULL;
+}
+
+#define STR(s) #s
+#define DEFAULT_CONFIG(s) STR(s) "/etc/hikari/hikari.conf"
+#define DEFAULT_CONFIG_FILE DEFAULT_CONFIG(HIKARI_PREFIX)
+
+static const char *default_config_file = DEFAULT_CONFIG_FILE;
+
+static char *
 get_default_config_path(void)
 {
-  return get_default_path("/.config/hikari/hikari.conf");
+  char *ret = get_default_path("/.config/hikari/hikari.conf");
+  struct stat s;
+
+  if (stat(ret, &s) == 0 && S_ISREG(s.st_mode)) {
+    return ret;
+  } else {
+    free(ret);
+
+    if ((ret = get_path(default_config_file)) != NULL) {
+      return ret;
+    }
+  }
+
+  return NULL;
 }
+#undef STR
+#undef DEFAULT_CONFIG
+#undef DEFAULT_CONFIG_FILE
 
 const char *usage = "Usage: hikari [options]\n"
                     "\n"
@@ -92,6 +132,12 @@ main(int argc, char **argv)
 
   if (config_path == NULL) {
     config_path = get_default_config_path();
+
+    if (config_path == NULL) {
+      free(autostart);
+      fprintf(stderr, "could not load default configuration \"%s\"\n", default_config_file);
+      exit(EXIT_FAILURE);
+    }
   }
 
   if (autostart == NULL) {

@@ -1,24 +1,7 @@
-.ifmake doc || dist
-.ifndef VERSION
-.error please specify VERSION
-.endif
-.endif
-
-VERSION ?= "darcs"
-
-.ifmake install || uninstall
-.ifndef PREFIX
-.error please specify PREFIX
-.endif
 OS != uname
+VERSION ?= "CURRENT"
 INSTALL_GROUP != id -gn
-.endif
-
-.ifmake install || uninstall
-.ifndef ETC_PREFIX
-.error please specify ETC_PREFIX
-.endif
-.endif
+PREFIX ?= /usr/local
 
 OBJS = \
 	action.o \
@@ -103,7 +86,7 @@ CFLAGS += -DHAVE_SCREENCOPY=1
 CFLAGS += -DHAVE_LAYERSHELL=1
 .endif
 
-CFLAGS += -Wall -I. -Iinclude
+CFLAGS += -Wall -I. -Iinclude -DHIKARI_PREFIX=${PREFIX}
 
 WLROOTS_CFLAGS != pkg-config --cflags wlroots
 WLROOTS_LIBS != pkg-config --libs wlroots
@@ -208,8 +191,8 @@ hikari-${VERSION}.tar.gz: version.h share/man/man1/hikari.1
 		README.md \
 		share/man/man1/hikari.md \
 		share/man/man1/hikari.1 \
-		share/examples/hikari/hikari.conf \
-		pam.d/hikari-unlocker.*
+		etc/hikari/hikari.conf \
+		etc/pam.d/hikari-unlocker.*
 
 distclean: clean-doc
 	@test -e _darcs && echo "cleaning version.h" ||:
@@ -220,17 +203,17 @@ dist: distclean hikari-${VERSION}.tar.gz
 install: hikari hikari-unlocker share/man/man1/hikari.1
 	mkdir -p ${PREFIX}/bin
 	mkdir -p ${PREFIX}/share/man/man1
-	mkdir -p ${PREFIX}/share/examples/hikari
-	mkdir -p ${ETC_PREFIX}/pam.d
+	mkdir -p ${PREFIX}/etc/hikari
+	mkdir -p ${PREFIX}/etc/pam.d
 	install -m 4555 -g ${INSTALL_GROUP} hikari hikari-unlocker ${PREFIX}/bin
 	install -m 644 -g ${INSTALL_GROUP} share/man/man1/hikari.1 ${PREFIX}/share/man/man1
-	install -m 644 -g ${INSTALL_GROUP} share/examples/hikari/hikari.conf ${PREFIX}/share/examples/hikari
-	install -m 644 -g ${INSTALL_GROUP} pam.d/hikari-unlocker.${OS} ${ETC_PREFIX}/pam.d/hikari-unlocker
+	install -m 644 -g ${INSTALL_GROUP} etc/hikari/hikari.conf ${PREFIX}/etc/hikari
+	install -m 644 -g ${INSTALL_GROUP} etc/pam.d/hikari-unlocker.${OS} ${PREFIX}/etc/pam.d/hikari-unlocker
 
 uninstall:
 	-rm ${PREFIX}/bin/hikari
 	-rm ${PREFIX}/bin/hikari-unlocker
-	-rm ${PREFIX}/share/examples/hikari/hikari.conf
-	-rmdir ${PREFIX}/share/examples/hikari
 	-rm ${PREFIX}/share/man/man1/hikari.1
-	-rm ${ETC_PREFIX}/pam.d/hikari-unlocker
+	-rm ${PREFIX}/etc/pam.d/hikari-unlocker
+	-rm ${PREFIX}/etc/hikari/hikari.conf
+	-rmdir ${PREFIX}/etc/hikari

@@ -140,10 +140,14 @@ CONFIGURATION
 =============
 
 **hikari** is configured using libucl(3) as a configuration file format. The
-configuration is located under _$HOME/.config/hikari/hikari.conf_. An example
-can be found under _share/examples/hikari/hikari.conf_.
+configuration is located under _~/.config/hikari/hikari.conf_. If this file is
+not found  **hikari** is going to try _hikari.conf_ from the install _etc_
+directory.
 
-On startup **hikari** attempts to execute _$HOME/.config/hikari/autostart_ to
+The default configuration is going to use **$TERMINAL** as your standard
+terminal application.
+
+On startup **hikari** attempts to execute _~/.config/hikari/autostart_ to
 autostart applications.
 
 ACTIONS

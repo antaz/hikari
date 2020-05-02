@@ -90,19 +90,31 @@ The build process will produce two binaries `hikari` and `hikari-unlocker`. The
 latter one is used to check credentials for unlocking the screen. Both need to
 be installed with root setuid in your `PATH`.
 
-`hikari` can be configured via `$HOME/.config/hikari/hikari.conf`, an example
-can be found under `share/exampes/hikari/hikari.conf`.
+`hikari` can be configured via `$HOME/.config/hikari/hikari.conf`, the default
+configuration can be found under `$PREFIX/etc/hikari/hikari.conf` (depending
+on the value of `PREFIX` that was specified during the installation).
+
+The default configuration expects your default terminal emulator to be specified
+in the `$TERMINAL` environment variable.
+
+The installation destination can be configured by setting`PREFIX` (default is
+`/usr/local` and does not need to be given explicitly). If you want to install
+`hikari` into a directory other than `/usr/local` you always should state the
+`PREFIX` when issuing `make`, since this information is also used to specify
+where `hikari` can find the default configuration on your system and is needed
+during the compilation process.
 
 #### Building on FreeBSD
 
-Simply run `make`. Installation needs `PREFIX` and `ETC_PREFIX` to be defined.
-To install everything in `/usr/local` run
+Simply run `make`. The installation destination can be configured by
+setting`PREFIX` (default is `/usr/local` and does not need to be given
+explicitly).
 
 ```
-make PREFIX=/usr/local ETC_PREFIX=/usr/local/etc install
+make
 ```
 
-`uninstall` requires the same values for `PREFIX` and `ETC_PREFIX`.
+`uninstall` requires the same value for `PREFIX`.
 
 #### Building on Linux
 
@@ -112,17 +124,15 @@ On Linux `bmake` is required which needs to be run like so:
 bmake WITH_POSIX_C_SOURCE=YES
 ```
 
-Installation needs `PREFIX` and `ETC_PREFIX` to be defined. To install
-everything in `/usr/local` run.
+The installation destination can be configured by
+setting`PREFIX` (default is `/usr/local` and does not need to be given
+explicitly).
 
 ```
-bmake PREFIX=/usr/local ETC_PREFIX=/etc install
+bmake PREFIX=/usr/local install
 ```
 
-`pam.d` files should be installed in `/etc` or `/usr/lib/pam.d` depending on
-your distribution.
-
-`uninstall` requires the same values for `PREFIX` and `ETC_PREFIX`.
+`uninstall` requires the same value for `PREFIX`.
 
 #### Building with XWayland support
 
