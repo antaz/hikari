@@ -215,6 +215,8 @@ hikari_layer_init(
 void
 hikari_layer_fini(struct hikari_layer *layer)
 {
+  wl_list_remove(&layer->layer_surfaces);
+
   wl_list_remove(&layer->destroy.link);
   wl_list_remove(&layer->map.link);
   wl_list_remove(&layer->unmap.link);
@@ -355,6 +357,8 @@ commit_handler(struct wl_listener *listener, void *data)
   struct wlr_box old_geometry = layer->geometry;
   struct hikari_output *output = layer->output;
 
+  assert(layer->mapped);
+
   calculate_exclusive(layer->output);
   calculate_geometry(layer);
 
@@ -442,6 +446,7 @@ unmap(struct hikari_layer *layer)
   assert(layer->mapped);
 
   wl_list_remove(&layer->layer_surfaces);
+  wl_list_init(&layer->layer_surfaces);
 
   wl_list_remove(&layer->commit.link);
   wl_list_remove(&layer->new_popup.link);
