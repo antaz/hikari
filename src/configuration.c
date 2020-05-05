@@ -551,6 +551,10 @@ hikari_configuration_resolve_view_autoconf(
     if (view_autoconf->invisible) {
       hikari_view_set_invisible(view);
     }
+
+    if (view_autoconf->floating) {
+      hikari_view_set_floating(view);
+    }
   } else {
     struct hikari_output *output = hikari_server.workspace->output;
 
@@ -881,6 +885,17 @@ parse_autoconf(struct hikari_configuration *configuration,
       }
 
       (*autoconf)->invisible = invisible;
+    } else if (!strcmp(key, "floating")) {
+      bool floating;
+
+      if (!ucl_object_toboolean_safe(cur, &floating)) {
+        fprintf(stderr,
+            "configuration error: expected boolean for \"views\" "
+            "\"floating\"\n");
+        goto done;
+      }
+
+      (*autoconf)->floating = floating;
     } else {
       fprintf(
           stderr, "configuration error: unkown \"views\" key \"%s\"\n", key);

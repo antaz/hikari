@@ -13,6 +13,7 @@ hikari_view_autoconf_init(struct hikari_view_autoconf *autoconf)
   autoconf->mark = NULL;
   autoconf->focus = false;
   autoconf->invisible = false;
+  autoconf->floating = false;
 
   hikari_position_config_init(&autoconf->position);
 }

@@ -520,6 +520,11 @@ When an application start its views can be automatically configured by
 **hikari**. Each view has a property called *id*, in the *views* section this
 can be used to specify certain properties you want for that view to apply.
 
+* **floating**
+
+  Takes a boolean to specify the view's **floating** state on startup. The
+  default value is *false*.
+
 * **focus**
 
   Takes a boolean to specify if the view should automatically grab focus when it
