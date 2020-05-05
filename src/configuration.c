@@ -1378,6 +1378,9 @@ parse_binding(struct hikari_configuration *configuration,
   } else if (!strcmp(str, "sheet-show-all")) {
     *action = hikari_server_show_all_sheet_views;
     *arg = NULL;
+  } else if (!strcmp(str, "sheet-show-group")) {
+    *action = hikari_server_sheet_show_group;
+    *arg = NULL;
 
   } else if (!strcmp(str, "layout-cycle-view-next")) {
     *action = hikari_server_cycle_next_layout_view;

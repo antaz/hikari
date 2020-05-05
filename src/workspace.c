@@ -987,21 +987,14 @@ hikari_workspace_only_group(struct hikari_workspace *workspace)
 }
 
 void
-hikari_workspace_show_group(struct hikari_workspace *workspace)
+hikari_workspace_sheet_show_group(struct hikari_workspace *workspace)
 {
   FOCUS_GUARD(workspace, focus_view);
 
   struct hikari_group *group = focus_view->group;
 
   hikari_workspace_clear(workspace);
-
-  struct hikari_view *view = NULL;
-  wl_list_for_each_reverse (view, &workspace->sheet->views, sheet_views) {
-    if (view->group == group) {
-      hikari_view_show(view);
-    }
-  }
-
+  hikari_sheet_show_group(workspace->sheet, group);
   hikari_server_cursor_focus();
 }
 

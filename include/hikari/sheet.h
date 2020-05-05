@@ -103,4 +103,7 @@ hikari_sheet_apply_split(
 bool
 hikari_sheet_is_visible(struct hikari_sheet *sheet);
 
+void
+hikari_sheet_show_group(struct hikari_sheet *sheet, struct hikari_group *group);
+
 #endif

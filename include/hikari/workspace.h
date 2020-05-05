@@ -145,7 +145,7 @@ WORKSPACE_ACTION(show_all_invisible_views)
 WORKSPACE_ACTION(exchange_next_view)
 WORKSPACE_ACTION(exchange_prev_view)
 WORKSPACE_ACTION(exchange_main_layout_view)
-WORKSPACE_ACTION(show_group)
+WORKSPACE_ACTION(sheet_show_group)
 WORKSPACE_ACTION(show_all_group_views)
 WORKSPACE_ACTION(show_all_sheet_views)
 #undef WORKSPACE_ACTION

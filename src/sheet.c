@@ -448,3 +448,14 @@ hikari_sheet_is_visible(struct hikari_sheet *sheet)
 
   return sheet == sheet->workspace->sheet || sheet == &sheets[0];
 }
+
+void
+hikari_sheet_show_group(struct hikari_sheet *sheet, struct hikari_group *group)
+{
+  struct hikari_view *view;
+  wl_list_for_each_reverse (view, &sheet->views, sheet_views) {
+    if (view->group == group) {
+      hikari_view_show(view);
+    }
+  }
+}

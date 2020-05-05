@@ -319,6 +319,12 @@ Sheet actions
   Clears the current workspace and populates it with all views that are a member
   of its current sheet. This includes **invisible** views as well.
 
+* **sheet-show-group**
+
+  Clears the current workspace and populates it with all views that are a member
+  of its current sheet and the group of the focused view. This includes
+  **invisible** views as well.
+
 * **sheet-show-invisible**
 
   Clears the current workspace and populates it with all **invisible** views
