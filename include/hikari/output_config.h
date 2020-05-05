@@ -5,6 +5,8 @@
 
 #include <wayland-util.h>
 
+#include <hikari/position_config.h>
+
 enum hikari_background_fit {
   HIKARI_BACKGROUND_CENTER,
   HIKARI_BACKGROUND_STRETCH,
@@ -17,9 +19,7 @@ struct hikari_output_config {
   char *output_name;
   char *background;
 
-  bool explicit_position;
-  int lx;
-  int ly;
+  struct hikari_position_config position;
 
   enum hikari_background_fit background_fit;
 };
@@ -29,9 +29,7 @@ hikari_output_config_init(struct hikari_output_config *output_config,
     const char *output_name,
     char *background,
     enum hikari_background_fit background_fit,
-    bool explicit_position,
-    int lx,
-    int ly);
+    struct hikari_position_config *position_config);
 
 void
 hikari_output_config_fini(struct hikari_output_config *output_config);

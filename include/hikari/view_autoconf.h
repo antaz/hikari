@@ -4,6 +4,8 @@
 #include <stdbool.h>
 #include <wayland-util.h>
 
+#include <hikari/position_config.h>
+
 struct hikari_mark;
 
 struct hikari_view_autoconf {
@@ -16,13 +18,13 @@ struct hikari_view_autoconf {
 
   struct hikari_mark *mark;
 
-  struct {
-    int x;
-    int y;
-  } position;
+  struct hikari_position_config position;
 
   bool focus;
 };
+
+void
+hikari_view_autoconf_init(struct hikari_view_autoconf *autoconf);
 
 void
 hikari_view_autoconf_fini(struct hikari_view_autoconf *autoconf);

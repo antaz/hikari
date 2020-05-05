@@ -534,7 +534,7 @@ hikari_configuration_resolve_view_autoconf(
       *group = hikari_server_find_or_create_group(app_id);
     }
 
-    if (view_autoconf->position.x != -1 && view_autoconf->position.y != -1) {
+    if (view_autoconf->position.explicit_position) {
       *x = view_autoconf->position.x;
       *y = view_autoconf->position.y;
     } else {
@@ -792,12 +792,8 @@ parse_autoconf(struct hikari_configuration *configuration,
     struct hikari_view_autoconf **autoconf)
 {
   bool success = false;
-  (*autoconf)->group_name = NULL;
-  (*autoconf)->sheet_nr = -1;
-  (*autoconf)->mark = NULL;
-  (*autoconf)->position.x = -1;
-  (*autoconf)->position.y = -1;
-  (*autoconf)->focus = false;
+
+  hikari_view_autoconf_init(*autoconf);
 
   ucl_object_iter_t it = ucl_object_iterate_new(autoconf_obj);
 
@@ -857,6 +853,8 @@ parse_autoconf(struct hikari_configuration *configuration,
             "configuration error: failed to parse \"views\" \"position\"\n");
         goto done;
       }
+
+      (*autoconf)->position.explicit_position = true;
     } else if (!strcmp(key, "focus")) {
       bool focus;
 
@@ -1923,8 +1921,8 @@ parse_output_config(struct hikari_configuration *configuration,
   ucl_object_iter_t it = ucl_object_iterate_new(output_config_obj);
   const char *output_name = ucl_object_key(output_config_obj);
   char *background = NULL;
-  int lx = -1, ly = -1;
-  bool explicit_position = false;
+  struct hikari_position_config position_config;
+  hikari_position_config_init(&position_config);
   enum hikari_background_fit background_fit = HIKARI_BACKGROUND_STRETCH;
 
   const ucl_object_t *cur;
@@ -1953,13 +1951,13 @@ parse_output_config(struct hikari_configuration *configuration,
         goto done;
       }
     } else if (!strcmp(key, "position")) {
-      if (!parse_position(cur, &lx, &ly)) {
+      if (!parse_position(cur, &position_config.x, &position_config.y)) {
         fprintf(stderr,
             "configuration error: failed to parse output \"position\"\n");
         goto done;
       }
 
-      explicit_position = true;
+      position_config.explicit_position = true;
     } else {
       fprintf(stderr,
           "configuration error: unknown \"outputs\" configuration key \"%s\"\n",
@@ -1969,13 +1967,8 @@ parse_output_config(struct hikari_configuration *configuration,
 
   struct hikari_output_config *output_config =
       hikari_malloc(sizeof(struct hikari_output_config));
-  hikari_output_config_init(output_config,
-      output_name,
-      background,
-      background_fit,
-      explicit_position,
-      lx,
-      ly);
+  hikari_output_config_init(
+      output_config, output_name, background, background_fit, &position_config);
 
   wl_list_insert(&configuration->output_configs, &output_config->link);
 
@@ -2221,10 +2214,11 @@ hikari_configuration_reload(char *config_path)
               hikari_configuration, output->wlr_output->name);
 
       if (output_config != NULL) {
-        if (output_config->explicit_position &&
-            (output->geometry.x != output_config->lx ||
-                output->geometry.y != output_config->ly)) {
-          hikari_output_move(output, output_config->lx, output_config->ly);
+        if (output_config->position.explicit_position &&
+            (output->geometry.x != output_config->position.x ||
+                output->geometry.y != output_config->position.y)) {
+          hikari_output_move(
+              output, output_config->position.x, output_config->position.y);
         }
 
         if (output_config->background != NULL) {

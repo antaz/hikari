@@ -6,6 +6,17 @@
 #include <hikari/memory.h>
 
 void
+hikari_view_autoconf_init(struct hikari_view_autoconf *autoconf)
+{
+  autoconf->group_name = NULL;
+  autoconf->sheet_nr = -1;
+  autoconf->mark = NULL;
+  autoconf->focus = false;
+
+  hikari_position_config_init(&autoconf->position);
+}
+
+void
 hikari_view_autoconf_fini(struct hikari_view_autoconf *autoconf)
 {
   assert(autoconf != NULL);
