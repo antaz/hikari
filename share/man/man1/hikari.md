@@ -421,6 +421,11 @@ VT actions
 
 Workspace actions
 -----------------
+* **workspace-show-all**
+
+  Clears the current workspace and populates it with all views. This includes
+  **invisible** views.
+
 * **workspace-show-group**
 
   Clears the current workspace and populates it with all views that are a member

@@ -341,6 +341,7 @@ WORKSPACE_ACTION(show_all_group_views)
 WORKSPACE_ACTION(switch_to_next_inhabited_sheet)
 WORKSPACE_ACTION(switch_to_prev_inhabited_sheet)
 WORKSPACE_ACTION(show_all_sheet_views)
+WORKSPACE_ACTION(show_all)
 WORKSPACE_ACTION(show_group)
 WORKSPACE_ACTION(show_invisible)
 #undef WORKSPACE_ACTION
