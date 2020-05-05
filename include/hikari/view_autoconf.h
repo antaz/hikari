@@ -21,6 +21,7 @@ struct hikari_view_autoconf {
   struct hikari_position_config position;
 
   bool focus;
+  bool invisible;
 };
 
 void

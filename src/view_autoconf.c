@@ -12,6 +12,7 @@ hikari_view_autoconf_init(struct hikari_view_autoconf *autoconf)
   autoconf->sheet_nr = -1;
   autoconf->mark = NULL;
   autoconf->focus = false;
+  autoconf->invisible = false;
 
   hikari_position_config_init(&autoconf->position);
 }

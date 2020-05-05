@@ -547,6 +547,10 @@ hikari_configuration_resolve_view_autoconf(
     if (view_autoconf->mark != NULL && view_autoconf->mark->view == NULL) {
       hikari_mark_set(view_autoconf->mark, view);
     }
+
+    if (view_autoconf->invisible) {
+      hikari_view_set_invisible(view);
+    }
   } else {
     struct hikari_output *output = hikari_server.workspace->output;
 
@@ -866,6 +870,17 @@ parse_autoconf(struct hikari_configuration *configuration,
       }
 
       (*autoconf)->focus = focus;
+    } else if (!strcmp(key, "invisible")) {
+      bool invisible;
+
+      if (!ucl_object_toboolean_safe(cur, &invisible)) {
+        fprintf(stderr,
+            "configuration error: expected boolean for \"views\" "
+            "\"invisible\"\n");
+        goto done;
+      }
+
+      (*autoconf)->invisible = invisible;
     } else {
       fprintf(
           stderr, "configuration error: unkown \"views\" key \"%s\"\n", key);

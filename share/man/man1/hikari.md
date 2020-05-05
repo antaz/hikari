@@ -532,6 +532,11 @@ can be used to specify certain properties you want for that view to apply.
   created automatically). If no group is specified a group name equal to the
   view *id* is chosen.
 
+* **invisible**
+
+  Takes a boolean to specify the view's **invisible** state on startup. The
+  default value is *false*.
+
 * **mark**
 
   Assign a mark to the view. This only takes effect if that mark is not already
