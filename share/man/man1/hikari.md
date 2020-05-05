@@ -755,10 +755,10 @@ gap = 5
 
   Specifies the font that is used for indicator bars.
 
-**hikari** uses *DejaVu Sans Mono 10* as its default font setting.
+**hikari** uses *monospace 10* as its default font setting.
 
 ```
-font = "DejaVu Sans Mono 10"
+font = "monospace 10"
 
 ```
 

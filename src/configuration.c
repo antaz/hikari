@@ -2290,7 +2290,7 @@ hikari_configuration_init(struct hikari_configuration *configuration)
   hikari_color_convert(configuration->border_active, 0xFFFFFF);
   hikari_color_convert(configuration->border_inactive, 0x465457);
 
-  hikari_font_init(&configuration->font, "DejaVu Sans Mono 10");
+  hikari_font_init(&configuration->font, "monospace 10");
 
   hikari_bindings_init(&configuration->bindings);
 
