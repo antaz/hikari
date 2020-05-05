@@ -999,6 +999,17 @@ hikari_workspace_sheet_show_group(struct hikari_workspace *workspace)
 }
 
 void
+hikari_workspace_show_group(struct hikari_workspace *workspace)
+{
+  FOCUS_GUARD(workspace, focus_view);
+
+  struct hikari_group *group = focus_view->group;
+  hikari_workspace_clear(workspace);
+  hikari_group_show(group);
+  hikari_server_cursor_focus();
+}
+
+void
 hikari_workspace_hide_group(struct hikari_workspace *workspace)
 {
   FOCUS_GUARD(workspace, focus_view);

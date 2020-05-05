@@ -341,6 +341,7 @@ WORKSPACE_ACTION(show_all_group_views)
 WORKSPACE_ACTION(switch_to_next_inhabited_sheet)
 WORKSPACE_ACTION(switch_to_prev_inhabited_sheet)
 WORKSPACE_ACTION(show_all_sheet_views)
+WORKSPACE_ACTION(show_group)
 #undef WORKSPACE_ACTION
 
 static inline void

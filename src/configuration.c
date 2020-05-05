@@ -1382,6 +1382,10 @@ parse_binding(struct hikari_configuration *configuration,
     *action = hikari_server_sheet_show_group;
     *arg = NULL;
 
+  } else if (!strcmp(str, "workspace-show-group")) {
+    *action = hikari_server_show_group;
+    *arg = NULL;
+
   } else if (!strcmp(str, "layout-cycle-view-next")) {
     *action = hikari_server_cycle_next_layout_view;
     *arg = NULL;

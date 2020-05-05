@@ -421,6 +421,11 @@ VT actions
 
 Workspace actions
 -----------------
+* **workspace-show-group**
+
+  Clears the current workspace and populates it with all views that are a member
+  of the group of the focused view. This includes **invisible** views.
+
 * **workspace-switch-to-sheet-[0-9|alternate|current]**
 
   Clears the current workspace and populates it with all views that are a member
