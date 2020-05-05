@@ -421,6 +421,10 @@ VT actions
 
 Workspace actions
 -----------------
+* **workspace-clear**
+
+  Clears the current workspace.
+
 * **workspace-show-all**
 
   Clears the current workspace and populates it with all views. This includes

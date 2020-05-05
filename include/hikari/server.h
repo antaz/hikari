@@ -344,6 +344,7 @@ WORKSPACE_ACTION(show_all_sheet_views)
 WORKSPACE_ACTION(show_all)
 WORKSPACE_ACTION(show_group)
 WORKSPACE_ACTION(show_invisible)
+WORKSPACE_ACTION(clear)
 #undef WORKSPACE_ACTION
 
 static inline void

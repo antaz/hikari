@@ -1382,6 +1382,9 @@ parse_binding(struct hikari_configuration *configuration,
     *action = hikari_server_sheet_show_group;
     *arg = NULL;
 
+  } else if (!strcmp(str, "workspace-clear")) {
+    *action = hikari_server_clear;
+    *arg = NULL;
   } else if (!strcmp(str, "workspace-show-all")) {
     *action = hikari_server_show_all;
     *arg = NULL;
