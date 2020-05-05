@@ -149,6 +149,7 @@ WORKSPACE_ACTION(sheet_show_group)
 WORKSPACE_ACTION(show_all_group_views)
 WORKSPACE_ACTION(show_all_sheet_views)
 WORKSPACE_ACTION(show_group)
+WORKSPACE_ACTION(show_invisible)
 #undef WORKSPACE_ACTION
 
 void

@@ -426,6 +426,11 @@ Workspace actions
   Clears the current workspace and populates it with all views that are a member
   of the group of the focused view. This includes **invisible** views.
 
+* **workspace-show-invisible**
+
+  Clears the current workspace and populates it with all **invisible** views
+  that belong to that workspace.
+
 * **workspace-switch-to-sheet-[0-9|alternate|current]**
 
   Clears the current workspace and populates it with all views that are a member

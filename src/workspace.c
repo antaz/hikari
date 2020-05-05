@@ -900,6 +900,22 @@ hikari_workspace_show_invisible_sheet_views(struct hikari_workspace *workspace)
 }
 
 void
+hikari_workspace_show_invisible(struct hikari_workspace *workspace)
+{
+  hikari_workspace_clear(workspace);
+
+  struct hikari_view *view;
+  wl_list_for_each (view, &workspace->output->views, output_views) {
+    if (hikari_view_is_invisible(view)) {
+      assert(hikari_view_is_hidden(view));
+      hikari_view_show(view);
+    }
+  }
+
+  hikari_server_cursor_focus();
+}
+
+void
 hikari_workspace_show_all_invisible_views(struct hikari_workspace *workspace)
 {
   hikari_workspace_clear(workspace);
