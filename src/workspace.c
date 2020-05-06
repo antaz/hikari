@@ -1008,7 +1008,7 @@ hikari_workspace_sheet_show_group(struct hikari_workspace *workspace)
   FOCUS_GUARD(workspace, focus_view);
 
   struct hikari_group *group = focus_view->group;
-
+  hikari_view_raise(focus_view);
   hikari_workspace_clear(workspace);
   hikari_sheet_show_group(workspace->sheet, group);
   hikari_server_cursor_focus();

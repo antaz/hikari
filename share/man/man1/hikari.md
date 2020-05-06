@@ -432,8 +432,9 @@ Workspace actions
 
 * **workspace-show-group**
 
-  Clears the current workspace and populates it with all views that are a member
-  of the group of the focused view. This includes **invisible** views.
+  Raises the focused view, clears the current workspace and populates it with
+  all views that are a member of the group of the focused view. This includes
+  **invisible** views.
 
 * **workspace-show-invisible**
 
