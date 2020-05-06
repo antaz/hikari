@@ -39,8 +39,8 @@ several states.
 
 * **tiled**
 
-  A *tiled* _view_ is part of a layout. *Tiled* _views_ cannot be moved around
-  on the workspace.
+  A *tiled* _view_ is part of a layout. They can never be *floating* or
+  *invisible*.
 
 * **floating**
 
