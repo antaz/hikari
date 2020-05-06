@@ -1,6 +1,5 @@
 OS != uname
 VERSION ?= "CURRENT"
-INSTALL_GROUP != id -gn
 PREFIX ?= /usr/local
 ETC_PREFIX ?= ${PREFIX}
 
@@ -61,6 +60,10 @@ WAYLAND_PROTOCOLS != pkg-config --variable pkgdatadir wayland-protocols
 
 .PHONY: distclean clean clean-doc doc dist install uninstall
 .PATH: src
+
+# Allow specification of /extra/ CFLAGS and LDFLAGS
+CFLAGS += ${CFLAGS_EXTRA}
+LDFLAGS += ${LDFLAGS_EXTRA}
 
 .ifdef DEBUG
 CFLAGS += -g -O0 -fsanitize=address
@@ -147,7 +150,7 @@ version.h:
 	echo "#define HIKARI_VERSION \"${VERSION}\"" >> version.h
 
 hikari: version.h xdg-shell-protocol.h wlr-layer-shell-unstable-v1-protocol.h ${OBJS}
-	${CC} ${LDFLAGS} ${CFLAGS} ${INCLUDES} ${LIBS} ${OBJS} -o ${.TARGET}
+	${CC} ${LDFLAGS} ${CFLAGS} ${INCLUDES} -o ${.TARGET} ${OBJS} ${LIBS}
 
 xdg-shell-protocol.h:
 	wayland-scanner server-header ${WAYLAND_PROTOCOLS}/stable/xdg-shell/xdg-shell.xml ${.TARGET}
@@ -156,7 +159,7 @@ wlr-layer-shell-unstable-v1-protocol.h:
 	wayland-scanner server-header protocol/wlr-layer-shell-unstable-v1.xml ${.TARGET}
 
 hikari-unlocker: hikari_unlocker.c
-	${CC} -lpam hikari_unlocker.c -o hikari-unlocker
+	${CC} ${CFLAGS_EXTRA} ${LDFLAGS_EXTRA} -o hikari-unlocker hikari_unlocker.c -lpam
 
 clean-doc:
 	@test -e _darcs && echo "cleaning manpage" ||:
@@ -203,19 +206,19 @@ distclean: clean-doc
 dist: distclean hikari-${VERSION}.tar.gz
 
 install: hikari hikari-unlocker share/man/man1/hikari.1
-	mkdir -p ${PREFIX}/bin
-	mkdir -p ${PREFIX}/share/man/man1
-	mkdir -p ${ETC_PREFIX}/etc/hikari
-	mkdir -p ${ETC_PREFIX}/etc/pam.d
-	install -m 4555 -g ${INSTALL_GROUP} hikari hikari-unlocker ${PREFIX}/bin
-	install -m 644 -g ${INSTALL_GROUP} share/man/man1/hikari.1 ${PREFIX}/share/man/man1
-	install -m 644 -g ${INSTALL_GROUP} etc/hikari/hikari.conf ${ETC_PREFIX}/etc/hikari
-	install -m 644 -g ${INSTALL_GROUP} etc/pam.d/hikari-unlocker.${OS} ${ETC_PREFIX}/etc/pam.d/hikari-unlocker
+	mkdir -p ${DESTDIR}/${PREFIX}/bin
+	mkdir -p ${DESTDIR}/${PREFIX}/share/man/man1
+	mkdir -p ${DESTDIR}/${ETC_PREFIX}/etc/hikari
+	mkdir -p ${DESTDIR}/${ETC_PREFIX}/etc/pam.d
+	install -m 4555 hikari hikari-unlocker ${DESTDIR}/${PREFIX}/bin
+	install -m 644 share/man/man1/hikari.1 ${DESTDIR}/${PREFIX}/share/man/man1
+	install -m 644 etc/hikari/hikari.conf ${DESTDIR}/${ETC_PREFIX}/etc/hikari
+	install -m 644 etc/pam.d/hikari-unlocker.${OS} ${DESTDIR}/${ETC_PREFIX}/etc/pam.d/hikari-unlocker
 
 uninstall:
-	-rm ${PREFIX}/bin/hikari
-	-rm ${PREFIX}/bin/hikari-unlocker
-	-rm ${PREFIX}/share/man/man1/hikari.1
-	-rm ${ETC_PREFIX}/etc/pam.d/hikari-unlocker
-	-rm ${ETC_PREFIX}/etc/hikari/hikari.conf
-	-rmdir ${ETC_PREFIX}/etc/hikari
+	-rm ${DESTDIR}/${PREFIX}/bin/hikari
+	-rm ${DESTDIR}/${PREFIX}/bin/hikari-unlocker
+	-rm ${DESTDIR}/${PREFIX}/share/man/man1/hikari.1
+	-rm ${DESTDIR}/${ETC_PREFIX}/etc/pam.d/hikari-unlocker
+	-rm ${DESTDIR}/${ETC_PREFIX}/etc/hikari/hikari.conf
+	-rmdir ${DESTDIR}/${ETC_PREFIX}/etc/hikari
