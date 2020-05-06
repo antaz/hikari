@@ -1056,23 +1056,6 @@ hikari_workspace_hide_group(struct hikari_workspace *workspace)
 }
 
 void
-hikari_workspace_show_all_group_views(struct hikari_workspace *workspace)
-{
-  FOCUS_GUARD(workspace, focus_view);
-
-  struct hikari_group *group = focus_view->group;
-
-  hikari_workspace_clear(workspace);
-
-  struct hikari_view *view = NULL;
-  wl_list_for_each_reverse (view, &group->views, group_views) {
-    hikari_view_show(view);
-  }
-
-  hikari_server_cursor_focus();
-}
-
-void
 hikari_workspace_show_all_sheet_views(struct hikari_workspace *workspace)
 {
   struct hikari_view *view;
