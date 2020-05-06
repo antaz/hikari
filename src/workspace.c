@@ -1032,7 +1032,7 @@ hikari_workspace_show_all(struct hikari_workspace *workspace)
 
   struct hikari_view *view;
   wl_list_for_each_reverse (view, &workspace->output->views, output_views) {
-    assert(hikari_view_is_hidden());
+    assert(hikari_view_is_hidden(view));
     hikari_view_show(view);
   }
 
