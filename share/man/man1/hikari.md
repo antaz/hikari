@@ -574,7 +574,22 @@ can be used to specify certain properties you want for that view to apply.
 
 * **position**
 
-  Positions a newly created view to the given coordinates.
+  Positions a newly created view to the given coordinates. **hikari** allows two
+  ways to define a view position. One way is to specify absolute position
+  stating the **x** and **y** coordinates as a object, the order one is by
+  stating them as one of the following options:
+
+  * *bottom-left*
+  * *bottom-middle*
+  * *bottom-right*
+  * *center*
+  * *center-left*
+  * *center-right*
+  * *top-left*
+  * *top-middle*
+  * *top-right*
+
+  This allows positioning a view relative to the ouptut.
 
 * **sheet**
 

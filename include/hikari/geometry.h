@@ -28,6 +28,42 @@ void
 hikari_geometry_constrain_relative(
     struct wlr_box *geometry, struct wlr_box *usable_area, int x, int y);
 
+void
+hikari_geometry_position_bottom_left(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y);
+
+void
+hikari_geometry_position_bottom_middle(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y);
+
+void
+hikari_geometry_position_bottom_right(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y);
+
+void
+hikari_geometry_position_center(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y);
+
+void
+hikari_geometry_position_center_left(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y);
+
+void
+hikari_geometry_position_center_right(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y);
+
+void
+hikari_geometry_position_top_left(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y);
+
+void
+hikari_geometry_position_top_middle(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y);
+
+void
+hikari_geometry_position_top_right(
+    struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y);
+
 #define FIXED_SCALE(name)                                                      \
   static inline int hikari_geometry_scale_fixed_##name(                        \
       struct wlr_box *src, double scale, int gap)                              \

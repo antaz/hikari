@@ -600,11 +600,12 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
       hikari_configuration_resolve_output(
           hikari_configuration, wlr_output->name);
 
-  if (output_config != NULL && output_config->position.explicit_position) {
-    wlr_output_layout_add(hikari_server.output_layout,
-        wlr_output,
-        output_config->position.x,
-        output_config->position.y);
+  if (output_config != NULL &&
+      output_config->position.type == HIKARI_POSITION_CONFIG_TYPE_ABSOLUTE) {
+    int x = output_config->position.config.absolute.x;
+    int y = output_config->position.config.absolute.y;
+
+    wlr_output_layout_add(hikari_server.output_layout, wlr_output, x, y);
   } else {
     wlr_output_layout_add_auto(hikari_server.output_layout, wlr_output);
   }

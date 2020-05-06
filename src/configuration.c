@@ -13,6 +13,7 @@
 #include <hikari/color.h>
 #include <hikari/command.h>
 #include <hikari/exec.h>
+#include <hikari/geometry.h>
 #include <hikari/keybinding.h>
 #include <hikari/keyboard.h>
 #include <hikari/layout.h>
@@ -518,6 +519,8 @@ hikari_configuration_resolve_view_autoconf(
   struct hikari_view_autoconf *view_autoconf =
       resolve_autoconf(configuration, app_id);
 
+  struct hikari_output *output;
+
   if (view_autoconf != NULL) {
     *focus = view_autoconf->focus;
 
@@ -534,14 +537,68 @@ hikari_configuration_resolve_view_autoconf(
       *group = hikari_server_find_or_create_group(app_id);
     }
 
-    if (view_autoconf->position.explicit_position) {
-      *x = view_autoconf->position.x;
-      *y = view_autoconf->position.y;
-    } else {
-      struct hikari_output *output = hikari_server.workspace->output;
+    switch (view_autoconf->position.type) {
+      case HIKARI_POSITION_CONFIG_TYPE_ABSOLUTE:
+        *x = view_autoconf->position.config.absolute.x;
+        *y = view_autoconf->position.config.absolute.y;
+        break;
 
-      *x = hikari_server.cursor.wlr_cursor->x - output->geometry.x;
-      *y = hikari_server.cursor.wlr_cursor->y - output->geometry.y;
+      case HIKARI_POSITION_CONFIG_TYPE_AUTO:
+        output = hikari_server.workspace->output;
+
+        *x = hikari_server.cursor.wlr_cursor->x - output->geometry.x;
+        *y = hikari_server.cursor.wlr_cursor->y - output->geometry.y;
+        break;
+
+      case HIKARI_POSITION_CONFIG_TYPE_RELATIVE:
+        output = hikari_server.workspace->output;
+
+        switch (view_autoconf->position.config.relative) {
+          case HIKARI_POSITION_CONFIG_RELATIVE_BOTTOM_LEFT:
+            hikari_geometry_position_bottom_left(
+                hikari_view_border_geometry(view), &output->usable_area, x, y);
+            break;
+
+          case HIKARI_POSITION_CONFIG_RELATIVE_BOTTOM_MIDDLE:
+            hikari_geometry_position_bottom_middle(
+                hikari_view_border_geometry(view), &output->usable_area, x, y);
+            break;
+
+          case HIKARI_POSITION_CONFIG_RELATIVE_BOTTOM_RIGHT:
+            hikari_geometry_position_bottom_right(
+                hikari_view_border_geometry(view), &output->usable_area, x, y);
+            break;
+
+          case HIKARI_POSITION_CONFIG_RELATIVE_CENTER:
+            hikari_geometry_position_center(
+                hikari_view_border_geometry(view), &output->usable_area, x, y);
+            break;
+
+          case HIKARI_POSITION_CONFIG_RELATIVE_CENTER_LEFT:
+            hikari_geometry_position_center_left(
+                hikari_view_border_geometry(view), &output->usable_area, x, y);
+            break;
+
+          case HIKARI_POSITION_CONFIG_RELATIVE_CENTER_RIGHT:
+            hikari_geometry_position_center_right(
+                hikari_view_border_geometry(view), &output->usable_area, x, y);
+            break;
+
+          case HIKARI_POSITION_CONFIG_RELATIVE_TOP_LEFT:
+            hikari_geometry_position_top_left(
+                hikari_view_border_geometry(view), &output->usable_area, x, y);
+            break;
+
+          case HIKARI_POSITION_CONFIG_RELATIVE_TOP_MIDDLE:
+            hikari_geometry_position_top_middle(
+                hikari_view_border_geometry(view), &output->usable_area, x, y);
+            break;
+
+          case HIKARI_POSITION_CONFIG_RELATIVE_TOP_RIGHT:
+            hikari_geometry_position_top_right(
+                hikari_view_border_geometry(view), &output->usable_area, x, y);
+        }
+        break;
     }
 
     if (view_autoconf->mark != NULL && view_autoconf->mark->view == NULL) {
@@ -556,7 +613,7 @@ hikari_configuration_resolve_view_autoconf(
       hikari_view_set_floating(view);
     }
   } else {
-    struct hikari_output *output = hikari_server.workspace->output;
+    output = hikari_server.workspace->output;
 
     *sheet = hikari_server.workspace->sheet;
     *group = hikari_server_find_or_create_group(app_id);
@@ -855,14 +912,44 @@ parse_autoconf(struct hikari_configuration *configuration,
 
       (*autoconf)->mark = &hikari_marks[mark_name[0] - 'a'];
     } else if (!strcmp(key, "position")) {
-      if (!parse_position(
-              cur, &(*autoconf)->position.x, &(*autoconf)->position.y)) {
-        fprintf(stderr,
-            "configuration error: failed to parse \"views\" \"position\"\n");
-        goto done;
+      ucl_type_t type = ucl_object_type(cur);
+      int x;
+      int y;
+      const char *relative;
+      enum hikari_position_config_relative relative_config;
+
+      switch (type) {
+        case UCL_OBJECT:
+          if (!parse_position(cur, &x, &y)) {
+            fprintf(stderr,
+                "configuration error: failed to parse \"views\" "
+                "\"position\"\n");
+            goto done;
+          }
+
+          hikari_position_config_set_absolute(&(*autoconf)->position, x, y);
+          break;
+
+        case UCL_STRING:
+          if (!ucl_object_tostring_safe(cur, &relative) ||
+              !hikari_position_config_relative_parse(
+                  &relative_config, relative)) {
+            fprintf(stderr,
+                "configuration error: failed to parse \"views\" "
+                "\"position\"\n");
+            goto done;
+          }
+
+          hikari_position_config_set_relative(
+              &(*autoconf)->position, relative_config);
+          break;
+
+        default:
+          fprintf(stderr,
+              "configuration error: failed to parse \"views\" \"position\"\n");
+          goto done;
       }
 
-      (*autoconf)->position.explicit_position = true;
     } else if (!strcmp(key, "focus")) {
       bool focus;
 
@@ -1997,13 +2084,15 @@ parse_output_config(struct hikari_configuration *configuration,
         goto done;
       }
     } else if (!strcmp(key, "position")) {
-      if (!parse_position(cur, &position_config.x, &position_config.y)) {
+      int x;
+      int y;
+      if (!parse_position(cur, &x, &y)) {
         fprintf(stderr,
             "configuration error: failed to parse output \"position\"\n");
         goto done;
       }
 
-      position_config.explicit_position = true;
+      hikari_position_config_set_absolute(&position_config, x, y);
     } else {
       fprintf(stderr,
           "configuration error: unknown \"outputs\" configuration key \"%s\"\n",
@@ -2260,11 +2349,14 @@ hikari_configuration_reload(char *config_path)
               hikari_configuration, output->wlr_output->name);
 
       if (output_config != NULL) {
-        if (output_config->position.explicit_position &&
-            (output->geometry.x != output_config->position.x ||
-                output->geometry.y != output_config->position.y)) {
-          hikari_output_move(
-              output, output_config->position.x, output_config->position.y);
+        if (output_config->position.type ==
+            HIKARI_POSITION_CONFIG_TYPE_ABSOLUTE) {
+          int x = output_config->position.config.absolute.x;
+          int y = output_config->position.config.absolute.y;
+
+          if (output->geometry.x != x || output->geometry.y != y) {
+            hikari_output_move(output, x, y);
+          }
         }
 
         if (output_config->background != NULL) {

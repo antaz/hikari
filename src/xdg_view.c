@@ -119,6 +119,7 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   struct hikari_output *output = hikari_server.workspace->output;
 
   wlr_xdg_surface_get_geometry(xdg_view->surface, geometry);
+  hikari_view_refresh_geometry(view, geometry);
 
   const char *app_id = xdg_view->surface->toplevel->app_id;
 

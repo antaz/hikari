@@ -129,6 +129,10 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
 
   view->border.state = HIKARI_BORDER_INACTIVE;
 
+  geometry->width = xwayland_view->surface->width;
+  geometry->height = xwayland_view->surface->height;
+  hikari_view_refresh_geometry(view, geometry);
+
   struct hikari_sheet *sheet;
   struct hikari_group *group;
   int x;
@@ -140,9 +144,6 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
 
   hikari_configuration_resolve_view_autoconf(
       hikari_configuration, app_id, view, &sheet, &group, &x, &y, focus);
-
-  geometry->width = xwayland_view->surface->width;
-  geometry->height = xwayland_view->surface->height;
 
   hikari_view_set_title(view, xwayland_view->surface->title);
   hikari_view_manage(view, sheet, group);
