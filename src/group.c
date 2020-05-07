@@ -116,7 +116,7 @@ void
 hikari_group_show(struct hikari_group *group)
 {
   struct hikari_view *view;
-  wl_list_for_each (view, &group->views, group_views) {
+  wl_list_for_each_reverse (view, &group->views, group_views) {
     assert(hikari_view_is_hidden(view));
     hikari_view_show(view);
   }
