@@ -574,6 +574,16 @@ hikari_view_show(struct hikari_view *view)
   hikari_view_damage_whole(view);
 }
 
+static void
+hide(struct hikari_view *view)
+{
+  wl_list_remove(&view->workspace_views);
+
+  decrease_group_visibility(view);
+
+  hikari_view_set_hidden(view);
+}
+
 void
 hikari_view_hide(struct hikari_view *view)
 {
@@ -589,13 +599,9 @@ hikari_view_hide(struct hikari_view *view)
     hikari_workspace_focus_view(view->sheet->workspace, NULL);
   }
 
-  wl_list_remove(&view->workspace_views);
-
-  decrease_group_visibility(view);
+  hide(view);
 
   hikari_view_damage_whole(view);
-
-  hikari_view_set_hidden(view);
 }
 
 void
@@ -1516,4 +1522,22 @@ hikari_view_activate(struct hikari_view *view, bool active)
     }
     view->activate(view, active);
   }
+}
+
+void
+hikari_view_migrate(
+    struct hikari_view *view, struct hikari_sheet *sheet, int x, int y)
+{
+  struct wlr_box geometry;
+
+  hikari_indicator_damage(&hikari_server.indicator, view);
+  hikari_view_damage_whole(view);
+
+  memcpy(&geometry, &view->geometry, sizeof(struct wlr_box));
+  geometry.x = x;
+  geometry.y = y;
+
+  hide(view);
+
+  queue_migrate(view, sheet, &geometry, false);
 }

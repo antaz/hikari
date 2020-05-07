@@ -218,6 +218,10 @@ hikari_view_refresh_geometry(
 void
 hikari_view_activate(struct hikari_view *view, bool active);
 
+void
+hikari_view_migrate(
+    struct hikari_view *view, struct hikari_sheet *sheet, int x, int y);
+
 static inline bool
 hikari_view_is_dirty(struct hikari_view *view)
 {

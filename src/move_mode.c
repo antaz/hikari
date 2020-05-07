@@ -61,15 +61,43 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
 static void
 cursor_move(uint32_t time_msec)
 {
+  double lx = hikari_server.cursor.wlr_cursor->x;
+  double ly = hikari_server.cursor.wlr_cursor->y;
+
+  struct wlr_output *wlr_output =
+      wlr_output_layout_output_at(hikari_server.output_layout, lx, ly);
+
+  if (wlr_output == NULL) {
+    return;
+  }
+
+  struct hikari_output *output = wlr_output->data;
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
   assert(focus_view != NULL);
 
-  struct hikari_output *output = focus_view->output;
+  struct hikari_output *view_output = focus_view->output;
 
-  hikari_view_move_absolute(focus_view,
-      hikari_server.cursor.wlr_cursor->x - output->geometry.x,
-      hikari_server.cursor.wlr_cursor->y - output->geometry.y);
+  if (output == view_output) {
+    hikari_view_move_absolute(
+        focus_view, lx - view_output->geometry.x, ly - view_output->geometry.y);
+  } else {
+    struct hikari_sheet *sheet = output->workspace->sheet;
+
+    hikari_view_migrate(
+        focus_view, sheet, lx - output->geometry.x, ly - output->geometry.y);
+
+    hikari_indicator_update_sheet(&hikari_server.indicator,
+        output,
+        sheet,
+        hikari_configuration->indicator_insert,
+        hikari_view_is_invisible(focus_view),
+        hikari_view_is_floating(focus_view));
+
+    hikari_server.workspace->focus_view = NULL;
+    hikari_server.workspace = output->workspace;
+    hikari_server.workspace->focus_view = focus_view;
+  }
 }
 
 static void
