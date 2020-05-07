@@ -67,6 +67,7 @@ commit_handler(struct wl_listener *listener, void *data)
             WLR_EDGE_LEFT | WLR_EDGE_RIGHT | WLR_EDGE_TOP | WLR_EDGE_BOTTOM);
         break;
 
+      case HIKARI_OPERATION_TYPE_MIGRATE:
       case HIKARI_OPERATION_TYPE_RESET:
       case HIKARI_OPERATION_TYPE_UNMAXIMIZE:
         wlr_xdg_toplevel_set_tiled(xdg_view->surface, WLR_EDGE_NONE);

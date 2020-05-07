@@ -180,9 +180,12 @@ cancel_tile(struct hikari_view *view)
 }
 
 static void
-queue_reset(struct hikari_view *view, bool center, bool migrate)
+prepare_reset(struct hikari_view *view,
+    enum hikari_operation_type type,
+    struct wlr_box *geometry,
+    bool center)
 {
-  struct wlr_box *geometry = hikari_view_geometry(view);
+  struct wlr_box *view_geometry = hikari_view_geometry(view);
   struct hikari_operation *op = &view->pending_operation;
   struct hikari_tile *tile = view->tile;
 
@@ -193,24 +196,19 @@ queue_reset(struct hikari_view *view, bool center, bool migrate)
     hikari_tile_detach(tile);
   }
 
-  op->type = HIKARI_OPERATION_TYPE_RESET;
-  op->geometry = view->geometry;
+  op->type = type;
   op->center = center;
-  op->migrate = migrate;
+  memcpy(&op->geometry, geometry, sizeof(struct wlr_box));
 
-  if (geometry->width == view->geometry.width &&
-      geometry->height == view->geometry.height) {
-    hikari_view_commit_pending_operation(view, geometry);
+  if (view_geometry->width == geometry->width &&
+      view_geometry->height == geometry->height) {
+    hikari_view_commit_pending_operation(view, view_geometry);
   } else {
-    op->serial =
-        view->resize(view, view->geometry.width, view->geometry.height);
+    op->serial = view->resize(view, geometry->width, geometry->height);
 
     if (view->move_resize != NULL) {
-      view->move_resize(view,
-          op->geometry.x,
-          op->geometry.y,
-          op->geometry.width,
-          op->geometry.height);
+      view->move_resize(
+          view, geometry->x, geometry->y, geometry->width, geometry->height);
     }
   }
 
@@ -219,7 +217,16 @@ queue_reset(struct hikari_view *view, bool center, bool migrate)
 }
 
 static void
-queue_migrate(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
+queue_reset(struct hikari_view *view, bool center)
+{
+  prepare_reset(view, HIKARI_OPERATION_TYPE_RESET, &view->geometry, center);
+}
+
+static void
+queue_migrate(struct hikari_view *view,
+    struct hikari_sheet *sheet,
+    struct wlr_box *geometry,
+    bool center)
 {
   if (!hikari_view_is_hidden(view)) {
     hikari_view_hide(view);
@@ -230,7 +237,7 @@ queue_migrate(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
 
   move_to_top(view);
 
-  queue_reset(view, center, true);
+  prepare_reset(view, HIKARI_OPERATION_TYPE_MIGRATE, geometry, center);
 }
 
 void
@@ -891,7 +898,7 @@ hikari_view_toggle_floating(struct hikari_view *view)
 void
 hikari_view_reset_geometry(struct hikari_view *view)
 {
-  queue_reset(view, true, false);
+  queue_reset(view, true);
 }
 
 static void
@@ -917,7 +924,7 @@ pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
     }
   } else {
     if (migrate) {
-      queue_migrate(view, sheet, center);
+      queue_migrate(view, sheet, &view->geometry, center);
     } else {
       if (hikari_sheet_is_visible(sheet)) {
         place_visibly_above(view, sheet->workspace);
@@ -1253,8 +1260,35 @@ commit_resize(struct hikari_view *view, struct hikari_operation *operation)
 }
 
 static void
+precommit_reset(struct hikari_view *view, struct hikari_operation *operation)
+{
+  hikari_indicator_damage(&hikari_server.indicator, view);
+
+  if (hikari_view_is_tiled(view)) {
+    assert(!hikari_tile_is_attached(view->tile));
+    hikari_free(view->tile);
+    view->tile = NULL;
+  }
+
+  if (hikari_view_is_maximized(view)) {
+    hikari_maximized_state_destroy(view->maximized_state);
+    view->maximized_state = NULL;
+
+    if (!view->use_csd) {
+      if (view == hikari_server.workspace->focus_view) {
+        view->border.state = HIKARI_BORDER_ACTIVE;
+      } else {
+        view->border.state = HIKARI_BORDER_INACTIVE;
+      }
+    }
+  }
+}
+
+static void
 commit_migrate(struct hikari_view *view, struct hikari_operation *operation)
 {
+  precommit_reset(view, operation);
+
   hikari_view_refresh_geometry(view, &operation->geometry);
 
   struct hikari_sheet *sheet = view->sheet;
@@ -1278,32 +1312,8 @@ commit_migrate(struct hikari_view *view, struct hikari_operation *operation)
 static void
 commit_reset(struct hikari_view *view, struct hikari_operation *operation)
 {
-  hikari_indicator_damage(&hikari_server.indicator, view);
-
-  if (hikari_view_is_tiled(view)) {
-    assert(!hikari_tile_is_attached(view->tile));
-    hikari_free(view->tile);
-    view->tile = NULL;
-  }
-
-  if (hikari_view_is_maximized(view)) {
-    hikari_maximized_state_destroy(view->maximized_state);
-    view->maximized_state = NULL;
-
-    if (!view->use_csd) {
-      if (view == hikari_server.workspace->focus_view) {
-        view->border.state = HIKARI_BORDER_ACTIVE;
-      } else {
-        view->border.state = HIKARI_BORDER_INACTIVE;
-      }
-    }
-  }
-
-  if (operation->migrate) {
-    commit_migrate(view, &view->pending_operation);
-  } else {
-    commit_pending_operation(view, operation);
-  }
+  precommit_reset(view, operation);
+  commit_pending_operation(view, operation);
 }
 
 static void
@@ -1469,6 +1479,10 @@ commit_operation(struct hikari_operation *operation, struct hikari_view *view)
 
     case HIKARI_OPERATION_TYPE_TILE:
       commit_tile(view, operation);
+      break;
+
+    case HIKARI_OPERATION_TYPE_MIGRATE:
+      commit_migrate(view, operation);
       break;
   }
 }

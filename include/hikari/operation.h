@@ -12,14 +12,14 @@ enum hikari_operation_type {
   HIKARI_OPERATION_TYPE_FULL_MAXIMIZE,
   HIKARI_OPERATION_TYPE_VERTICAL_MAXIMIZE,
   HIKARI_OPERATION_TYPE_HORIZONTAL_MAXIMIZE,
-  HIKARI_OPERATION_TYPE_TILE
+  HIKARI_OPERATION_TYPE_TILE,
+  HIKARI_OPERATION_TYPE_MIGRATE
 };
 
 struct hikari_operation {
   enum hikari_operation_type type;
   bool dirty;
   bool center;
-  bool migrate;
   uint32_t serial;
   struct wlr_box geometry;
   struct hikari_tile *tile;
