@@ -24,9 +24,13 @@ resize(struct hikari_view *view, int width, int height)
       (struct hikari_xwayland_view *)view;
 
   struct wlr_box *geometry = hikari_view_geometry(view);
+  struct hikari_output *output = view->output;
 
-  wlr_xwayland_surface_configure(
-      xwayland_view->surface, geometry->x, geometry->y, width, height);
+  wlr_xwayland_surface_configure(xwayland_view->surface,
+      output->geometry.x + geometry->x,
+      output->geometry.y + geometry->y,
+      width,
+      height);
 
   return 0;
 }
@@ -37,7 +41,13 @@ move_resize(struct hikari_view *view, int x, int y, int width, int height)
   struct hikari_xwayland_view *xwayland_view =
       (struct hikari_xwayland_view *)view;
 
-  wlr_xwayland_surface_configure(xwayland_view->surface, x, y, width, height);
+  struct hikari_output *output = view->output;
+
+  wlr_xwayland_surface_configure(xwayland_view->surface,
+      output->geometry.x + x,
+      output->geometry.y + y,
+      width,
+      height);
 }
 
 static void
@@ -47,9 +57,13 @@ move(struct hikari_view *view, int x, int y)
       (struct hikari_xwayland_view *)view;
 
   struct wlr_box *geometry = hikari_view_geometry(view);
+  struct hikari_output *output = view->output;
 
-  wlr_xwayland_surface_configure(
-      xwayland_view->surface, x, y, geometry->width, geometry->height);
+  wlr_xwayland_surface_configure(xwayland_view->surface,
+      output->geometry.x + x,
+      output->geometry.y + y,
+      geometry->width,
+      geometry->height);
 }
 
 static void
@@ -68,16 +82,22 @@ commit_handler(struct wl_listener *listener, void *data)
     struct wlr_xwayland_surface *surface = xwayland_view->surface;
     struct hikari_output *output = view->output;
 
+    // Xwayland surfaces use "output layout coordinates", hikari's coordinates
+    // are relative to output - convert
+    const int surface_x_in_hikari = surface->x - output->geometry.x;
+    const int surface_y_in_hikari = surface->y - output->geometry.y;
+
     if (surface->width != geometry->width ||
-        surface->height != geometry->height || surface->x != geometry->x ||
-        surface->y != geometry->y) {
+        surface->height != geometry->height ||
+        surface_x_in_hikari != geometry->x ||
+        surface_y_in_hikari != geometry->y) {
       if (!hikari_view_is_hidden(view)) {
         hikari_indicator_damage(&hikari_server.indicator, view);
         hikari_view_damage_whole(view);
       }
 
-      geometry->x = surface->x;
-      geometry->y = surface->y;
+      geometry->x = surface_x_in_hikari;
+      geometry->y = surface_y_in_hikari;
       geometry->width = surface->width;
       geometry->height = surface->height;
 
@@ -151,8 +171,8 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
   hikari_geometry_constrain_absolute(geometry, &output->usable_area, x, y);
 
   wlr_xwayland_surface_configure(xwayland_view->surface,
-      view->geometry.x,
-      view->geometry.y,
+      output->geometry.x + view->geometry.x,
+      output->geometry.y + view->geometry.y,
       geometry->width,
       geometry->height);
 
@@ -276,19 +296,19 @@ request_configure_handler(struct wl_listener *listener, void *data)
 
   struct hikari_sheet *sheet = xwayland_view->view.sheet;
 
-  struct wlr_box *usable_area;
-  if (sheet != NULL) {
-    usable_area = &xwayland_view->view.output->usable_area;
-  } else {
-    usable_area = &hikari_server.workspace->output->usable_area;
-  }
+  struct hikari_output *output = sheet != NULL
+                                     ? xwayland_view->view.output
+                                     : hikari_server.workspace->output;
+  struct wlr_box *usable_area = &output->usable_area;
 
-  hikari_geometry_constrain_absolute(
-      &geometry, usable_area, event->x, event->y);
+  hikari_geometry_constrain_absolute(&geometry,
+      usable_area,
+      event->x - output->geometry.x,
+      event->y - output->geometry.y);
 
   wlr_xwayland_surface_configure(xwayland_surface,
-      geometry.x,
-      geometry.y,
+      geometry.x + output->geometry.x,
+      geometry.y + output->geometry.y,
       geometry.width,
       geometry.height);
 }
