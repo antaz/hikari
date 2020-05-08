@@ -893,6 +893,16 @@ are available.
   Sets mouse acceleration for the pointer device to a value between **-1** and
   **1**.
 
+* **disable-while-typing**
+
+  Enable or disable *disable-while-typing* if available. This setting expects a
+  boolean value.
+
+* **natural-scrolling**
+
+  Enable or disable *natural-scrolling* if available. This setting expects a
+  boolean value.
+
 * **scroll-button**
 
   Configures the pointer scroll button. Valid values are *right*, *middle*,
@@ -900,7 +910,22 @@ are available.
 
 * **scroll-method**
 
-  Sets the pointers scroll method. Valid values are *on-button-down*.
+  Sets the pointers scroll method. Valid values are *no-scroll*,
+  *on-button-down*.
+
+* **tap**
+
+  Enable or disable *tap* if available. This setting expects a boolean value.
+
+* **tap-drag**
+
+  Enable or disable *tap-drag* if available. This setting expects a boolean
+  value.
+
+* **tap-drag-lock**
+
+  Enable or disable *tap-drag-lock* if available. This setting expects a boolean
+  value.
 
 Configuring the *System mouse* input device could look like this.
 

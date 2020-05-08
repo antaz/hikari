@@ -14,9 +14,15 @@ hikari_pointer_config_init(
 
   pointer_config->name = hikari_malloc(keylen + 1);
   strcpy(pointer_config->name, name);
-  pointer_config->accel = 0;
-  pointer_config->scroll_method = LIBINPUT_CONFIG_SCROLL_NO_SCROLL;
-  pointer_config->scroll_button = 0;
+
+  pointer_config->accel.configured = false;
+  pointer_config->disable_while_typing.configured = false;
+  pointer_config->natural_scrolling.configured = false;
+  pointer_config->scroll_button.configured = false;
+  pointer_config->scroll_method.configured = false;
+  pointer_config->tap.configured = false;
+  pointer_config->tap_drag.configured = false;
+  pointer_config->tap_drag_lock.configured = false;
 }
 
 void

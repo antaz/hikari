@@ -1877,7 +1877,8 @@ parse_pointer_config(struct hikari_configuration *configuration,
             stderr, "configuration error: expected float between -1 and 1\n");
         goto done;
       }
-      pointer_config->accel = accel;
+
+      hikari_pointer_config_set_accel(pointer_config, accel);
     } else if (!strcmp(key, "scroll-method")) {
       const char *scroll_method;
       if (!ucl_object_tostring_safe(cur, &scroll_method)) {
@@ -1889,7 +1890,11 @@ parse_pointer_config(struct hikari_configuration *configuration,
       }
 
       if (!strcmp(scroll_method, "on-button-down")) {
-        pointer_config->scroll_method = LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN;
+        hikari_pointer_config_set_scroll_method(
+            pointer_config, LIBINPUT_CONFIG_SCROLL_ON_BUTTON_DOWN);
+      } else if (!strcmp(scroll_method, "no-scroll")) {
+        hikari_pointer_config_set_scroll_method(
+            pointer_config, LIBINPUT_CONFIG_SCROLL_NO_SCROLL);
       } else {
         fprintf(stderr,
             "configuration error: unkown \"scroll-method\" \"%s\" for \"%s\"\n",
@@ -1912,7 +1917,83 @@ parse_pointer_config(struct hikari_configuration *configuration,
         goto done;
       }
 
-      pointer_config->scroll_button = scroll_button_keycode;
+      hikari_pointer_config_set_scroll_button(
+          pointer_config, scroll_button_keycode);
+    } else if (!strcmp(key, "disable-while-typing")) {
+      bool disable_while_typing;
+      if (!ucl_object_toboolean_safe(cur, &disable_while_typing)) {
+        fprintf(stderr,
+            "configuration error: expected boolean for "
+            "\"disable-while-typing\"\n");
+        goto done;
+      }
+
+      if (disable_while_typing) {
+        hikari_pointer_config_set_disable_while_typing(
+            pointer_config, LIBINPUT_CONFIG_DWT_ENABLED);
+      } else {
+        hikari_pointer_config_set_disable_while_typing(
+            pointer_config, LIBINPUT_CONFIG_DWT_DISABLED);
+      }
+    } else if (!strcmp(key, "tap")) {
+      bool tap;
+      if (!ucl_object_toboolean_safe(cur, &tap)) {
+        fprintf(stderr,
+            "configuration error: expected boolean for "
+            "\"tap\"\n");
+        goto done;
+      }
+
+      if (tap) {
+        hikari_pointer_config_set_tap(
+            pointer_config, LIBINPUT_CONFIG_TAP_ENABLED);
+      } else {
+        hikari_pointer_config_set_tap(
+            pointer_config, LIBINPUT_CONFIG_TAP_DISABLED);
+      }
+    } else if (!strcmp(key, "tap-drag")) {
+      bool tap_drag;
+      if (!ucl_object_toboolean_safe(cur, &tap_drag)) {
+        fprintf(stderr,
+            "configuration error: expected boolean for "
+            "\"tap-drag\"\n");
+        goto done;
+      }
+
+      if (tap_drag) {
+        hikari_pointer_config_set_tap_drag(
+            pointer_config, LIBINPUT_CONFIG_DRAG_ENABLED);
+      } else {
+        hikari_pointer_config_set_tap_drag(
+            pointer_config, LIBINPUT_CONFIG_DRAG_DISABLED);
+      }
+    } else if (!strcmp(key, "tap-drag-lock")) {
+      bool tap_drag_lock;
+      if (!ucl_object_toboolean_safe(cur, &tap_drag_lock)) {
+        fprintf(stderr,
+            "configuration error: expected boolean for "
+            "\"tap-drag-lock\"\n");
+        goto done;
+      }
+
+      if (tap_drag_lock) {
+        hikari_pointer_config_set_tap_drag_lock(
+            pointer_config, LIBINPUT_CONFIG_DRAG_LOCK_ENABLED);
+      } else {
+        hikari_pointer_config_set_tap_drag_lock(
+            pointer_config, LIBINPUT_CONFIG_DRAG_LOCK_DISABLED);
+      }
+    } else if (!strcmp(key, "natural-scrolling")) {
+      bool natural_scrolling;
+      if (!ucl_object_toboolean_safe(cur, &natural_scrolling)) {
+        fprintf(stderr,
+            "configuration error: expected boolean for "
+            "\"natural-scrolling\"\n");
+        goto done;
+      }
+
+      hikari_pointer_config_set_natural_scrolling(
+          pointer_config, natural_scrolling);
     } else {
       fprintf(stderr,
           "configuration error: unknown \"pointer\" configuration key \"%s\" "
