@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.1.1
+
+* Xwayland fix for multimonitor coordinates
+* fix tile exchange with maximized views
+* fix layer-shell destroy issue
+
 ## 1.1.0
 
 * add layer-shell support
