@@ -766,10 +766,12 @@ like that:
 Just stating the tiling algorithm is a short-hand for a layout object with where
 *views* is set to 256.
 
-THEMING
-=======
-Getting everything to look like is an important aspect of feeling "at home".
-**hikari** offers a couple of options to tweak visuals to the users content.
+
+UI CONFIGURATION
+================
+Getting everything to look right is an important aspect of feeling "at home".
+**hikari** offers a couple of options to tweak visuals to the users content. All
+of these configuration options are part of the *ui* section.
 
 * **border**
 

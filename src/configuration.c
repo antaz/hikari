@@ -2284,6 +2284,48 @@ parse_font(
   return true;
 }
 
+static bool
+parse_ui(struct hikari_configuration *configuration, const ucl_object_t *ui_obj)
+{
+  bool success = false;
+  ucl_object_iter_t it = ucl_object_iterate_new(ui_obj);
+
+  const ucl_object_t *cur;
+  while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
+    const char *key = ucl_object_key(cur);
+
+    if (!strcmp(key, "colorscheme")) {
+      if (!parse_colorscheme(configuration, cur)) {
+        goto done;
+      }
+    } else if (!strcmp(key, "font")) {
+      hikari_font_fini(&configuration->font);
+      if (!parse_font(configuration, cur)) {
+        goto done;
+      }
+    } else if (!strcmp(key, "border")) {
+      if (!parse_border(configuration, cur)) {
+        goto done;
+      }
+    } else if (!strcmp(key, "gap")) {
+      if (!parse_gap(configuration, cur)) {
+        goto done;
+      }
+    } else if (!strcmp(key, "step")) {
+      if (!parse_step(configuration, cur)) {
+        goto done;
+      }
+    }
+  }
+
+  success = true;
+
+done:
+  ucl_object_iterate_free(it);
+
+  return success;
+}
+
 bool
 hikari_configuration_load(
     struct hikari_configuration *configuration, char *config_path)
@@ -2306,8 +2348,8 @@ hikari_configuration_load(
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
-    if (!strcmp(key, "colorscheme")) {
-      if (!parse_colorscheme(configuration, cur)) {
+    if (!strcmp(key, "ui")) {
+      if (!parse_ui(configuration, cur)) {
         goto done;
       }
     } else if (!strcmp(key, "views")) {
@@ -2343,23 +2385,6 @@ hikari_configuration_load(
       }
     } else if (!strcmp(key, "inputs")) {
       if (!parse_inputs(configuration, cur)) {
-        goto done;
-      }
-    } else if (!strcmp(key, "font")) {
-      hikari_font_fini(&configuration->font);
-      if (!parse_font(configuration, cur)) {
-        goto done;
-      }
-    } else if (!strcmp(key, "border")) {
-      if (!parse_border(configuration, cur)) {
-        goto done;
-      }
-    } else if (!strcmp(key, "gap")) {
-      if (!parse_gap(configuration, cur)) {
-        goto done;
-      }
-    } else if (!strcmp(key, "step")) {
-      if (!parse_step(configuration, cur)) {
         goto done;
       }
     } else if (!!strcmp(key, "actions") && !!strcmp(key, "layouts")) {
