@@ -69,7 +69,9 @@ XKB_DEFAULT_LAYOUT "de(nodeadkeys),de"
 ## Building
 
 `hikari` currently only works on FreeBSD and Linux. This will likely change in
-the future when more systems adopt Wayland.
+the future when more systems adopt Wayland. When building directly from the
+repository, breaking changes might be encountered. These are documented in the
+`UPDATING` file which should be consulted before updating to a newer build.
 
 ### Dependencies
 
