@@ -1240,3 +1240,145 @@ hikari_server_switch_to_mark(void *arg)
 
   show_marked_view(view, mark);
 }
+
+static void
+move_view(int dx, int dy)
+{
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  if (focus_view == NULL) {
+    return;
+  }
+
+  struct hikari_output *view_output = focus_view->output;
+  struct wlr_box *geometry = hikari_view_geometry(focus_view);
+
+  double lx = view_output->geometry.x + geometry->x + dx;
+  double ly = view_output->geometry.y + geometry->y + dy;
+
+  struct wlr_output *wlr_output =
+      wlr_output_layout_output_at(hikari_server.output_layout, lx, ly);
+
+  hikari_server_set_cycling();
+
+  if (wlr_output == NULL || wlr_output->data == view_output) {
+    hikari_view_move(focus_view, dx, dy);
+  } else {
+    struct hikari_output *output = wlr_output->data;
+    struct hikari_sheet *sheet = output->workspace->sheet;
+
+    hikari_view_migrate(
+        focus_view, sheet, lx - output->geometry.x, ly - output->geometry.y);
+
+    hikari_indicator_update_sheet(&hikari_server.indicator,
+        output,
+        sheet,
+        hikari_configuration->indicator_selected,
+        hikari_view_is_invisible(focus_view),
+        hikari_view_is_floating(focus_view));
+
+    hikari_server.workspace->focus_view = NULL;
+    hikari_server.workspace = output->workspace;
+    hikari_server.workspace->focus_view = focus_view;
+  }
+}
+
+void
+hikari_server_move_view_up(void *arg)
+{
+  const int step = hikari_configuration->step;
+  move_view(0, -step);
+}
+
+void
+hikari_server_move_view_down(void *arg)
+{
+  const int step = hikari_configuration->step;
+  move_view(0, step);
+}
+
+void
+hikari_server_move_view_left(void *arg)
+{
+  const int step = hikari_configuration->step;
+  move_view(-step, 0);
+}
+
+void
+hikari_server_move_view_right(void *arg)
+{
+  const int step = hikari_configuration->step;
+  move_view(step, 0);
+}
+
+static void
+move_resize_view(int dx, int dy, int dwidth, int dheight)
+{
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  if (focus_view == NULL) {
+    return;
+  }
+
+  struct hikari_output *view_output = focus_view->output;
+  struct wlr_box *geometry = hikari_view_geometry(focus_view);
+
+  double lx = view_output->geometry.x + geometry->x + dy;
+  double ly = view_output->geometry.y + geometry->y + dy;
+
+  struct wlr_output *wlr_output =
+      wlr_output_layout_output_at(hikari_server.output_layout, lx, ly);
+
+  hikari_server_set_cycling();
+
+  if (wlr_output == NULL || wlr_output->data == view_output) {
+    hikari_view_move_resize(focus_view, dx, dy, dwidth, dheight);
+  } else {
+    struct hikari_output *output = wlr_output->data;
+    struct hikari_sheet *sheet = output->workspace->sheet;
+
+    hikari_view_migrate(
+        focus_view, sheet, lx - output->geometry.x, ly - output->geometry.y);
+
+    hikari_indicator_update_sheet(&hikari_server.indicator,
+        output,
+        sheet,
+        hikari_configuration->indicator_selected,
+        hikari_view_is_invisible(focus_view),
+        hikari_view_is_floating(focus_view));
+
+    hikari_server.workspace->focus_view = NULL;
+    hikari_server.workspace = output->workspace;
+    hikari_server.workspace->focus_view = focus_view;
+
+    hikari_view_resize(focus_view, dheight, dwidth);
+  }
+}
+
+void
+hikari_server_decrease_view_size_down(void *arg)
+{
+  const int step = hikari_configuration->step;
+  move_resize_view(0, step, 0, -step);
+}
+
+void
+hikari_server_decrease_view_size_right(void *arg)
+{
+  const int step = hikari_configuration->step;
+  move_resize_view(step, 0, -step, 0);
+}
+
+void
+hikari_server_increase_view_size_up(void *arg)
+{
+  const int step = hikari_configuration->step;
+  move_resize_view(0, -step, 0, step);
+}
+
+void
+hikari_server_increase_view_size_left(void *arg)
+{
+  const int step = hikari_configuration->step;
+  move_resize_view(-step, 0, step, 0);
+}

@@ -560,16 +560,6 @@ hikari_workspace_hide_view(struct hikari_workspace *workspace)
 }
 
 void
-hikari_workspace_move_view(struct hikari_workspace *workspace, int dx, int dy)
-{
-  FOCUS_GUARD(workspace, focus_view);
-
-  hikari_server_set_cycling();
-
-  hikari_view_move(focus_view, dx, dy);
-}
-
-void
 hikari_workspace_only_view(struct hikari_workspace *workspace)
 {
   FOCUS_GUARD(workspace, focus_view);

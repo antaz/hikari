@@ -198,6 +198,9 @@ void
 hikari_view_resize_absolute(struct hikari_view *view, int x, int y);
 
 void
+hikari_view_resize(struct hikari_view *view, int dx, int dy);
+
+void
 hikari_view_assign_sheet(struct hikari_view *view, struct hikari_sheet *sheet);
 
 void

@@ -196,59 +196,35 @@ SHEET_ACTIONS(next)
 SHEET_ACTIONS(prev)
 #undef SHEET_ACTIONS
 
+void
+hikari_server_move_view_up(void *arg);
+
+void
+hikari_server_move_view_down(void *arg);
+
+void
+hikari_server_move_view_left(void *arg);
+
+void
+hikari_server_move_view_right(void *arg);
+
+void
+hikari_server_increase_view_size_up(void *arg);
+
+void
+hikari_server_decrease_view_size_down(void *arg);
+
+void
+hikari_server_increase_view_size_left(void *arg);
+
+void
+hikari_server_decrease_view_size_right(void *arg);
+
 #define STEP hikari_configuration->step
-static inline void
-hikari_server_move_view_up(void *arg)
-{
-  hikari_workspace_move_view(hikari_server.workspace, 0, -STEP);
-}
-
-static inline void
-hikari_server_move_view_down(void *arg)
-{
-  hikari_workspace_move_view(hikari_server.workspace, 0, STEP);
-}
-
-static inline void
-hikari_server_move_view_left(void *arg)
-{
-  hikari_workspace_move_view(hikari_server.workspace, -STEP, 0);
-}
-
-static inline void
-hikari_server_move_view_right(void *arg)
-{
-  hikari_workspace_move_view(hikari_server.workspace, STEP, 0);
-}
-
 static inline void
 hikari_server_decrease_view_size_up(void *arg)
 {
   hikari_workspace_move_resize_view(hikari_server.workspace, 0, 0, 0, -STEP);
-}
-
-static inline void
-hikari_server_decrease_view_size_down(void *arg)
-{
-  hikari_workspace_move_resize_view(hikari_server.workspace, 0, STEP, 0, -STEP);
-}
-
-static inline void
-hikari_server_decrease_view_size_left(void *arg)
-{
-  hikari_workspace_move_resize_view(hikari_server.workspace, 0, 0, -STEP, 0);
-}
-
-static inline void
-hikari_server_decrease_view_size_right(void *arg)
-{
-  hikari_workspace_move_resize_view(hikari_server.workspace, STEP, 0, -STEP, 0);
-}
-
-static inline void
-hikari_server_increase_view_size_up(void *arg)
-{
-  hikari_workspace_move_resize_view(hikari_server.workspace, 0, -STEP, 0, STEP);
 }
 
 static inline void
@@ -258,9 +234,9 @@ hikari_server_increase_view_size_down(void *arg)
 }
 
 static inline void
-hikari_server_increase_view_size_left(void *arg)
+hikari_server_decrease_view_size_left(void *arg)
 {
-  hikari_workspace_move_resize_view(hikari_server.workspace, -STEP, 0, STEP, 0);
+  hikari_workspace_move_resize_view(hikari_server.workspace, 0, 0, -STEP, 0);
 }
 
 static inline void

@@ -474,6 +474,31 @@ queue_resize(struct hikari_view *view,
 }
 
 void
+hikari_view_resize(struct hikari_view *view, int dwidth, int dheight)
+{
+  assert(view != NULL);
+  assert(view->resize != NULL);
+  assert(view->constraints != NULL);
+
+  if (view->maximized_state != NULL || hikari_view_is_dirty(view)) {
+    return;
+  }
+
+  struct wlr_box *geometry = hikari_view_geometry(view);
+
+  int requested_width = geometry->width + dwidth;
+  int requested_height = geometry->height + dheight;
+
+  queue_resize(view,
+      geometry,
+      geometry->x,
+      geometry->y,
+      requested_width,
+      requested_height,
+      false);
+}
+
+void
 hikari_view_resize_absolute(struct hikari_view *view, int width, int height)
 {
   assert(view != NULL);
