@@ -425,8 +425,7 @@ queue_resize(struct hikari_view *view,
     int x,
     int y,
     int requested_width,
-    int requested_height,
-    bool center)
+    int requested_height)
 {
   assert(view->maximized_state == NULL);
 
@@ -467,7 +466,7 @@ queue_resize(struct hikari_view *view,
   op->geometry.y = y;
   op->geometry.width = new_width;
   op->geometry.height = new_height;
-  op->center = center;
+  op->center = false;
   op->serial = serial;
 
   hikari_view_set_dirty(view);
@@ -494,8 +493,7 @@ hikari_view_resize(struct hikari_view *view, int dwidth, int dheight)
       geometry->x,
       geometry->y,
       requested_width,
-      requested_height,
-      false);
+      requested_height);
 }
 
 void
@@ -510,7 +508,7 @@ hikari_view_resize_absolute(struct hikari_view *view, int width, int height)
   }
 
   struct wlr_box *geometry = hikari_view_geometry(view);
-  queue_resize(view, geometry, geometry->x, geometry->y, width, height, false);
+  queue_resize(view, geometry, geometry->x, geometry->y, width, height);
 }
 
 void
@@ -537,8 +535,7 @@ hikari_view_move_resize(
       requested_x,
       requested_y,
       requested_width,
-      requested_height,
-      true);
+      requested_height);
 }
 
 void
