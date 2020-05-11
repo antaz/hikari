@@ -422,8 +422,8 @@ refresh_geometry(struct hikari_view *view)
 static void
 queue_resize(struct hikari_view *view,
     struct wlr_box *geometry,
-    int x,
-    int y,
+    int requested_x,
+    int requested_y,
     int requested_width,
     int requested_height)
 {
@@ -459,15 +459,17 @@ queue_resize(struct hikari_view *view,
     return;
   }
 
+  struct hikari_output *output = view->output;
   uint32_t serial = view->resize(view, new_width, new_height);
 
   op->type = HIKARI_OPERATION_TYPE_RESIZE;
-  op->geometry.x = x;
-  op->geometry.y = y;
   op->geometry.width = new_width;
   op->geometry.height = new_height;
   op->center = false;
   op->serial = serial;
+
+  hikari_geometry_constrain_relative(
+      &op->geometry, &output->usable_area, requested_x, requested_y);
 
   hikari_view_set_dirty(view);
 }
@@ -525,10 +527,10 @@ hikari_view_move_resize(
 
   struct wlr_box *geometry = hikari_view_geometry(view);
 
-  int requested_width = geometry->width + width;
-  int requested_height = geometry->height + height;
   int requested_x = geometry->x + x;
   int requested_y = geometry->y + y;
+  int requested_width = geometry->width + width;
+  int requested_height = geometry->height + height;
 
   queue_resize(view,
       geometry,
@@ -930,6 +932,23 @@ hikari_view_reset_geometry(struct hikari_view *view)
 }
 
 static void
+pin_migrate(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
+{
+  assert(view != NULL);
+  assert(sheet != NULL);
+
+  struct hikari_output *output = sheet->workspace->output;
+  struct wlr_box geometry;
+
+  memcpy(&geometry, &view->geometry, sizeof(struct wlr_box));
+
+  hikari_geometry_constrain_absolute(
+      &geometry, &output->usable_area, geometry.x, geometry.y);
+
+  queue_migrate(view, sheet, &geometry, true);
+}
+
+static void
 pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
 {
   assert(view != NULL);
@@ -952,7 +971,7 @@ pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
     }
   } else {
     if (migrate) {
-      queue_migrate(view, sheet, &view->geometry, center);
+      pin_migrate(view, sheet, center);
     } else {
       if (hikari_sheet_is_visible(sheet)) {
         place_visibly_above(view, sheet->workspace);
@@ -975,8 +994,7 @@ pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
 }
 
 void
-hikari_view_migrate_to_sheet(
-    struct hikari_view *view, struct hikari_sheet *sheet)
+hikari_view_evacuate(struct hikari_view *view, struct hikari_sheet *sheet)
 {
   pin_to_sheet(view, sheet, false);
 }
@@ -1551,13 +1569,13 @@ hikari_view_migrate(
     struct hikari_view *view, struct hikari_sheet *sheet, int x, int y)
 {
   struct wlr_box geometry;
+  struct hikari_output *output = sheet->workspace->output;
 
   hikari_indicator_damage(&hikari_server.indicator, view);
   hikari_view_damage_whole(view);
 
   memcpy(&geometry, &view->geometry, sizeof(struct wlr_box));
-  geometry.x = x;
-  geometry.y = y;
+  hikari_geometry_constrain_relative(&geometry, &output->usable_area, x, y);
 
   hide(view);
 

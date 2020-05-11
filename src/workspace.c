@@ -101,7 +101,7 @@ hikari_workspace_merge(
     struct hikari_sheet *to = &into->sheets[i];
     struct hikari_view *view, *view_temp;
     wl_list_for_each_reverse_safe (view, view_temp, &from->views, sheet_views) {
-      hikari_view_migrate_to_sheet(view, to);
+      hikari_view_evacuate(view, to);
     }
   }
 }

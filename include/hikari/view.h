@@ -175,8 +175,7 @@ hikari_view_commit_pending_operation(
     struct hikari_view *view, struct wlr_box *geometry);
 
 void
-hikari_view_migrate_to_sheet(
-    struct hikari_view *view, struct hikari_sheet *sheet);
+hikari_view_evacuate(struct hikari_view *view, struct hikari_sheet *sheet);
 
 void
 hikari_view_pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet);
