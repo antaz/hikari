@@ -69,8 +69,6 @@ hikari_workspace_center_cursor(struct hikari_workspace *workspace);
   struct hikari_view *hikari_workspace_##name(                                 \
       struct hikari_workspace *workspace);
 
-WORKSPACE_CYCLE_ACTION(first_view)
-WORKSPACE_CYCLE_ACTION(last_view)
 WORKSPACE_CYCLE_ACTION(next_view)
 WORKSPACE_CYCLE_ACTION(prev_view)
 WORKSPACE_CYCLE_ACTION(next_layout_view)

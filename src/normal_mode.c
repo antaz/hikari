@@ -229,18 +229,18 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
   if (hikari_server.keyboard_state.mod_pressed && focus_view != NULL) {
-    struct hikari_workspace *workspace = hikari_server.workspace;
     struct hikari_group *group = focus_view->group;
-
+    struct hikari_view *first = hikari_group_first_view(group);
     float *indicator_first = hikari_configuration->indicator_first;
     float *indicator_grouped = hikari_configuration->indicator_grouped;
+
     struct hikari_view *view;
     wl_list_for_each_reverse (
         view, &group->visible_views, visible_group_views) {
       if (view != focus_view && view->output == output) {
         render_data->geometry = hikari_view_border_geometry(view);
 
-        if (hikari_group_first_view(group, workspace) == view) {
+        if (first == view) {
           hikari_indicator_frame_render(
               &view->indicator_frame, indicator_first, render_data);
         } else {

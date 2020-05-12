@@ -258,34 +258,6 @@ hikari_workspace_switch_to_prev_inhabited_sheet(
   display_sheet(workspace, sheet);
 }
 
-struct hikari_view *
-hikari_workspace_first_view(struct hikari_workspace *workspace)
-{
-  struct hikari_view *view;
-
-  if (wl_list_empty(&workspace->views)) {
-    return NULL;
-  }
-
-  view = wl_container_of(workspace->views.next, view, workspace_views);
-
-  return view;
-}
-
-struct hikari_view *
-hikari_workspace_last_view(struct hikari_workspace *workspace)
-{
-  struct hikari_view *view;
-
-  if (wl_list_empty(&workspace->views)) {
-    return NULL;
-  }
-
-  view = wl_container_of(workspace->views.prev, view, workspace_views);
-
-  return view;
-}
-
 #define CYCLE_VIEW(name, link)                                                 \
   struct hikari_view *hikari_workspace_##name##_view(                          \
       struct hikari_workspace *workspace)                                      \
@@ -362,8 +334,7 @@ CYCLE_LAYOUT_VIEW(last, prev)
       return NULL;                                                             \
     }                                                                          \
                                                                                \
-    return hikari_group_##link##_view(                                         \
-        focus_view->group, hikari_server.workspace);                           \
+    return hikari_group_##link##_view(focus_view->group);                      \
   }
 
 CYCLE_GROUP_VIEW(first)
@@ -506,7 +477,7 @@ hikari_workspace_raise_view(struct hikari_workspace *workspace)
   FOCUS_GUARD(workspace, focus_view);
 
   struct hikari_group *group = focus_view->group;
-  struct hikari_view *first = hikari_group_first_view(group, workspace);
+  struct hikari_view *first = hikari_group_first_view(group);
 
   hikari_view_raise(focus_view);
 
@@ -531,7 +502,7 @@ hikari_workspace_lower_view(struct hikari_workspace *workspace)
   hikari_view_lower(focus_view);
 
   struct hikari_group *group = focus_view->group;
-  struct hikari_view *first = hikari_group_first_view(group, workspace);
+  struct hikari_view *first = hikari_group_first_view(group);
 
   hikari_view_damage_border(first);
 

@@ -57,10 +57,6 @@ raise_view(struct hikari_view *view)
 {
   assert(view != NULL);
 
-  if (view == hikari_workspace_first_view(view->sheet->workspace)) {
-    return;
-  }
-
   move_to_top(view);
   place_visibly_above(view, view->sheet->workspace);
 }
@@ -642,10 +638,6 @@ void
 hikari_view_lower(struct hikari_view *view)
 {
   assert(view != NULL);
-
-  if (view == hikari_workspace_last_view(view->sheet->workspace)) {
-    return;
-  }
 
   wl_list_remove(&(view->sheet_views));
   wl_list_insert(view->sheet->views.prev, &(view->sheet_views));

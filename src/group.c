@@ -28,37 +28,22 @@ hikari_group_fini(struct hikari_group *group)
   wl_list_remove(&group->server_groups);
 }
 
-struct hikari_view *
-hikari_group_first_view(
-    struct hikari_group *group, struct hikari_workspace *workspace)
-{
-  assert(group != NULL);
-
-  struct hikari_view *view = NULL;
-  wl_list_for_each (view, &group->visible_views, visible_group_views) {
-    if (view->sheet->workspace == workspace) {
-      return view;
-    }
+#define GROUP_VIEW(name, link)                                                 \
+  struct hikari_view *hikari_group_##name##_view(struct hikari_group *group)   \
+  {                                                                            \
+    if (!wl_list_empty(&group->visible_views)) {                               \
+      struct wl_list *link = group->visible_views.link;                        \
+      struct hikari_view *view =                                               \
+          wl_container_of(link, view, visible_group_views);                    \
+      return view;                                                             \
+    }                                                                          \
+                                                                               \
+    return NULL;                                                               \
   }
 
-  return NULL;
-}
-
-struct hikari_view *
-hikari_group_last_view(
-    struct hikari_group *group, struct hikari_workspace *workspace)
-{
-  assert(group != NULL);
-
-  struct hikari_view *view = NULL;
-  wl_list_for_each_reverse (view, &group->visible_views, visible_group_views) {
-    if (view->sheet->workspace == workspace) {
-      return view;
-    }
-  }
-
-  return NULL;
-}
+GROUP_VIEW(first, next)
+GROUP_VIEW(last, prev)
+#undef GROUP_VIEW
 
 void
 hikari_group_raise(struct hikari_group *group, struct hikari_view *top)

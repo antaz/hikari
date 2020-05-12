@@ -38,11 +38,9 @@ void
 hikari_group_show(struct hikari_group *group);
 
 struct hikari_view *
-hikari_group_first_view(
-    struct hikari_group *group, struct hikari_workspace *workspace);
+hikari_group_first_view(struct hikari_group *group);
 
 struct hikari_view *
-hikari_group_last_view(
-    struct hikari_group *group, struct hikari_workspace *workspace);
+hikari_group_last_view(struct hikari_group *group);
 
 #endif
