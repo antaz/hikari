@@ -83,20 +83,8 @@ cursor_move(uint32_t time_msec)
     hikari_view_move_absolute(
         focus_view, lx - view_output->geometry.x, ly - view_output->geometry.y);
   } else {
-    struct hikari_sheet *sheet = output->workspace->sheet;
-
-    hikari_view_migrate(
-        focus_view, sheet, lx - output->geometry.x, ly - output->geometry.y);
-
-    hikari_indicator_update_sheet(&hikari_server.indicator,
-        output,
-        sheet,
-        focus_view->flags,
-        hikari_configuration->indicator_insert);
-
-    hikari_server.workspace->focus_view = NULL;
-    hikari_server.workspace = output->workspace;
-    hikari_server.workspace->focus_view = focus_view;
+    hikari_server_view_migrate(
+        focus_view, output, lx, ly, hikari_configuration->indicator_insert);
   }
 }
 

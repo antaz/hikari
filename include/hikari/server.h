@@ -137,6 +137,13 @@ hikari_server_unset_cycling(void)
 }
 
 void
+hikari_server_view_migrate(struct hikari_view *view,
+    struct hikari_output *output,
+    double lx,
+    double ly,
+    float color[static 4]);
+
+void
 hikari_server_start(char *config_path, char *autostart);
 
 struct hikari_view_interface *
