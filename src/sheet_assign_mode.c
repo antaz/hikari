@@ -68,9 +68,8 @@ update_state(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
   hikari_indicator_update_sheet(indicator,
       output,
       sheet,
-      hikari_configuration->indicator_insert,
-      hikari_view_is_invisible(view),
-      hikari_view_is_floating(view));
+      view->flags,
+      hikari_configuration->indicator_insert);
 
   hikari_indicator_damage_sheet(indicator, output, geometry);
 
@@ -208,9 +207,8 @@ cancel(void)
     hikari_indicator_update_sheet(indicator,
         output,
         view->sheet,
-        hikari_configuration->indicator_selected,
-        hikari_view_is_invisible(view),
-        hikari_view_is_floating(view));
+        view->flags,
+        hikari_configuration->indicator_selected);
 
     hikari_view_damage_border(view);
   }
@@ -252,9 +250,8 @@ hikari_sheet_assign_mode_enter(struct hikari_view *view)
   hikari_indicator_update_sheet(indicator,
       view->output,
       view->sheet,
-      hikari_configuration->indicator_insert,
-      hikari_view_is_invisible(view),
-      hikari_view_is_floating(view));
+      view->flags,
+      hikari_configuration->indicator_insert);
 
   hikari_indicator_damage_sheet(indicator, output, geometry);
 }

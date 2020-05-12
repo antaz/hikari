@@ -44,12 +44,8 @@ hikari_indicator_update(struct hikari_indicator *indicator,
 
   hikari_indicator_update_title(indicator, output, view->title, background);
 
-  hikari_indicator_update_sheet(indicator,
-      output,
-      view->sheet,
-      background,
-      hikari_view_is_invisible(view),
-      hikari_view_is_floating(view));
+  hikari_indicator_update_sheet(
+      indicator, output, view->sheet, view->flags, background);
 
   hikari_indicator_update_group(
       indicator, output, view->group->name, background);
@@ -104,13 +100,15 @@ void
 hikari_indicator_update_sheet(struct hikari_indicator *indicator,
     struct hikari_output *output,
     struct hikari_sheet *sheet,
-    float background[static 4],
-    bool invisible,
-    bool floating)
+    unsigned long flags,
+    float background[static 4])
 {
+  bool invisible = flags & hikari_view_invisible_flag;
+  bool floating = flags & hikari_view_floating_flag;
   char *output_name = sheet->workspace->output->wlr_output->name;
-  char *text = hikari_malloc(strlen(output_name) + 12);
   int i = 0;
+
+  char *text = hikari_malloc(strlen(output_name) + 12);
 
   if (floating) {
     text[i++] = '~';

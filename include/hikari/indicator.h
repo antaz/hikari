@@ -36,9 +36,8 @@ void
 hikari_indicator_update_sheet(struct hikari_indicator *indicator,
     struct hikari_output *output,
     struct hikari_sheet *sheet,
-    float background[static 4],
-    bool invisible,
-    bool floating);
+    unsigned long flags,
+    float background[static 4]);
 
 void
 hikari_indicator_damage(

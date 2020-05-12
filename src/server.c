@@ -1273,9 +1273,8 @@ move_view(int dx, int dy)
     hikari_indicator_update_sheet(&hikari_server.indicator,
         output,
         sheet,
-        hikari_configuration->indicator_selected,
-        hikari_view_is_invisible(focus_view),
-        hikari_view_is_floating(focus_view));
+        focus_view->flags,
+        hikari_configuration->indicator_selected);
 
     hikari_server.workspace->focus_view = NULL;
     hikari_server.workspace = output->workspace;
@@ -1343,9 +1342,8 @@ move_resize_view(int dx, int dy, int dwidth, int dheight)
     hikari_indicator_update_sheet(&hikari_server.indicator,
         output,
         sheet,
-        hikari_configuration->indicator_selected,
-        hikari_view_is_invisible(focus_view),
-        hikari_view_is_floating(focus_view));
+        focus_view->flags,
+        hikari_configuration->indicator_selected);
 
     hikari_server.workspace->focus_view = NULL;
     hikari_server.workspace = output->workspace;

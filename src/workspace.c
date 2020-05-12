@@ -777,9 +777,8 @@ pin_to_sheet(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
     hikari_indicator_update_sheet(&hikari_server.indicator,
         output,
         focus_view->sheet,
-        hikari_configuration->indicator_selected,
-        hikari_view_is_invisible(focus_view),
-        hikari_view_is_floating(focus_view));
+        focus_view->flags,
+        hikari_configuration->indicator_selected);
   }
 }
 
@@ -838,9 +837,8 @@ hikari_workspace_toggle_view_invisible(struct hikari_workspace *workspace)
   hikari_indicator_update_sheet(indicator,
       output,
       focus_view->sheet,
-      hikari_configuration->indicator_selected,
-      hikari_view_is_invisible(focus_view),
-      hikari_view_is_floating(focus_view));
+      focus_view->flags,
+      hikari_configuration->indicator_selected);
 
   if (hikari_server_is_indicating()) {
     hikari_indicator_damage_sheet(indicator, output, geometry);
@@ -865,9 +863,8 @@ hikari_workspace_toggle_view_floating(struct hikari_workspace *workspace)
   hikari_indicator_update_sheet(indicator,
       output,
       focus_view->sheet,
-      hikari_configuration->indicator_selected,
-      hikari_view_is_invisible(focus_view),
-      hikari_view_is_floating(focus_view));
+      focus_view->flags,
+      hikari_configuration->indicator_selected);
 
   if (hikari_server_is_indicating()) {
     hikari_indicator_damage_sheet(indicator, output, geometry);

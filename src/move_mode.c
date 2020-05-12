@@ -90,9 +90,8 @@ cursor_move(uint32_t time_msec)
     hikari_indicator_update_sheet(&hikari_server.indicator,
         output,
         sheet,
-        hikari_configuration->indicator_insert,
-        hikari_view_is_invisible(focus_view),
-        hikari_view_is_floating(focus_view));
+        focus_view->flags,
+        hikari_configuration->indicator_insert);
 
     hikari_server.workspace->focus_view = NULL;
     hikari_server.workspace = output->workspace;
