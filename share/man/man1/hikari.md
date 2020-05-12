@@ -425,6 +425,11 @@ Workspace actions
 
   Clears the current workspace.
 
+* **workspace-cycle-[next|prev]**
+
+  Cycle through available workspaces. This moves the cursor into the center of
+  the target workspace.
+
 * **workspace-show-all**
 
   Clears the current workspace and populates it with all views. This includes

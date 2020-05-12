@@ -291,6 +291,8 @@ CYCLE_ACTION(next_group)
 CYCLE_ACTION(prev_group)
 CYCLE_ACTION(next_view)
 CYCLE_ACTION(prev_view)
+CYCLE_ACTION(next_workspace)
+CYCLE_ACTION(prev_workspace)
 #undef CYCLE_ACTION
 
 #define WORKSPACE_ACTION(name)                                                 \

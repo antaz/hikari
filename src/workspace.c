@@ -1079,4 +1079,11 @@ hikari_workspace_apply_split(
   hikari_sheet_apply_split(sheet, split);
 }
 
+void
+hikari_workspace_center_cursor(struct hikari_workspace *workspace)
+{
+  struct hikari_output *output = workspace->output;
+  hikari_cursor_center(&hikari_server.cursor, output, &output->usable_area);
+}
+
 #undef FOCUS_GUARD

@@ -970,6 +970,23 @@ CYCLE_ACTION(next_view)
 CYCLE_ACTION(prev_view)
 #undef CYCLE_ACTION
 
+#define CYCLE_WORKSPACE(name)                                                  \
+  void hikari_server_cycle_##name##_workspace(void *arg)                       \
+  {                                                                            \
+    struct hikari_workspace *workspace = hikari_server.workspace;              \
+    struct hikari_workspace *name##_workspace =                                \
+        hikari_workspace_##name(workspace);                                    \
+                                                                               \
+    if (workspace != name##_workspace) {                                       \
+      hikari_workspace_center_cursor(name##_workspace);                        \
+      hikari_server_cursor_focus();                                            \
+    }                                                                          \
+  }
+
+CYCLE_WORKSPACE(next)
+CYCLE_WORKSPACE(prev)
+#undef CYCLE_WORKSPACE
+
 static void
 update_indication(struct hikari_view *view)
 {
