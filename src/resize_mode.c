@@ -23,6 +23,7 @@ cancel(void)
         hikari_configuration->indicator_selected);
 
     hikari_indicator_damage(indicator, view);
+    hikari_group_damage(view->group);
 
     hikari_view_center_cursor(view);
   }
