@@ -1010,11 +1010,14 @@ hikari_view_center_cursor(struct hikari_view *view)
 {
   assert(view != NULL);
 
-  struct wlr_box *geometry = hikari_view_geometry(view);
   struct hikari_output *output = view->output;
+  struct wlr_box *view_geometry = hikari_view_geometry(view);
 
-  int x = output->geometry.x + geometry->x + geometry->width / 2;
-  int y = output->geometry.y + geometry->y + geometry->height / 2;
+  struct wlr_box geometry;
+  hikari_geometry_constrain_size(view_geometry, &output->usable_area, &geometry);
+
+  int x = output->geometry.x + geometry.x + geometry.width / 2;
+  int y = output->geometry.y + geometry.y + geometry.height / 2;
 
   hikari_cursor_warp(&hikari_server.cursor, x, y);
 }
