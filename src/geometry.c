@@ -216,7 +216,8 @@ hikari_geometry_position_top_right(
 
 void
 hikari_geometry_constrain_size(struct wlr_box *geometry,
-    struct wlr_box *usable_area, struct wlr_box *constrained)
+    struct wlr_box *usable_area,
+    struct wlr_box *constrained)
 {
   if (geometry->x < 0) {
     constrained->width = geometry->width + geometry->x;
@@ -234,7 +235,7 @@ hikari_geometry_constrain_size(struct wlr_box *geometry,
   }
 
   if (geometry->y < 0) {
-    constrained->height  = geometry->height + geometry->y;
+    constrained->height = geometry->height + geometry->y;
     constrained->y = 0;
   } else {
     int excess_height = geometry->height - (usable_area->height - geometry->y);

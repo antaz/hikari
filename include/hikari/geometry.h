@@ -66,7 +66,8 @@ hikari_geometry_position_top_right(
 
 void
 hikari_geometry_constrain_size(struct wlr_box *geometry,
-    struct wlr_box *usable_area, struct wlr_box *constrained);
+    struct wlr_box *usable_area,
+    struct wlr_box *constrained);
 
 #define FIXED_SCALE(name)                                                      \
   static inline int hikari_geometry_scale_fixed_##name(                        \

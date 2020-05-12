@@ -1014,7 +1014,8 @@ hikari_view_center_cursor(struct hikari_view *view)
   struct wlr_box *view_geometry = hikari_view_geometry(view);
 
   struct wlr_box geometry;
-  hikari_geometry_constrain_size(view_geometry, &output->usable_area, &geometry);
+  hikari_geometry_constrain_size(
+      view_geometry, &output->usable_area, &geometry);
 
   int x = output->geometry.x + geometry.x + geometry.width / 2;
   int y = output->geometry.y + geometry.y + geometry.height / 2;
