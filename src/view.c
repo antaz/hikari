@@ -1017,10 +1017,7 @@ hikari_view_center_cursor(struct hikari_view *view)
   hikari_geometry_constrain_size(
       view_geometry, &output->usable_area, &geometry);
 
-  int x = output->geometry.x + geometry.x + geometry.width / 2;
-  int y = output->geometry.y + geometry.y + geometry.height / 2;
-
-  hikari_cursor_warp(&hikari_server.cursor, x, y);
+  hikari_cursor_center(&hikari_server.cursor, output, &geometry);
 }
 
 void

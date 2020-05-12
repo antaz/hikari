@@ -3,6 +3,8 @@
 
 #include <wlr/types/wlr_cursor.h>
 
+struct hikari_output;
+
 struct hikari_cursor {
   struct wlr_cursor *wlr_cursor;
 
@@ -29,6 +31,11 @@ hikari_cursor_deactivate(struct hikari_cursor *cursor);
 
 void
 hikari_cursor_set_image(struct hikari_cursor *cursor, const char *path);
+
+void
+hikari_cursor_center(struct hikari_cursor *cursor,
+    struct hikari_output *output,
+    struct wlr_box *geometry);
 
 static inline void
 hikari_cursor_reset_image(struct hikari_cursor *cursor)

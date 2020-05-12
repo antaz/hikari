@@ -5,6 +5,7 @@
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 
+#include <hikari/output.h>
 #include <hikari/server.h>
 
 static void
@@ -91,6 +92,17 @@ hikari_cursor_set_image(struct hikari_cursor *cursor, const char *path)
 
   wlr_xcursor_manager_set_cursor_image(
       hikari_server.cursor_mgr, path, cursor->wlr_cursor);
+}
+
+void
+hikari_cursor_center(struct hikari_cursor *cursor,
+    struct hikari_output *output,
+    struct wlr_box *geometry)
+{
+  int x = output->geometry.x + geometry->x + geometry->width / 2;
+  int y = output->geometry.y + geometry->y + geometry->height / 2;
+
+  hikari_cursor_warp(cursor, x, y);
 }
 
 static void
