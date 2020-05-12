@@ -952,7 +952,7 @@ hikari_server_unlock(void)
     view = hikari_workspace_##n(hikari_server.workspace);                      \
                                                                                \
     if (view != NULL && view != hikari_server.workspace->focus_view) {         \
-      hikari_workspace_focus_view(hikari_server.workspace, view);              \
+      hikari_workspace_focus_view(view->sheet->workspace, view);               \
     }                                                                          \
   }
 
