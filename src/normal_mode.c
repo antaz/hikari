@@ -132,25 +132,32 @@ key_handler(struct wl_listener *listener, void *data)
 static void
 dump_debug(struct hikari_server *server)
 {
+  struct hikari_view *view;
+  printf("---------------------------------------------------------------------"
+         "\n");
+  printf("VIEWS\n");
+  printf("---------------------------------------------------------------------"
+         "\n");
+  wl_list_for_each (view, &hikari_server.visible_views, visible_server_views) {
+    printf("%p ", view);
+  }
+  printf("\n");
   printf("---------------------------------------------------------------------"
          "\n");
   printf("GROUPS\n");
   printf("---------------------------------------------------------------------"
          "\n");
-  struct hikari_group *group = NULL;
-  struct hikari_view *view;
-  wl_list_for_each (
-      group, &hikari_server.visible_groups, visible_server_groups) {
+  struct hikari_group *group;
+  wl_list_for_each (group, &hikari_server.groups, server_groups) {
     printf("%s ", group->name);
-    view = NULL;
-    wl_list_for_each (view, &group->views, group_views) {
+
+    wl_list_for_each (view, &group->visible_views, visible_group_views) {
       printf("%p ", view);
     }
 
     printf("/ ");
 
-    view = NULL;
-    wl_list_for_each (view, &group->visible_views, visible_group_views) {
+    wl_list_for_each (view, &group->views, group_views) {
       printf("%p ", view);
     }
 
@@ -158,35 +165,42 @@ dump_debug(struct hikari_server *server)
   }
   printf("---------------------------------------------------------------------"
          "\n");
-  printf("SHEETS\n");
-  printf("---------------------------------------------------------------------"
-         "\n");
-  struct hikari_sheet *sheets = hikari_server.workspace->sheets;
-  struct hikari_sheet *sheet;
-  for (int i = 0; i < 10; i++) {
-    sheet = &sheets[i];
-    printf("%d ", sheet->nr);
-    view = NULL;
-    wl_list_for_each (view, &sheet->views, sheet_views) {
-      printf("%p ", view);
+  struct hikari_workspace *workspace;
+  wl_list_for_each (workspace, &hikari_server.workspaces, server_workspaces) {
+    const char *output_name = workspace->output->wlr_output->name;
+    printf("SHEETS %s\n", output_name);
+    printf(
+        "---------------------------------------------------------------------"
+        "\n");
+    struct hikari_sheet *sheets = workspace->sheets;
+    struct hikari_sheet *sheet;
+    for (int i = 0; i < 10; i++) {
+      sheet = &sheets[i];
+      if (!wl_list_empty(&sheet->views)) {
+        printf("%d ", sheet->nr);
+        wl_list_for_each (view, &sheet->views, sheet_views) {
+          printf("%p ", view);
+        }
+        printf("\n");
+      }
     }
-    printf("\n");
-  }
-  printf("---------------------------------------------------------------------"
-         "\n");
-  if (hikari_server.workspace->sheet->layout != NULL) {
-    printf("-------------------------------------------------------------------"
-           "--\n");
-    printf("LAYOUT\n");
-    struct hikari_tile *tile;
-    wl_list_for_each (
-        tile, &hikari_server.workspace->sheet->layout->tiles, layout_tiles) {
-      printf("%p ", tile->view);
+    printf(
+        "---------------------------------------------------------------------"
+        "\n");
+    if (workspace->sheet->layout != NULL) {
+      printf(
+          "-------------------------------------------------------------------"
+          "--\n");
+      printf("LAYOUT %s\n", output_name);
+      struct hikari_tile *tile;
+      wl_list_for_each (tile, &workspace->sheet->layout->tiles, layout_tiles) {
+        printf("%p ", tile->view);
+      }
+      printf("\n");
     }
-    printf("\n");
-    printf("-------------------------------------------------------------------"
-           "--\n");
   }
+  printf("/////////////////////////////////////////////////////////////////////"
+         "\n");
 }
 #endif
 
