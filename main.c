@@ -11,14 +11,22 @@
 static char *
 get_default_path(char *path)
 {
-  char *config_home = getenv("HOME");
-  size_t len = strlen(config_home) + strlen(path);
+  char *prefix = getenv("XDG_CONFIG_HOME");
+  char *subdirectory;
+
+  if (prefix == NULL) {
+    prefix = getenv("HOME");
+    subdirectory = "/.config/hikari/";
+  } else {
+    subdirectory = "/hikari/";
+  }
+
+  size_t len = strlen(prefix) + strlen(subdirectory) + strlen(path);
 
   char *ret = malloc(len + 1);
 
-  memset(ret, 0, len + 1);
-
-  strcat(ret, config_home);
+  strcpy(ret, prefix);
+  strcat(ret, subdirectory);
   strcat(ret, path);
 
   return ret;
@@ -27,7 +35,7 @@ get_default_path(char *path)
 static char *
 get_default_autostart(void)
 {
-  return get_default_path("/.config/hikari/autostart");
+  return get_default_path("autostart");
 }
 
 static char *
@@ -56,7 +64,7 @@ static const char *default_config_file = DEFAULT_CONFIG_FILE;
 static char *
 get_default_config_path(void)
 {
-  char *ret = get_default_path("/.config/hikari/hikari.conf");
+  char *ret = get_default_path("hikari.conf");
   struct stat s;
 
   if (stat(ret, &s) == 0 && S_ISREG(s.st_mode)) {

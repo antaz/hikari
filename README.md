@@ -92,9 +92,9 @@ The build process will produce two binaries `hikari` and `hikari-unlocker`. The
 latter one is used to check credentials for unlocking the screen. Both need to
 be installed with root setuid in your `PATH`.
 
-`hikari` can be configured via `$HOME/.config/hikari/hikari.conf`, the default
-configuration can be found under `$PREFIX/etc/hikari/hikari.conf` (depending
-on the value of `PREFIX` that was specified during the installation).
+`hikari` can be configured via `$XDG_CONFIG_HOME/hikari/hikari.conf`, the
+default configuration can be found under `$PREFIX/etc/hikari/hikari.conf`
+(depending on the value of `PREFIX` that was specified during the installation).
 
 The default configuration expects your default terminal emulator to be specified
 in the `$TERMINAL` environment variable.

@@ -140,9 +140,9 @@ CONFIGURATION
 =============
 
 **hikari** is configured using libucl(3) as a configuration file format. The
-configuration is located under _~/.config/hikari/hikari.conf_. If this file is
-not found  **hikari** is going to try _hikari.conf_ from the install _etc_
-directory.
+configuration is located under _$XDG_CONFIG_HOME/hikari/hikari.conf_. If this
+file is not found **hikari** is going to try _hikari.conf_ from the install
+_etc_ directory.
 
 The default configuration is going to use **$TERMINAL** as your standard
 terminal application.
