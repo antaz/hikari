@@ -22,6 +22,29 @@
 #include <hikari/xdg_view.h>
 #include <hikari/xwayland_view.h>
 
+#define VIEW(name, link)                                                       \
+  static struct hikari_view *name##_view(void)                                 \
+  {                                                                            \
+    struct wl_list *views = hikari_server.visible_views.link;                  \
+                                                                               \
+    if (!wl_list_empty(views)) {                                               \
+      struct hikari_view *view;                                                \
+      view = wl_container_of(views, view, visible_server_views);               \
+      return view;                                                             \
+    }                                                                          \
+                                                                               \
+    return NULL;                                                               \
+  }                                                                            \
+                                                                               \
+  static bool is_##name##_view(struct hikari_view *view)                       \
+  {                                                                            \
+    return view == name##_view();                                              \
+  }
+
+VIEW(first, next)
+VIEW(last, prev)
+#undef VIEW
+
 static void
 move_to_top(struct hikari_view *view)
 {
@@ -41,6 +64,11 @@ static void
 place_visibly_above(
     struct hikari_view *view, struct hikari_workspace *workspace)
 {
+  assert(!hikari_view_is_hidden(view));
+
+  wl_list_remove(&view->visible_server_views);
+  wl_list_insert(&hikari_server.visible_views, &view->visible_server_views);
+
   wl_list_remove(&view->visible_group_views);
   wl_list_insert(&view->group->visible_views, &view->visible_group_views);
 
@@ -123,7 +151,7 @@ increase_group_visiblity(struct hikari_view *view)
         &hikari_server.visible_groups, &group->visible_server_groups);
   }
 
-  wl_list_insert(&group->visible_views, &view->visible_group_views);
+  wl_list_init(&view->visible_group_views);
 }
 
 static void
@@ -144,6 +172,7 @@ detach_from_group(struct hikari_view *view)
   struct hikari_group *group = view->group;
 
   wl_list_remove(&view->group_views);
+  wl_list_init(&view->group_views);
 
   if (wl_list_empty(&group->views)) {
     hikari_group_fini(group);
@@ -573,6 +602,9 @@ hikari_view_manage(struct hikari_view *view,
   view->output = sheet->workspace->output;
   view->group = group;
 
+  wl_list_init(&view->workspace_views);
+  wl_list_init(&view->visible_server_views);
+
   wl_list_insert(&sheet->views, &view->sheet_views);
   wl_list_insert(&group->views, &view->group_views);
   wl_list_insert(&view->output->views, &view->output_views);
@@ -586,20 +618,27 @@ hikari_view_show(struct hikari_view *view)
 #if !defined(NDEBUG)
   printf("SHOW %p\n", view);
 #endif
-
-  wl_list_insert(&view->sheet->workspace->views, &view->workspace_views);
-
   hikari_view_unset_hidden(view);
+
   increase_group_visiblity(view);
+
+  raise_view(view);
+
   hikari_view_damage_whole(view);
+
+  assert(is_first_view(view));
 }
 
 static void
 hide(struct hikari_view *view)
 {
-  wl_list_remove(&view->workspace_views);
-
   decrease_group_visibility(view);
+
+  wl_list_remove(&view->workspace_views);
+  wl_list_init(&view->workspace_views);
+
+  wl_list_remove(&view->visible_server_views);
+  wl_list_init(&view->visible_server_views);
 
   hikari_view_set_hidden(view);
 }
@@ -630,6 +669,10 @@ hikari_view_raise(struct hikari_view *view)
   assert(view != NULL);
   assert(!hikari_view_is_hidden(view));
 
+  if (is_first_view(view)) {
+    return;
+  }
+
   raise_view(view);
   hikari_view_damage_whole(view);
 }
@@ -638,9 +681,14 @@ void
 hikari_view_lower(struct hikari_view *view)
 {
   assert(view != NULL);
+  assert(!hikari_view_is_hidden(view));
 
-  wl_list_remove(&(view->sheet_views));
-  wl_list_insert(view->sheet->views.prev, &(view->sheet_views));
+  if (is_last_view(view)) {
+    return;
+  }
+
+  wl_list_remove(&view->sheet_views);
+  wl_list_insert(view->sheet->views.prev, &view->sheet_views);
 
   wl_list_remove(&view->group_views);
   wl_list_insert(view->group->views.prev, &view->group_views);
@@ -657,6 +705,9 @@ hikari_view_lower(struct hikari_view *view)
 
   wl_list_remove(&view->workspace_views);
   wl_list_insert(view->sheet->workspace->views.prev, &view->workspace_views);
+
+  wl_list_remove(&view->visible_server_views);
+  wl_list_insert(hikari_server.visible_views.prev, &view->visible_server_views);
 
   hikari_view_damage_whole(view);
 }
@@ -956,9 +1007,7 @@ pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
       hikari_view_hide(view);
       move_to_top(view);
     } else {
-      raise_view(view);
-
-      hikari_view_damage_whole(view);
+      hikari_view_raise(view);
       hikari_indicator_damage(&hikari_server.indicator, view);
     }
   } else {
@@ -1065,17 +1114,11 @@ hikari_view_group(struct hikari_view *view, struct hikari_group *group)
   }
 
   remove_from_group(view);
-
-  wl_list_remove(&view->sheet_views);
-  wl_list_insert(&view->sheet->views, &view->sheet_views);
-
   view->group = group;
-  wl_list_insert(&group->views, &view->group_views);
 
   increase_group_visiblity(view);
 
-  wl_list_remove(&view->workspace_views);
-  wl_list_insert(&view->sheet->workspace->views, &view->workspace_views);
+  raise_view(view);
 
   hikari_view_damage_whole(view);
 }
@@ -1338,8 +1381,9 @@ commit_migrate(struct hikari_view *view, struct hikari_operation *operation)
   if (hikari_sheet_is_visible(sheet)) {
     if (hikari_view_is_hidden(view)) {
       hikari_view_show(view);
+    } else {
+      hikari_view_raise(view);
     }
-    raise_view(view);
 
     if (operation->center) {
       hikari_view_center_cursor(view);

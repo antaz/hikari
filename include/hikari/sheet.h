@@ -104,6 +104,15 @@ bool
 hikari_sheet_is_visible(struct hikari_sheet *sheet);
 
 void
+hikari_sheet_show(struct hikari_sheet *sheet);
+
+void
+hikari_sheet_show_all(struct hikari_sheet *sheet);
+
+void
+hikari_sheet_show_invisible(struct hikari_sheet *sheet);
+
+void
 hikari_sheet_show_group(struct hikari_sheet *sheet, struct hikari_group *group);
 
 #endif

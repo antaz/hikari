@@ -86,8 +86,9 @@ struct hikari_server {
   struct wl_list outputs;
 
   struct wl_list groups;
-  struct wl_list visible_groups;
   struct wl_list workspaces;
+  struct wl_list visible_groups;
+  struct wl_list visible_views;
 
   struct hikari_mode *mode;
 
@@ -316,7 +317,6 @@ WORKSPACE_ACTION(raise_group)
 WORKSPACE_ACTION(lower_view)
 WORKSPACE_ACTION(lower_group)
 WORKSPACE_ACTION(show_invisible_sheet_views)
-WORKSPACE_ACTION(show_all_invisible_views)
 WORKSPACE_ACTION(reset_view_geometry)
 WORKSPACE_ACTION(quit_view)
 WORKSPACE_ACTION(exchange_next_view)

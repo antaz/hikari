@@ -793,11 +793,13 @@ server_init(struct hikari_server *server, char *config_path)
   setup_layer_shell(server);
 #endif
 
-  wl_list_init(&server->keyboards);
-  wl_list_init(&server->groups);
-  wl_list_init(&server->visible_groups);
-  wl_list_init(&server->workspaces);
   wl_list_init(&server->pointers);
+  wl_list_init(&server->keyboards);
+
+  wl_list_init(&server->groups);
+  wl_list_init(&server->workspaces);
+  wl_list_init(&server->visible_groups);
+  wl_list_init(&server->visible_views);
 
   hikari_dnd_mode_init(&server->dnd_mode);
   hikari_group_assign_mode_init(&server->group_assign_mode);
@@ -943,6 +945,50 @@ hikari_server_unlock(void)
   hikari_server_cursor_focus();
 }
 
+#define CYCLE_VIEW(name, link)                                                 \
+  static struct hikari_view *cycle_##name##_view(void)                         \
+  {                                                                            \
+    struct hikari_server *server = &hikari_server;                             \
+                                                                               \
+    if (wl_list_empty(&server->visible_views)) {                               \
+      return NULL;                                                             \
+    }                                                                          \
+                                                                               \
+    struct hikari_view *focus_view = server->workspace->focus_view;            \
+                                                                               \
+    struct hikari_view *view;                                                  \
+    if (focus_view == NULL) {                                                  \
+      view = wl_container_of(                                                  \
+          server->visible_views.link, view, visible_server_views);             \
+    } else {                                                                   \
+      struct wl_list *link = focus_view->visible_server_views.link;            \
+      if (link != &server->visible_views) {                                    \
+        view = wl_container_of(link, view, visible_server_views);              \
+      } else {                                                                 \
+        view = wl_container_of(                                                \
+            server->visible_views.link, view, visible_server_views);           \
+      }                                                                        \
+    }                                                                          \
+                                                                               \
+    return view;                                                               \
+  }                                                                            \
+                                                                               \
+  void hikari_server_cycle_##name##_view(void *arg)                            \
+  {                                                                            \
+    struct hikari_view *view;                                                  \
+                                                                               \
+    hikari_server_set_cycling();                                               \
+    view = cycle_##name##_view();                                              \
+                                                                               \
+    if (view != NULL && view != hikari_server.workspace->focus_view) {         \
+      hikari_workspace_focus_view(view->sheet->workspace, view);               \
+    }                                                                          \
+  }
+
+CYCLE_VIEW(next, prev)
+CYCLE_VIEW(prev, next)
+#undef CYCLE_VIEW
+
 #define CYCLE_ACTION(n)                                                        \
   void hikari_server_cycle_##n(void *arg)                                      \
   {                                                                            \
@@ -966,8 +1012,6 @@ CYCLE_ACTION(first_layout_view)
 CYCLE_ACTION(last_layout_view)
 CYCLE_ACTION(next_group)
 CYCLE_ACTION(prev_group)
-CYCLE_ACTION(next_view)
-CYCLE_ACTION(prev_view)
 #undef CYCLE_ACTION
 
 #define CYCLE_WORKSPACE(name)                                                  \
@@ -1214,10 +1258,9 @@ static void
 show_marked_view(struct hikari_view *view, struct hikari_mark *mark)
 {
   if (view != NULL) {
-    if (!hikari_view_is_hidden(view)) {
-      hikari_view_raise(view);
-    } else {
+    if (hikari_view_is_hidden(view)) {
       hikari_view_show(view);
+    } else {
       hikari_view_raise(view);
     }
 

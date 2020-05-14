@@ -449,13 +449,46 @@ hikari_sheet_is_visible(struct hikari_sheet *sheet)
   return sheet == sheet->workspace->sheet || sheet == &sheets[0];
 }
 
+#define SHOW_VIEWS(cond)                                                       \
+  {                                                                            \
+    struct hikari_view *view, *view_temp, *top = NULL;                         \
+    wl_list_for_each_reverse_safe (                                            \
+        view, view_temp, &sheet->views, sheet_views) {                         \
+      if (cond) {                                                              \
+        if (top == view) {                                                     \
+          break;                                                               \
+        }                                                                      \
+                                                                               \
+        if (top == NULL) {                                                     \
+          top = view;                                                          \
+        }                                                                      \
+                                                                               \
+        hikari_view_show(view);                                                \
+      }                                                                        \
+    }                                                                          \
+  }
+
+void
+hikari_sheet_show_all(struct hikari_sheet *sheet)
+{
+  SHOW_VIEWS(true);
+}
+
+void
+hikari_sheet_show(struct hikari_sheet *sheet)
+{
+  SHOW_VIEWS(!hikari_view_is_invisible(view));
+}
+
 void
 hikari_sheet_show_group(struct hikari_sheet *sheet, struct hikari_group *group)
 {
-  struct hikari_view *view;
-  wl_list_for_each_reverse (view, &sheet->views, sheet_views) {
-    if (view->group == group) {
-      hikari_view_show(view);
-    }
-  }
+  SHOW_VIEWS(view->group == group);
 }
+
+void
+hikari_sheet_show_invisible(struct hikari_sheet *sheet)
+{
+  SHOW_VIEWS(hikari_view_is_invisible(view));
+}
+#undef SHOW_VIEWS

@@ -69,9 +69,9 @@ restack(struct hikari_layout *layout)
 
     if (hikari_view_is_hidden(view)) {
       hikari_view_show(view);
+    } else {
+      hikari_view_raise(view);
     }
-
-    hikari_view_raise(view);
   }
 }
 

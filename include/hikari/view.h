@@ -59,6 +59,7 @@ struct hikari_view {
   struct wl_list sheet_views;
   struct wl_list group_views;
   struct wl_list visible_group_views;
+  struct wl_list visible_server_views;
 
   struct hikari_operation pending_operation;
 

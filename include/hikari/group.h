@@ -37,6 +37,9 @@ hikari_group_damage(struct hikari_group *group);
 void
 hikari_group_show(struct hikari_group *group);
 
+void
+hikari_group_hide(struct hikari_group *group);
+
 struct hikari_view *
 hikari_group_first_view(struct hikari_group *group);
 
