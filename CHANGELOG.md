@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.2.0
+
+* add drag/drop support
+* add client side cursor setting
+* add invisible view configuration flag
+* add floating view configuration flag
+* fix workspace focus on multimonitor
+
 ## 1.1.1
 
 * Xwayland fix for multimonitor coordinates
