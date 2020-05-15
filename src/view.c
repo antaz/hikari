@@ -253,9 +253,7 @@ queue_migrate(struct hikari_view *view,
     struct wlr_box *geometry,
     bool center)
 {
-  if (!hikari_view_is_hidden(view)) {
-    hikari_view_hide(view);
-  }
+  assert(hikari_view_is_hidden(view));
 
   view->output = sheet->workspace->output;
   view->sheet = sheet;
@@ -988,6 +986,10 @@ pin_migrate(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
   hikari_geometry_constrain_absolute(
       &geometry, &output->usable_area, geometry.x, geometry.y);
 
+  if (!hikari_view_is_hidden(view)) {
+    hikari_view_hide(view);
+  }
+
   queue_migrate(view, sheet, &geometry, true);
 }
 
@@ -1614,6 +1616,8 @@ hikari_view_migrate(
   memcpy(&geometry, &view->geometry, sizeof(struct wlr_box));
   hikari_geometry_constrain_relative(&geometry, &output->usable_area, x, y);
 
+  // only remove view from lists and do not make it lose focus by calling
+  // `hikari_view_hide`.
   hide(view);
 
   queue_migrate(view, sheet, &geometry, false);
