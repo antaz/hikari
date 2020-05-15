@@ -661,7 +661,7 @@ output_layout_change_handler(struct wl_listener *listener, void *data)
     output->geometry.height = output_box->height;
 
     struct hikari_output_config *output_config =
-        hikari_configuration_resolve_output(
+        hikari_configuration_resolve_output_config(
             hikari_configuration, wlr_output->name);
 
     if (output_config != NULL) {

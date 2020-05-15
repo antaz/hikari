@@ -597,7 +597,7 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
   }
 
   struct hikari_output_config *output_config =
-      hikari_configuration_resolve_output(
+      hikari_configuration_resolve_output_config(
           hikari_configuration, wlr_output->name);
 
   if (output_config != NULL &&
