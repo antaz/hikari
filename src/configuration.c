@@ -2533,11 +2533,11 @@ hikari_configuration_init(struct hikari_configuration *configuration)
 
   hikari_color_convert(configuration->clear, 0x282C34);
   hikari_color_convert(configuration->foreground, 0x000000);
-  hikari_color_convert(configuration->indicator_selected, 0xE6DB74);
-  hikari_color_convert(configuration->indicator_grouped, 0xFD971F);
+  hikari_color_convert(configuration->indicator_selected, 0xF5E094);
+  hikari_color_convert(configuration->indicator_grouped, 0xFDAF53);
   hikari_color_convert(configuration->indicator_first, 0xB8E673);
-  hikari_color_convert(configuration->indicator_conflict, 0xEF5939);
-  hikari_color_convert(configuration->indicator_insert, 0x66D9EF);
+  hikari_color_convert(configuration->indicator_conflict, 0xED6B32);
+  hikari_color_convert(configuration->indicator_insert, 0xE3C3FA);
   hikari_color_convert(configuration->border_active, 0xFFFFFF);
   hikari_color_convert(configuration->border_inactive, 0x465457);
 
