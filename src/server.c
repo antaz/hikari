@@ -665,8 +665,9 @@ output_layout_change_handler(struct wl_listener *listener, void *data)
             hikari_configuration, wlr_output->name);
 
     if (output_config != NULL) {
-      hikari_output_load_background(
-          output, output_config->background, output_config->background_fit);
+      hikari_output_load_background(output,
+          output_config->background.value,
+          output_config->background_fit.value);
     }
   }
 }

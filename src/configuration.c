@@ -1851,19 +1851,12 @@ done:
 }
 
 static bool
-parse_pointer_config(struct hikari_configuration *configuration,
+parse_pointer_config(struct hikari_pointer_config *pointer_config,
     const ucl_object_t *pointer_config_obj)
 {
   bool success = false;
-  const char *pointer_name = ucl_object_key(pointer_config_obj);
+  const char *pointer_name = pointer_config->name;
   const ucl_object_t *cur;
-
-  struct hikari_pointer_config *pointer_config =
-      hikari_malloc(sizeof(struct hikari_pointer_config));
-
-  hikari_pointer_config_init(pointer_config, pointer_name);
-
-  wl_list_insert(&configuration->pointer_configs, &pointer_config->link);
 
   ucl_object_iter_t it = ucl_object_iterate_new(pointer_config_obj);
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
@@ -2024,18 +2017,39 @@ parse_pointers(struct hikari_configuration *configuration,
     const ucl_object_t *pointers_obj)
 {
   bool success = false;
+
   ucl_object_iter_t it = ucl_object_iterate_new(pointers_obj);
+  struct hikari_pointer_config *pointer_config;
 
   const ucl_object_t *cur;
   while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
-    if (!parse_pointer_config(configuration, cur)) {
+    const char *pointer_name = ucl_object_key(cur);
+
+    pointer_config = hikari_malloc(sizeof(struct hikari_pointer_config));
+    hikari_pointer_config_init(pointer_config, pointer_name);
+
+    wl_list_insert(&configuration->pointer_configs, &pointer_config->link);
+
+    if (!parse_pointer_config(pointer_config, cur)) {
       goto done;
+    }
+  }
+
+  struct hikari_pointer_config *default_config =
+      hikari_configuration_resolve_pointer_config(configuration, "*");
+
+  if (default_config != NULL) {
+    wl_list_for_each (pointer_config, &configuration->pointer_configs, link) {
+      if (!!strcmp(pointer_config->name, "*")) {
+        hikari_pointer_config_merge(pointer_config, default_config);
+      }
     }
   }
 
   success = true;
 
 done:
+
   ucl_object_iterate_free(it);
 
   return success;
@@ -2073,8 +2087,7 @@ done:
 }
 
 static bool
-parse_background(struct hikari_configuration *configuration,
-    const ucl_object_t *background_obj,
+parse_background(const ucl_object_t *background_obj,
     char **background,
     enum hikari_background_fit *fit)
 {
@@ -2133,17 +2146,12 @@ done:
 }
 
 static bool
-parse_output_config(struct hikari_configuration *configuration,
+parse_output_config(struct hikari_output_config *output_config,
     const ucl_object_t *output_config_obj)
 
 {
   bool success = false;
   ucl_object_iter_t it = ucl_object_iterate_new(output_config_obj);
-  const char *output_name = ucl_object_key(output_config_obj);
-  char *background = NULL;
-  struct hikari_position_config position_config;
-  hikari_position_config_init(&position_config);
-  enum hikari_background_fit background_fit = HIKARI_BACKGROUND_STRETCH;
 
   const ucl_object_t *cur;
   while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
@@ -2153,17 +2161,25 @@ parse_output_config(struct hikari_configuration *configuration,
       ucl_type_t type = ucl_object_type(cur);
 
       if (type == UCL_STRING) {
-        background = copy_in_config_string(cur);
+        char *background = copy_in_config_string(cur);
+
         if (background == NULL) {
           fprintf(
               stderr, "configuration error: invalid \"background\" value\n");
           goto done;
         }
+
+        hikari_output_config_set_background(output_config, background);
       } else if (type == UCL_OBJECT) {
-        if (!parse_background(
-                configuration, cur, &background, &background_fit)) {
+        char *background;
+        enum hikari_background_fit background_fit;
+
+        if (!parse_background(cur, &background, &background_fit)) {
           goto done;
         }
+
+        hikari_output_config_set_background(output_config, background);
+        hikari_output_config_set_background_fit(output_config, background_fit);
       } else {
         fprintf(stderr,
             "configuration error: expected string or object for "
@@ -2173,26 +2189,20 @@ parse_output_config(struct hikari_configuration *configuration,
     } else if (!strcmp(key, "position")) {
       int x;
       int y;
+
       if (!parse_position(cur, &x, &y)) {
         fprintf(stderr,
             "configuration error: failed to parse output \"position\"\n");
         goto done;
       }
 
-      hikari_position_config_set_absolute(&position_config, x, y);
+      hikari_position_config_set_absolute(&output_config->position.value, x, y);
     } else {
       fprintf(stderr,
           "configuration error: unknown \"outputs\" configuration key \"%s\"\n",
           key);
     }
   }
-
-  struct hikari_output_config *output_config =
-      hikari_malloc(sizeof(struct hikari_output_config));
-  hikari_output_config_init(
-      output_config, output_name, background, background_fit, &position_config);
-
-  wl_list_insert(&configuration->output_configs, &output_config->link);
 
   success = true;
 
@@ -2207,11 +2217,20 @@ parse_outputs(
     struct hikari_configuration *configuration, const ucl_object_t *outputs_obj)
 {
   bool success = false;
+
   ucl_object_iter_t it = ucl_object_iterate_new(outputs_obj);
+  struct hikari_output_config *output_config;
 
   const ucl_object_t *cur;
   while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
-    if (!parse_output_config(configuration, cur)) {
+    const char *output_name = ucl_object_key(cur);
+
+    output_config = hikari_malloc(sizeof(struct hikari_output_config));
+    hikari_output_config_init(output_config, output_name);
+
+    wl_list_insert(&configuration->output_configs, &output_config->link);
+
+    if (!parse_output_config(output_config, cur)) {
       fprintf(stderr,
           "configuration error: failed to parse \"outputs\" configuration\n");
       goto done;
@@ -2219,6 +2238,17 @@ parse_outputs(
   }
 
   success = true;
+
+  struct hikari_output_config *default_config =
+      hikari_configuration_resolve_output_config(configuration, "*");
+
+  if (default_config != NULL) {
+    wl_list_for_each (output_config, &configuration->output_configs, link) {
+      if (!!strcmp(output_config->output_name, "*")) {
+        hikari_output_config_merge(output_config, default_config);
+      }
+    }
+  }
 
 done:
   ucl_object_iterate_free(it);
@@ -2461,19 +2491,20 @@ hikari_configuration_reload(char *config_path)
               hikari_configuration, output->wlr_output->name);
 
       if (output_config != NULL) {
-        if (output_config->position.type ==
+        if (output_config->position.value.type ==
             HIKARI_POSITION_CONFIG_TYPE_ABSOLUTE) {
-          int x = output_config->position.config.absolute.x;
-          int y = output_config->position.config.absolute.y;
+          int x = output_config->position.value.config.absolute.x;
+          int y = output_config->position.value.config.absolute.y;
 
           if (output->geometry.x != x || output->geometry.y != y) {
             hikari_output_move(output, x, y);
           }
         }
 
-        if (output_config->background != NULL) {
-          hikari_output_load_background(
-              output, output_config->background, output_config->background_fit);
+        if (output_config->background.value != NULL) {
+          hikari_output_load_background(output,
+              output_config->background.value,
+              output_config->background_fit.value);
         }
       }
     }
@@ -2591,6 +2622,12 @@ hikari_configuration_resolve_output_config(
     }
   }
 
+  wl_list_for_each (output_config, &configuration->output_configs, link) {
+    if (!strcmp(output_config->output_name, "*")) {
+      return output_config;
+    }
+  }
+
   return NULL;
 }
 
@@ -2601,6 +2638,12 @@ hikari_configuration_resolve_pointer_config(
   struct hikari_pointer_config *pointer_config;
   wl_list_for_each (pointer_config, &configuration->pointer_configs, link) {
     if (!strcmp(pointer_config->name, pointer_name)) {
+      return pointer_config;
+    }
+  }
+
+  wl_list_for_each (pointer_config, &configuration->pointer_configs, link) {
+    if (!strcmp(pointer_config->name, "*")) {
       return pointer_config;
     }
   }

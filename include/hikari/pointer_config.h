@@ -6,27 +6,22 @@
 #include <libinput.h>
 #include <wayland-util.h>
 
-#define CONFIGURATION(name, type)                                              \
-  struct {                                                                     \
-    bool configured;                                                           \
-    type value;                                                                \
-  } name
+#include <hikari/option.h>
 
 struct hikari_pointer_config {
   struct wl_list link;
 
   char *name;
 
-  CONFIGURATION(accel, double);
-  CONFIGURATION(disable_while_typing, enum libinput_config_dwt_state);
-  CONFIGURATION(natural_scrolling, bool);
-  CONFIGURATION(scroll_button, uint32_t);
-  CONFIGURATION(scroll_method, enum libinput_config_scroll_method);
-  CONFIGURATION(tap, enum libinput_config_tap_state);
-  CONFIGURATION(tap_drag, enum libinput_config_drag_state);
-  CONFIGURATION(tap_drag_lock, enum libinput_config_drag_lock_state);
+  HIKARI_OPTION(accel, double);
+  HIKARI_OPTION(disable_while_typing, enum libinput_config_dwt_state);
+  HIKARI_OPTION(natural_scrolling, bool);
+  HIKARI_OPTION(scroll_button, uint32_t);
+  HIKARI_OPTION(scroll_method, enum libinput_config_scroll_method);
+  HIKARI_OPTION(tap, enum libinput_config_tap_state);
+  HIKARI_OPTION(tap_drag, enum libinput_config_drag_state);
+  HIKARI_OPTION(tap_drag_lock, enum libinput_config_drag_lock_state);
 };
-#undef CONFIGURATION
 
 void
 hikari_pointer_config_init(
@@ -35,29 +30,17 @@ hikari_pointer_config_init(
 void
 hikari_pointer_config_fini(struct hikari_pointer_config *pointer_config);
 
-#define CONFIGURE(name, type)                                                  \
-                                                                               \
-  static inline void hikari_pointer_config_set_##name(                         \
-      struct hikari_pointer_config *pointer_config, type value)                \
-  {                                                                            \
-    pointer_config->name.configured = true;                                    \
-    pointer_config->name.value = value;                                        \
-  }                                                                            \
-                                                                               \
-  static inline bool hikari_pointer_config_has_##name(                         \
-      struct hikari_pointer_config *pointer_config)                            \
-  {                                                                            \
-    return pointer_config->name.configured;                                    \
-  }
+void
+hikari_pointer_config_merge(struct hikari_pointer_config *pointer_config,
+    struct hikari_pointer_config *default_config);
 
-CONFIGURE(accel, double)
-CONFIGURE(disable_while_typing, bool)
-CONFIGURE(natural_scrolling, bool)
-CONFIGURE(scroll_button, uint32_t)
-CONFIGURE(scroll_method, enum libinput_config_scroll_method)
-CONFIGURE(tap, enum libinput_config_tap_state)
-CONFIGURE(tap_drag, enum libinput_config_drag_state)
-CONFIGURE(tap_drag_lock, enum libinput_config_drag_lock_state)
-#undef CONFIGURE
+HIKARI_OPTION_FUNS(pointer, accel, double)
+HIKARI_OPTION_FUNS(pointer, disable_while_typing, bool)
+HIKARI_OPTION_FUNS(pointer, natural_scrolling, bool)
+HIKARI_OPTION_FUNS(pointer, scroll_button, uint32_t)
+HIKARI_OPTION_FUNS(pointer, scroll_method, enum libinput_config_scroll_method)
+HIKARI_OPTION_FUNS(pointer, tap, enum libinput_config_tap_state)
+HIKARI_OPTION_FUNS(pointer, tap_drag, enum libinput_config_drag_state)
+HIKARI_OPTION_FUNS(pointer, tap_drag_lock, enum libinput_config_drag_lock_state)
 
 #endif

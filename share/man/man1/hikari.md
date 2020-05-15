@@ -947,6 +947,9 @@ Configuring the *System mouse* input device could look like this.
 }
 ```
 
+A special name "\*" is used to address all pointers. Values defined for this
+pseudo pointer override unconfigured values for any other pointer.
+
 Keyboards
 ---------
 Keyboards are configured using *XKB* environment variables. Refer to
@@ -968,7 +971,9 @@ OUTPUTS
 =======
 
 The *outputs* section allows users to define the background and position for a
-output using its name.
+output using its name. A special name "\*" is used to address all outputs.
+Values defined for this pseudo output override unconfigured values for any other
+output.
 
 Backgrounds are configured via the *background* attribute which can be either
 the path to the background image, or an object which enables the user to define
