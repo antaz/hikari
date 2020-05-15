@@ -1014,16 +1014,23 @@ CYCLE_ACTION(next_group)
 CYCLE_ACTION(prev_group)
 #undef CYCLE_ACTION
 
-#define CYCLE_WORKSPACE(name)                                                  \
-  void hikari_server_cycle_##name##_workspace(void *arg)                       \
+#define CYCLE_WORKSPACE(link)                                                  \
+  void hikari_server_cycle_##link##_workspace(void *arg)                       \
   {                                                                            \
     struct hikari_workspace *workspace = hikari_server.workspace;              \
-    struct hikari_workspace *name##_workspace =                                \
-        hikari_workspace_##name(workspace);                                    \
+    struct hikari_workspace *link = hikari_workspace_##link(workspace);        \
                                                                                \
-    if (workspace != name##_workspace) {                                       \
-      hikari_workspace_center_cursor(name##_workspace);                        \
-      hikari_server_cursor_focus();                                            \
+    if (workspace != link) {                                                   \
+      struct hikari_view *first = hikari_sheet_first_view(link->sheet);        \
+                                                                               \
+      hikari_server_set_cycling();                                             \
+      if (first != NULL) {                                                     \
+        hikari_workspace_focus_view(link, first);                              \
+        hikari_view_center_cursor(first);                                      \
+      } else {                                                                 \
+        hikari_workspace_center_cursor(link);                                  \
+        hikari_server_cursor_focus();                                          \
+      }                                                                        \
     }                                                                          \
   }
 
