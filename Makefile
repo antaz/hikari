@@ -197,6 +197,7 @@ hikari-${VERSION}.tar.gz: version.h share/man/man1/hikari.1
 		CHANGELOG.md \
 		share/man/man1/hikari.md \
 		share/man/man1/hikari.1 \
+		share/backgrounds/hikari/hikari_wallpaper.png \
 		etc/hikari/hikari.conf \
 		etc/pam.d/hikari-unlocker.*
 
@@ -209,17 +210,22 @@ dist: distclean hikari-${VERSION}.tar.gz
 install: hikari hikari-unlocker share/man/man1/hikari.1
 	mkdir -p ${DESTDIR}/${PREFIX}/bin
 	mkdir -p ${DESTDIR}/${PREFIX}/share/man/man1
+	mkdir -p ${DESTDIR}/${PREFIX}/share/backgrounds/hikari
 	mkdir -p ${DESTDIR}/${ETC_PREFIX}/etc/hikari
 	mkdir -p ${DESTDIR}/${ETC_PREFIX}/etc/pam.d
+	sed "s,PREFIX,/${PREFIX}," etc/hikari/hikari.conf > ${DESTDIR}/${ETC_PREFIX}/etc/hikari/hikari.conf
+	chmod 644 ${DESTDIR}/${ETC_PREFIX}/etc/hikari/hikari.conf
 	install -m 4555 hikari hikari-unlocker ${DESTDIR}/${PREFIX}/bin
 	install -m 644 share/man/man1/hikari.1 ${DESTDIR}/${PREFIX}/share/man/man1
-	install -m 644 etc/hikari/hikari.conf ${DESTDIR}/${ETC_PREFIX}/etc/hikari
+	install -m 644 share/backgrounds/hikari/hikari_wallpaper.png ${DESTDIR}/${PREFIX}/share/backgrounds/hikari/hikari_wallpaper.png
 	install -m 644 etc/pam.d/hikari-unlocker.${OS} ${DESTDIR}/${ETC_PREFIX}/etc/pam.d/hikari-unlocker
 
 uninstall:
 	-rm ${DESTDIR}/${PREFIX}/bin/hikari
 	-rm ${DESTDIR}/${PREFIX}/bin/hikari-unlocker
 	-rm ${DESTDIR}/${PREFIX}/share/man/man1/hikari.1
+	-rm ${DESTDIR}/${PREFIX}/share/backgrounds/hikari/hikari_wallpaper.png
 	-rm ${DESTDIR}/${ETC_PREFIX}/etc/pam.d/hikari-unlocker
 	-rm ${DESTDIR}/${ETC_PREFIX}/etc/hikari/hikari.conf
 	-rmdir ${DESTDIR}/${ETC_PREFIX}/etc/hikari
+	-rmdir ${DESTDIR}/${PREFIX}/share/backgrounds/hikari
