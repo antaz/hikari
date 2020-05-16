@@ -1,6 +1,6 @@
 OS != uname
 VERSION ?= "CURRENT"
-PREFIX ?= /usr/local
+PREFIX ?= usr/local
 ETC_PREFIX ?= ${PREFIX}
 
 OBJS = \
@@ -91,7 +91,7 @@ CFLAGS += -DHAVE_SCREENCOPY=1
 CFLAGS += -DHAVE_LAYERSHELL=1
 .endif
 
-CFLAGS += -Wall -I. -Iinclude -DHIKARI_ETC_PREFIX=${ETC_PREFIX}
+CFLAGS += -Wall -I. -Iinclude -DHIKARI_ETC_PREFIX=/${ETC_PREFIX}
 
 WLROOTS_CFLAGS != pkg-config --cflags wlroots
 WLROOTS_LIBS != pkg-config --libs wlroots
