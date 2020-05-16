@@ -22,14 +22,13 @@ get_mode(void)
 }
 
 static void
-clear_conflict(void)
+clear_conflict(struct hikari_mark_assign_mode *mode, struct hikari_mark *mark)
 {
-  struct hikari_mark_assign_mode *mode = get_mode();
-  struct hikari_mark *mark = mode->pending_mark;
-
   if (mark != NULL && mark->view != NULL) {
-    hikari_view_damage_border(mark->view);
-    hikari_indicator_damage(&mode->indicator, mark->view);
+    struct hikari_view *view = mark->view;
+
+    hikari_view_damage_border(view);
+    hikari_indicator_damage(&mode->indicator, view);
   }
 }
 
@@ -42,35 +41,37 @@ update_state(struct hikari_mark *mark)
   struct hikari_output *output = workspace->output;
   struct wlr_box *geometry = hikari_view_border_geometry(view);
   struct hikari_indicator *indicator = &hikari_server.indicator;
+  struct hikari_mark *pending_mark = mode->pending_mark;
+
+  if (pending_mark != mark) {
+    clear_conflict(mode, pending_mark);
+  }
 
   if (mark == NULL) {
     hikari_indicator_update_mark(
         indicator, output, " ", hikari_configuration->indicator_insert);
   } else {
-    if (mode->pending_mark != mark) {
-      clear_conflict();
-      float *indicator_color;
-      struct hikari_view *mark_view = mark->view;
+    float *indicator_color;
+    struct hikari_view *mark_view = mark->view;
 
-      if (mark != NULL && mark_view != NULL) {
-        hikari_indicator_update(&mode->indicator,
-            mark_view,
-            hikari_configuration->indicator_conflict);
+    if (mark_view != NULL) {
+      hikari_indicator_update(&mode->indicator,
+          mark_view,
+          hikari_configuration->indicator_conflict);
 
-        hikari_view_damage_border(mark_view);
-        hikari_indicator_damage(&mode->indicator, mark_view);
+      hikari_view_damage_border(mark_view);
+      hikari_indicator_damage(&mode->indicator, mark_view);
 
-        indicator_color = hikari_configuration->indicator_conflict;
-      } else {
-        indicator_color = hikari_configuration->indicator_insert;
-      }
-
-      hikari_indicator_update_mark(
-          indicator, output, mark->name, indicator_color);
-
-      hikari_indicator_damage_mark(indicator, output, geometry);
+      indicator_color = hikari_configuration->indicator_conflict;
+    } else {
+      indicator_color = hikari_configuration->indicator_insert;
     }
+
+    hikari_indicator_update_mark(
+        indicator, output, mark->name, indicator_color);
   }
+
+  hikari_indicator_damage_mark(indicator, output, geometry);
 
   mode->pending_mark = mark;
 }
@@ -82,13 +83,13 @@ confirm_mark_assign(void)
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_view *view = workspace->focus_view;
   struct hikari_output *output = workspace->output;
-  struct hikari_mark *mark = mode->pending_mark;
+  struct hikari_mark *pending_mark = mode->pending_mark;
   struct hikari_indicator *indicator = &hikari_server.indicator;
 
-  if (mark != NULL) {
-    clear_conflict();
+  if (pending_mark != NULL) {
+    clear_conflict(mode, pending_mark);
 
-    hikari_mark_set(mark, view);
+    hikari_mark_set(pending_mark, view);
     hikari_indicator_update_mark(indicator,
         output,
         mode->pending_mark->name,
@@ -148,9 +149,8 @@ handle_keysym(
 }
 
 static void
-assign_mark(struct hikari_workspace *workspace,
-    struct wlr_event_keyboard_key *event,
-    struct hikari_keyboard *keyboard)
+assign_mark(
+    struct wlr_event_keyboard_key *event, struct hikari_keyboard *keyboard)
 {
   assert(hikari_server.workspace->focus_view != NULL);
 
@@ -164,10 +164,9 @@ key_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
   struct wlr_event_keyboard_key *event = data;
-  struct hikari_workspace *workspace = hikari_server.workspace;
 
   if (event->state == WLR_KEY_PRESSED) {
-    assign_mark(workspace, event, keyboard);
+    assign_mark(event, keyboard);
   }
 }
 
@@ -210,8 +209,9 @@ cancel(void)
 {
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_view *view = workspace->focus_view;
+  struct hikari_mark_assign_mode *mode = get_mode();
 
-  clear_conflict();
+  clear_conflict(mode, mode->pending_mark);
 
   if (view != NULL) {
     struct hikari_indicator *indicator = &hikari_server.indicator;
