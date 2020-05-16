@@ -83,8 +83,8 @@ cursor_move(uint32_t time_msec)
     hikari_view_move_absolute(
         focus_view, lx - view_output->geometry.x, ly - view_output->geometry.y);
   } else {
-    hikari_server_view_migrate(
-        focus_view, output, lx, ly, hikari_configuration->indicator_insert);
+    hikari_server_migrate_focus_view(
+        output, lx, ly, hikari_configuration->indicator_insert);
   }
 }
 
