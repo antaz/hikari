@@ -296,6 +296,12 @@ hikari_view_border_geometry(struct hikari_view *view)
 }
 
 static inline bool
+hikari_view_is_focus_view(struct hikari_view *view)
+{
+  return view->sheet->workspace->focus_view == view;
+}
+
+static inline bool
 hikari_view_has_focus(struct hikari_view *view)
 {
   assert(view != NULL);

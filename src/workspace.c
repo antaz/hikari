@@ -986,4 +986,18 @@ hikari_workspace_center_cursor(struct hikari_workspace *workspace)
   hikari_cursor_center(&hikari_server.cursor, output, &output->usable_area);
 }
 
+struct hikari_view *
+hikari_workspace_first_view(struct hikari_workspace *workspace)
+{
+  assert(workspace != NULL);
+
+  struct hikari_view *view;
+  if (workspace->focus_view != NULL) {
+    view = workspace->focus_view;
+  } else {
+    view = hikari_sheet_first_view(workspace->sheet);
+  }
+
+  return view;
+}
 #undef FOCUS_GUARD

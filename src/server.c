@@ -242,8 +242,12 @@ topmost_of(struct wl_list *layers,
 #endif
 
 static struct hikari_view_interface *
-view_interface_at(
-    double lx, double ly, struct wlr_surface **surface, double *sx, double *sy)
+view_interface_at(double lx,
+    double ly,
+    struct wlr_surface **surface,
+    struct hikari_workspace **workspace,
+    double *sx,
+    double *sy)
 {
   assert(hikari_server.workspace != NULL);
 
@@ -255,24 +259,11 @@ view_interface_at(
   }
 
   struct hikari_output *output = wlr_output->data;
-  struct hikari_workspace *workspace;
+  struct hikari_workspace *output_workspace = output->workspace;
+
+  *workspace = output_workspace;
+
   struct hikari_view_interface *view_interface;
-
-  if (hikari_server.workspace != output->workspace) {
-    if (hikari_server.workspace->focus_view != NULL) {
-      hikari_workspace_focus_view(hikari_server.workspace, NULL);
-    }
-
-    workspace = output->workspace;
-    hikari_server.workspace = workspace;
-
-    if (workspace->focus_view != NULL) {
-      hikari_workspace_focus_view(workspace, NULL);
-    }
-  } else {
-    workspace = hikari_server.workspace;
-  }
-
   double ox = lx - output->geometry.x;
   double oy = ly - output->geometry.y;
 
@@ -314,7 +305,7 @@ view_interface_at(
 #endif
 
   struct hikari_view *view = NULL;
-  wl_list_for_each (view, &workspace->views, workspace_views) {
+  wl_list_for_each (view, &output_workspace->views, workspace_views) {
     view_interface = (struct hikari_view_interface *)view;
 
     if (surface_at(view_interface, ox, oy, surface, sx, sy)) {
@@ -338,10 +329,14 @@ view_interface_at(
 }
 
 struct hikari_view_interface *
-hikari_server_view_interface_at(
-    double x, double y, struct wlr_surface **surface, double *sx, double *sy)
+hikari_server_view_interface_at(double x,
+    double y,
+    struct wlr_surface **surface,
+    struct hikari_workspace **workspace,
+    double *sx,
+    double *sy)
 {
-  return view_interface_at(x, y, surface, sx, sy);
+  return view_interface_at(x, y, surface, workspace, sx, sy);
 }
 
 void
@@ -534,13 +529,15 @@ setup_decorations(struct hikari_server *server)
 static void
 start_drag_handler(struct wl_listener *listener, void *data)
 {
-  struct wlr_surface *surface = NULL;
+  struct wlr_surface *surface;
+  struct hikari_workspace *workspace;
   double sx, sy;
 
   struct hikari_view_interface *view_interface =
       view_interface_at(hikari_server.cursor.wlr_cursor->x,
           hikari_server.cursor.wlr_cursor->y,
           &surface,
+          &workspace,
           &sx,
           &sy);
 
@@ -1021,12 +1018,12 @@ CYCLE_ACTION(prev_group)
     struct hikari_workspace *link = hikari_workspace_##link(workspace);        \
                                                                                \
     if (workspace != link) {                                                   \
-      struct hikari_view *first = hikari_sheet_first_view(link->sheet);        \
-                                                                               \
       hikari_server_set_cycling();                                             \
-      if (first != NULL) {                                                     \
-        hikari_workspace_focus_view(link, first);                              \
-        hikari_view_center_cursor(first);                                      \
+                                                                               \
+      struct hikari_view *view = hikari_workspace_first_view(link);            \
+      if (view != NULL) {                                                      \
+        hikari_workspace_focus_view(link, view);                               \
+        hikari_view_center_cursor(view);                                       \
       } else {                                                                 \
         hikari_workspace_center_cursor(link);                                  \
         hikari_server_cursor_focus();                                          \

@@ -65,6 +65,9 @@ hikari_workspace_move_resize_view(struct hikari_workspace *workspace,
 void
 hikari_workspace_center_cursor(struct hikari_workspace *workspace);
 
+struct hikari_view *
+hikari_workspace_first_view(struct hikari_workspace *workspace);
+
 #define WORKSPACE_CYCLE_ACTION(name)                                           \
   struct hikari_view *hikari_workspace_##name(                                 \
       struct hikari_workspace *workspace);

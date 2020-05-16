@@ -44,10 +44,11 @@ cursor_move(uint32_t time_msec)
   double x = hikari_server.cursor.wlr_cursor->x;
   double y = hikari_server.cursor.wlr_cursor->y;
 
-  struct wlr_surface *surface = NULL;
+  struct wlr_surface *surface;
+  struct hikari_workspace *workspace;
   double sx, sy;
   struct hikari_view_interface *view_interface =
-      hikari_server_view_interface_at(x, y, &surface, &sx, &sy);
+      hikari_server_view_interface_at(x, y, &surface, &workspace, &sx, &sy);
 
   struct wlr_seat *seat = hikari_server.seat;
 

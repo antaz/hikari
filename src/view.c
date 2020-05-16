@@ -651,9 +651,12 @@ hikari_view_hide(struct hikari_view *view)
   printf("HIDE %p\n", view);
 #endif
 
-  if (hikari_view_has_focus(view)) {
-    hikari_indicator_damage(&hikari_server.indicator, view);
-    hikari_workspace_focus_view(view->sheet->workspace, NULL);
+  if (hikari_view_is_focus_view(view)) {
+    if (hikari_view_has_focus(view)) {
+      hikari_workspace_focus_view(hikari_server.workspace, NULL);
+    } else {
+      view->sheet->workspace->focus_view = NULL;
+    }
   }
 
   hide(view);

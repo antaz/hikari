@@ -148,8 +148,13 @@ void
 hikari_server_start(char *config_path, char *autostart);
 
 struct hikari_view_interface *
-hikari_server_view_interface_at(
-    double x, double y, struct wlr_surface **surface, double *sx, double *sy);
+hikari_server_view_interface_at(double x,
+    double y,
+    struct wlr_surface **surface,
+    struct hikari_workspace **workspace,
+    double *sx,
+    double *sy);
+
 void
 hikari_server_stop();
 

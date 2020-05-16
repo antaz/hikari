@@ -427,9 +427,11 @@ Workspace actions
 
 * **workspace-cycle-[next|prev]**
 
-  Cycle through available workspaces selecting the first view on the
-  corresponding sheet and centers the cursor. If the sheet is empty this moves
-  the cursor into the center of the target workspace.
+  Cycle through available workspaces selecting the view that had focus last. If
+  that view is no longer visible the first view of the **current sheet** of that
+  workspace is selected . In both cases the cursor gets centered on that view.
+  If the **current sheet** is empty this moves the cursor into the center of the
+  target workspace.
 
 * **workspace-show-all**
 

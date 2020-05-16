@@ -168,7 +168,7 @@ dump_debug(struct hikari_server *server)
   struct hikari_workspace *workspace;
   wl_list_for_each (workspace, &hikari_server.workspaces, server_workspaces) {
     const char *output_name = workspace->output->wlr_output->name;
-    printf("SHEETS %s\n", output_name);
+    printf("SHEETS %s (%p)\n", output_name, workspace->focus_view);
     printf(
         "---------------------------------------------------------------------"
         "\n");
@@ -288,19 +288,19 @@ cursor_move(uint32_t time)
   double sx, sy;
   struct wlr_seat *seat = hikari_server.seat;
   struct wlr_surface *surface;
+  struct hikari_workspace *workspace;
 
   struct hikari_view_interface *view_interface =
       hikari_server_view_interface_at(hikari_server.cursor.wlr_cursor->x,
           hikari_server.cursor.wlr_cursor->y,
           &surface,
+          &workspace,
           &sx,
           &sy);
 
-  struct hikari_workspace *workspace = hikari_server.workspace;
-
   if (view_interface != NULL) {
     struct hikari_view_interface *focus_view_interface =
-        (struct hikari_view_interface *)workspace->focus_view;
+        (struct hikari_view_interface *)hikari_server.workspace->focus_view;
 
     if (view_interface != focus_view_interface) {
       hikari_view_interface_focus(view_interface);
@@ -313,6 +313,10 @@ cursor_move(uint32_t time)
       wlr_seat_pointer_notify_motion(seat, time, sx, sy);
     }
   } else {
+    if (hikari_server.workspace != workspace) {
+      struct hikari_view *view = hikari_workspace_first_view(workspace);
+      hikari_workspace_focus_view(workspace, view);
+    }
     if (seat->pointer_state.focused_surface != NULL) {
       hikari_cursor_reset_image(&hikari_server.cursor);
     }
