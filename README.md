@@ -180,6 +180,18 @@ Building the `hikari` manpage requires [`pandoc`](http://pandoc.org/). To build
 the manpage just run `make VERSION=1.0.0 doc`, where `VERSION` is the version
 number that will be spliced into the manpage.
 
+#### Installing without SUID
+
+`hikari` requires root privileges during startup on BSD systems to initialize
+the `wlroots` backend, those are dropped as soon as possible. If you don't
+happen to need this you can prevent installation from setting this bit by
+issuing `WITHOUT_SUID`. (SUID is still set for `hikari-unlocker` to allow
+communication with PAM, which is required for password authentication)
+
+```
+make WITHOUT_SUID=YES install
+```
+
 ## Community
 
 The `hikari` community gears to be inclusive and welcoming to everyone, this is

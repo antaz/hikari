@@ -91,6 +91,12 @@ CFLAGS += -DHAVE_SCREENCOPY=1
 CFLAGS += -DHAVE_LAYERSHELL=1
 .endif
 
+.ifdef WITHOUT_SUID
+PERMS = 555
+.else
+PERMS = 4555
+.endif
+
 CFLAGS += -Wall -I. -Iinclude -DHIKARI_ETC_PREFIX=/${ETC_PREFIX}
 
 WLROOTS_CFLAGS != pkg-config --cflags wlroots
@@ -215,7 +221,8 @@ install: hikari hikari-unlocker share/man/man1/hikari.1
 	mkdir -p ${DESTDIR}/${ETC_PREFIX}/etc/pam.d
 	sed "s,PREFIX,/${PREFIX}," etc/hikari/hikari.conf > ${DESTDIR}/${ETC_PREFIX}/etc/hikari/hikari.conf
 	chmod 644 ${DESTDIR}/${ETC_PREFIX}/etc/hikari/hikari.conf
-	install -m 4555 hikari hikari-unlocker ${DESTDIR}/${PREFIX}/bin
+	install -m ${PERMS} hikari ${DESTDIR}/${PREFIX}/bin
+	install -m 4555 hikari-unlocker ${DESTDIR}/${PREFIX}/bin
 	install -m 644 share/man/man1/hikari.1 ${DESTDIR}/${PREFIX}/share/man/man1
 	install -m 644 share/backgrounds/hikari/hikari_wallpaper.png ${DESTDIR}/${PREFIX}/share/backgrounds/hikari/hikari_wallpaper.png
 	install -m 644 etc/pam.d/hikari-unlocker.${OS} ${DESTDIR}/${ETC_PREFIX}/etc/pam.d/hikari-unlocker
