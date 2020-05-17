@@ -875,15 +875,15 @@ These are the default settings for the **hikari** colorscheme.
 
 ```
 colorscheme {
-  active     = 0xFFFFFF
   background = 0x282C34
-  conflict   = 0xEF5939
-  first      = 0xB8E673
   foreground = 0x000000
-  grouped    = 0xFD971F
+  selected   = 0xF5E094
+  grouped    = 0xFDAF53
+  first      = 0xB8E673
+  conflict   = 0xED6B32
+  insert     = 0xE3C3FA
+  active     = 0xFFFFFF
   inactive   = 0x465457
-  insert     = 0x66D9EF
-  selected   = 0xE6DB74
 }
 ```
 
