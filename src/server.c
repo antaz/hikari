@@ -672,6 +672,54 @@ output_layout_change_handler(struct wl_listener *listener, void *data)
   }
 }
 
+static bool
+drop_privileges(struct hikari_server *server)
+{
+  if (getuid() != geteuid() || getgid() != getegid()) {
+    if (setuid(getuid()) != 0 || setgid(getgid()) != 0) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+void
+hikari_server_prepare_privileged(void)
+{
+  bool success = false;
+  struct hikari_server *server = &hikari_server;
+
+  server->display = wl_display_create();
+  if (server->display == NULL) {
+    fprintf(stderr, "error: could not create display\n");
+    goto done;
+  }
+
+  server->event_loop = wl_display_get_event_loop(server->display);
+  if (server->event_loop == NULL) {
+    fprintf(stderr, "error: could not create event loop\n");
+    goto done;
+  }
+
+  server->backend = wlr_backend_autocreate(server->display, NULL);
+  if (server->backend == NULL) {
+    fprintf(stderr, "error: could not create backend\n");
+    goto done;
+  }
+
+  success = true;
+
+done:
+  if (!drop_privileges(server) || !success) {
+    if (server->display != NULL) {
+      wl_display_destroy(server->display);
+    }
+
+    exit(EXIT_FAILURE);
+  }
+}
+
 static void
 server_init(struct hikari_server *server, char *config_path)
 {
@@ -699,39 +747,11 @@ server_init(struct hikari_server *server, char *config_path)
   server->locked = false;
   server->cycling = false;
   server->workspace = NULL;
-  server->display = wl_display_create();
-
-  if (server->display == NULL) {
-    fprintf(stderr, "error: could not create display\n");
-    exit(EXIT_FAILURE);
-  }
 
   hikari_indicator_init(
       &server->indicator, hikari_configuration->indicator_selected);
 
   wl_list_init(&server->outputs);
-
-  server->event_loop = wl_display_get_event_loop(server->display);
-
-  if (server->event_loop == NULL) {
-    fprintf(stderr, "error: could not create event loop\n");
-    wl_display_destroy(server->display);
-    exit(EXIT_FAILURE);
-  }
-
-  server->backend = wlr_backend_autocreate(server->display, NULL);
-
-  if (server->backend == NULL) {
-    wl_display_destroy(server->display);
-    exit(EXIT_FAILURE);
-  }
-
-  if (getuid() != geteuid() || getgid() != getegid()) {
-    if (setuid(getuid()) != 0 || setgid(getgid()) != 0) {
-      wl_display_destroy(server->display);
-      exit(EXIT_FAILURE);
-    }
-  }
 
   hikari_unlocker_init();
 
@@ -831,6 +851,7 @@ hikari_server_start(char *config_path, char *autostart)
 {
   server_init(&hikari_server, config_path);
   signal(SIGTERM, sig_handler);
+
   wlr_backend_start(hikari_server.backend);
 
   run_autostart(autostart);

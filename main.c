@@ -2,7 +2,9 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+#ifndef NDEBUG
 #include <wlr/util/log.h>
+#endif
 
 #include <hikari/server.h>
 
@@ -92,12 +94,14 @@ const char *usage = "Usage: hikari [options]\n"
                     "  -v              Show version and quit.\n"
                     "\n";
 
-int
-main(int argc, char **argv)
+struct options {
+  char *config_path;
+  char *autostart;
+};
+
+static void
+parse_options(int argc, char **argv, struct options *options)
 {
-#ifndef NDEBUG
-  wlr_log_init(WLR_DEBUG, NULL);
-#endif
   char *config_path = NULL;
   char *autostart = NULL;
 
@@ -119,14 +123,14 @@ main(int argc, char **argv)
         free(autostart);
 
         printf("%s\n", HIKARI_VERSION);
-        return EXIT_SUCCESS;
+        exit(EXIT_SUCCESS);
 
       case 'h':
         free(config_path);
         free(autostart);
 
         printf("%s", usage);
-        return EXIT_SUCCESS;
+        exit(EXIT_SUCCESS);
 
       case '?':
       default:
@@ -134,7 +138,7 @@ main(int argc, char **argv)
         free(autostart);
 
         printf("%s", usage);
-        return EXIT_FAILURE;
+        exit(EXIT_SUCCESS);
     }
   }
 
@@ -154,7 +158,26 @@ main(int argc, char **argv)
     autostart = get_default_autostart();
   }
 
-  hikari_server_start(config_path, autostart);
+  options->config_path = config_path;
+  options->autostart = autostart;
+}
+
+int
+main(int argc, char **argv)
+{
+#ifndef NDEBUG
+  wlr_log_init(WLR_DEBUG, NULL);
+#endif
+
+  hikari_server_prepare_privileged();
+
+  assert(geteuid() != 0 && geteuid() == getuid());
+  assert(getegid() != 0 && getegid() == getgid());
+
+  struct options options;
+  parse_options(argc, argv, &options);
+
+  hikari_server_start(options.config_path, options.autostart);
   hikari_server_stop();
 
   return EXIT_SUCCESS;
