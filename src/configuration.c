@@ -2189,6 +2189,7 @@ parse_output_config(struct hikari_output_config *output_config,
     } else if (!strcmp(key, "position")) {
       int x;
       int y;
+      struct hikari_position_config position;
 
       if (!parse_position(cur, &x, &y)) {
         fprintf(stderr,
@@ -2196,7 +2197,8 @@ parse_output_config(struct hikari_output_config *output_config,
         goto done;
       }
 
-      hikari_position_config_set_absolute(&output_config->position.value, x, y);
+      hikari_position_config_set_absolute(&position, x, y);
+      hikari_output_config_set_position(output_config, position);
     } else {
       fprintf(stderr,
           "configuration error: unknown \"outputs\" configuration key \"%s\"\n",
