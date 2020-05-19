@@ -855,7 +855,9 @@ hikari_server_start(char *config_path, char *autostart)
 
   wlr_backend_start(hikari_server.backend);
 
-  run_autostart(autostart);
+  if (autostart != NULL) {
+    run_autostart(autostart);
+  }
 
   wl_display_run(hikari_server.display);
 }
