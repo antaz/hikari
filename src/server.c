@@ -736,6 +736,7 @@ server_init(struct hikari_server *server, char *config_path)
     hikari_configuration_fini(hikari_configuration);
     hikari_free(hikari_configuration);
 
+    wl_display_destroy(server->display);
     exit(EXIT_FAILURE);
   }
 
