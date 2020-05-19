@@ -205,14 +205,12 @@ cancel_tile(struct hikari_view *view)
 }
 
 static void
-prepare_reset(struct hikari_view *view,
-    enum hikari_operation_type type,
-    struct wlr_box *geometry,
-    bool center)
+queue_reset(struct hikari_view *view, bool center)
 {
   struct wlr_box *view_geometry = hikari_view_geometry(view);
   struct hikari_operation *op = &view->pending_operation;
   struct hikari_tile *tile = view->tile;
+  struct wlr_box *geometry = &view->geometry;
 
   cancel_tile(view);
   hikari_view_set_dirty(view);
@@ -221,7 +219,7 @@ prepare_reset(struct hikari_view *view,
     hikari_tile_detach(tile);
   }
 
-  op->type = type;
+  op->type = HIKARI_OPERATION_TYPE_RESET;
   op->center = center;
   memcpy(&op->geometry, geometry, sizeof(struct wlr_box));
 
@@ -242,16 +240,7 @@ prepare_reset(struct hikari_view *view,
 }
 
 static void
-queue_reset(struct hikari_view *view, bool center)
-{
-  prepare_reset(view, HIKARI_OPERATION_TYPE_RESET, &view->geometry, center);
-}
-
-static void
-queue_migrate(struct hikari_view *view,
-    struct hikari_sheet *sheet,
-    struct wlr_box *geometry,
-    bool center)
+migrate_view(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
 {
   assert(hikari_view_is_hidden(view));
 
@@ -260,7 +249,7 @@ queue_migrate(struct hikari_view *view,
 
   move_to_top(view);
 
-  prepare_reset(view, HIKARI_OPERATION_TYPE_MIGRATE, geometry, center);
+  queue_reset(view, center);
 }
 
 void
@@ -982,18 +971,17 @@ pin_migrate(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
   assert(sheet != NULL);
 
   struct hikari_output *output = sheet->workspace->output;
-  struct wlr_box geometry;
-
-  memcpy(&geometry, &view->geometry, sizeof(struct wlr_box));
-
-  hikari_geometry_constrain_absolute(
-      &geometry, &output->usable_area, geometry.x, geometry.y);
 
   if (!hikari_view_is_hidden(view)) {
     hikari_view_hide(view);
   }
 
-  queue_migrate(view, sheet, &geometry, true);
+  hikari_geometry_constrain_absolute(&view->geometry,
+      &output->usable_area,
+      view->geometry.x,
+      view->geometry.y);
+
+  migrate_view(view, sheet, true);
 }
 
 static void
@@ -1347,7 +1335,7 @@ commit_resize(struct hikari_view *view, struct hikari_operation *operation)
 }
 
 static void
-precommit_reset(struct hikari_view *view, struct hikari_operation *operation)
+commit_reset(struct hikari_view *view, struct hikari_operation *operation)
 {
   hikari_indicator_damage(&hikari_server.indicator, view);
 
@@ -1369,39 +1357,16 @@ precommit_reset(struct hikari_view *view, struct hikari_operation *operation)
       }
     }
   }
-}
 
-static void
-commit_migrate(struct hikari_view *view, struct hikari_operation *operation)
-{
-  precommit_reset(view, operation);
+  commit_pending_operation(view, operation);
 
-  hikari_view_refresh_geometry(view, &operation->geometry);
-
-  struct hikari_sheet *sheet = view->sheet;
-  struct wlr_box *geometry = hikari_view_geometry(view);
-
-  move_view(view, geometry, geometry->x, geometry->y);
-
-  if (hikari_sheet_is_visible(sheet)) {
-    if (hikari_view_is_hidden(view)) {
-      hikari_view_show(view);
-    } else {
-      hikari_view_raise(view);
-    }
-
+  if (hikari_view_is_hidden(view) && hikari_sheet_is_visible(view->sheet)) {
+    hikari_view_show(view);
     if (operation->center) {
       hikari_view_center_cursor(view);
       hikari_server_cursor_focus();
     }
   }
-}
-
-static void
-commit_reset(struct hikari_view *view, struct hikari_operation *operation)
-{
-  precommit_reset(view, operation);
-  commit_pending_operation(view, operation);
 }
 
 static void
@@ -1568,10 +1533,6 @@ commit_operation(struct hikari_operation *operation, struct hikari_view *view)
     case HIKARI_OPERATION_TYPE_TILE:
       commit_tile(view, operation);
       break;
-
-    case HIKARI_OPERATION_TYPE_MIGRATE:
-      commit_migrate(view, operation);
-      break;
   }
 }
 
@@ -1610,18 +1571,27 @@ void
 hikari_view_migrate(
     struct hikari_view *view, struct hikari_sheet *sheet, int x, int y)
 {
-  struct wlr_box geometry;
   struct hikari_output *output = sheet->workspace->output;
+  struct wlr_box *view_geometry = hikari_view_geometry(view);
 
   hikari_indicator_damage(&hikari_server.indicator, view);
   hikari_view_damage_whole(view);
-
-  memcpy(&geometry, &view->geometry, sizeof(struct wlr_box));
-  hikari_geometry_constrain_relative(&geometry, &output->usable_area, x, y);
 
   // only remove view from lists and do not make it lose focus by calling
   // `hikari_view_hide`.
   hide(view);
 
-  queue_migrate(view, sheet, &geometry, false);
+  hikari_geometry_constrain_relative(
+      &view->geometry, &output->usable_area, x, y);
+  hikari_geometry_constrain_relative(view_geometry, &output->usable_area, x, y);
+
+  if (view->move != NULL) {
+    view->move(view, view_geometry->x, view_geometry->y);
+  }
+
+  migrate_view(view, sheet, false);
+
+  if (hikari_view_is_hidden(view)) {
+    hikari_view_show(view);
+  }
 }
