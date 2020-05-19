@@ -48,7 +48,7 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
 {
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
-  if (focus_view->output == output) {
+  if (focus_view->output == output && !hikari_view_is_hidden(focus_view)) {
     render_data->geometry = hikari_view_border_geometry(focus_view);
 
     hikari_indicator_frame_render(&focus_view->indicator_frame,
