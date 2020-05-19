@@ -138,7 +138,8 @@ parse_options(int argc, char **argv, struct options *options)
         free(autostart);
 
         printf("%s", usage);
-        exit(EXIT_SUCCESS);
+        exit(EXIT_FAILURE);
+        break;
     }
   }
 
