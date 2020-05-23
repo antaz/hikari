@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.2.1
+
+* fix double selection manager creation
+* add CHANGELOG.md to distribution tarball
+
 ## 1.2.0
 
 * add drag/drop support
