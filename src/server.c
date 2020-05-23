@@ -565,10 +565,9 @@ request_start_drag_handler(struct wl_listener *listener, void *data)
 static void
 setup_selection(struct hikari_server *server)
 {
-  wlr_gtk_primary_selection_device_manager_create(server->display);
-  wlr_primary_selection_v1_device_manager_create(server->display);
-
   wlr_data_control_manager_v1_create(server->display);
+
+  wlr_gtk_primary_selection_device_manager_create(server->display);
   wlr_primary_selection_v1_device_manager_create(server->display);
 
   server->seat = wlr_seat_create(server->display, "seat0");
