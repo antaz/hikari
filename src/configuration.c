@@ -436,7 +436,7 @@ done:
       } else if (!strcmp(key, #second)) {                                      \
         if (!parse_split(cur, &second)) {                                      \
           if (first != NULL) {                                                 \
-            hikari_split_fini(first);                                          \
+            hikari_split_free(first);                                          \
           }                                                                    \
           fprintf(stderr,                                                      \
               "configuration error: invalid \"" #second "\" for \"" #name      \
@@ -464,7 +464,7 @@ done:
     }                                                                          \
                                                                                \
     if (second == NULL) {                                                      \
-      hikari_split_fini(first);                                                \
+      hikari_split_free(first);                                                \
       fprintf(stderr,                                                          \
           "configuration error: missing \"" #second "\" for " #name            \
           " split\n");                                                         \

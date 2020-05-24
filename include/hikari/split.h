@@ -94,7 +94,10 @@ hikari_split_container_init(struct hikari_split_container *container,
     hikari_layout_func layout);
 
 void
-hikari_split_fini(struct hikari_split *split);
+hikari_split_free(struct hikari_split *split);
+
+struct hikari_split *
+hikari_split_copy(struct hikari_split *split);
 
 void
 hikari_split_vertical_init(struct hikari_split_vertical *split_vertical,

@@ -17,5 +17,5 @@ hikari_layout_config_init(struct hikari_layout_config *layout_config,
 void
 hikari_layout_config_fini(struct hikari_layout_config *layout_config)
 {
-  hikari_split_fini(layout_config->split);
+  hikari_split_free(layout_config->split);
 }

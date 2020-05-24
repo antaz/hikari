@@ -418,25 +418,33 @@ raise_floating(struct hikari_sheet *sheet)
 void
 hikari_sheet_apply_split(struct hikari_sheet *sheet, struct hikari_split *split)
 {
+  struct hikari_layout *layout;
   if (sheet->layout != NULL) {
+    layout = sheet->layout;
+
     struct hikari_tile *tile;
-    wl_list_for_each (tile, &sheet->layout->tiles, layout_tiles) {
+    wl_list_for_each (tile, &layout->tiles, layout_tiles) {
       if (hikari_view_is_dirty(tile->view)) {
         return;
       }
     }
+
+    if (layout->split != split) {
+      hikari_split_free(layout->split);
+      layout->split = hikari_split_copy(split);
+    }
   } else {
-    sheet->layout = hikari_malloc(sizeof(struct hikari_layout));
-    hikari_layout_init(sheet->layout, split, sheet);
+    layout = hikari_malloc(sizeof(struct hikari_layout));
+    hikari_layout_init(layout, split, sheet);
+
+    sheet->layout = layout;
   }
 
   struct hikari_output *output = sheet->workspace->output;
   struct wlr_box geometry = output->usable_area;
   struct hikari_view *first = hikari_sheet_first_tileable_view(sheet);
 
-  sheet->layout->split = split;
-
-  hikari_split_apply(split, &geometry, first);
+  hikari_split_apply(layout->split, &geometry, first);
 
   raise_floating(sheet);
 }

@@ -58,6 +58,7 @@ hikari_tile_detach(struct hikari_tile *tile)
 
     if (wl_list_empty(&layout->tiles)) {
       layout->sheet->layout = NULL;
+      hikari_layout_fini(layout);
       hikari_free(layout);
     }
     tile->layout = NULL;

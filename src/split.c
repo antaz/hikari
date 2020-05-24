@@ -62,6 +62,68 @@ SCALE(width)
 SCALE(height)
 #undef SCALE
 
+static struct hikari_split *
+copy_split(struct hikari_split *split);
+
+#define COPY(name, first, second)                                              \
+  static struct hikari_split *copy_split_##name(                               \
+      struct hikari_split_##name *split_##name)                                \
+  {                                                                            \
+    struct hikari_split *first = copy_split(split_##name->first);              \
+    struct hikari_split *second = copy_split(split_##name->second);            \
+                                                                               \
+    struct hikari_split_##name *ret =                                          \
+        hikari_malloc(sizeof(struct hikari_split_##name));                     \
+                                                                               \
+    hikari_split_##name##_init(                                                \
+        ret, &split_##name->scale, split_##name->orientation, first, second);  \
+                                                                               \
+    return (struct hikari_split *)ret;                                         \
+  }
+
+COPY(vertical, left, right)
+COPY(horizontal, top, bottom)
+#undef COPY
+
+static struct hikari_split *
+copy_split_container(struct hikari_split_container *split_container)
+{
+  struct hikari_split_container *ret =
+      hikari_malloc(sizeof(struct hikari_split_container));
+
+  hikari_split_container_init(
+      ret, split_container->max, split_container->layout);
+
+  return (struct hikari_split *)ret;
+}
+
+static struct hikari_split *
+copy_split(struct hikari_split *split)
+{
+  struct hikari_split *ret;
+  switch (split->type) {
+    case HIKARI_SPLIT_TYPE_VERTICAL:
+      ret = copy_split_vertical((struct hikari_split_vertical *)split);
+      break;
+
+    case HIKARI_SPLIT_TYPE_HORIZONTAL:
+      ret = copy_split_horizontal((struct hikari_split_horizontal *)split);
+      break;
+
+    case HIKARI_SPLIT_TYPE_CONTAINER:
+      ret = copy_split_container((struct hikari_split_container *)split);
+      break;
+  }
+
+  return ret;
+}
+
+struct hikari_split *
+hikari_split_copy(struct hikari_split *split)
+{
+  return copy_split(split);
+}
+
 static struct hikari_view *
 apply_split(struct hikari_split *split,
     struct wlr_box *geometry,
@@ -201,15 +263,15 @@ hikari_split_horizontal_init(struct hikari_split_horizontal *split_horizontal,
 }
 
 void
-hikari_split_fini(struct hikari_split *split)
+hikari_split_free(struct hikari_split *split)
 {
   switch (split->type) {
     case HIKARI_SPLIT_TYPE_VERTICAL: {
       struct hikari_split_vertical *split_vertical =
           (struct hikari_split_vertical *)split;
 
-      hikari_split_fini(split_vertical->left);
-      hikari_split_fini(split_vertical->right);
+      hikari_split_free(split_vertical->left);
+      hikari_split_free(split_vertical->right);
       hikari_free(split_vertical);
     } break;
 
@@ -217,8 +279,8 @@ hikari_split_fini(struct hikari_split *split)
       struct hikari_split_horizontal *split_horizontal =
           (struct hikari_split_horizontal *)split;
 
-      hikari_split_fini(split_horizontal->top);
-      hikari_split_fini(split_horizontal->bottom);
+      hikari_split_free(split_horizontal->top);
+      hikari_split_free(split_horizontal->bottom);
       hikari_free(split_horizontal);
     } break;
 
