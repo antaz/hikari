@@ -204,6 +204,7 @@ hikari-${VERSION}.tar.gz: version.h share/man/man1/hikari.1
 		share/man/man1/hikari.md \
 		share/man/man1/hikari.1 \
 		share/backgrounds/hikari/hikari_wallpaper.png \
+		share/wayland-sessions/hikari.desktop \
 		etc/hikari/hikari.conf \
 		etc/pam.d/hikari-unlocker.*
 
