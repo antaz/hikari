@@ -639,7 +639,7 @@ focus(struct hikari_view_interface *view_interface)
     struct hikari_view *focus_view = workspace->focus_view;
     struct hikari_layer *focus_layer = workspace->focus_layer;
     struct wlr_seat *seat = hikari_server.seat;
-    struct wlr_keyboard *keyboard = wlr_seat_get_keyboard(seat);
+    struct wlr_keyboard *wlr_keyboard = wlr_seat_get_keyboard(seat);
 
     if (focus_view != NULL) {
       hikari_workspace_focus_view(workspace, NULL);
@@ -649,13 +649,15 @@ focus(struct hikari_view_interface *view_interface)
       wlr_seat_keyboard_clear_focus(seat);
     }
 
-    workspace->focus_layer = layer;
+    if (wlr_keyboard != NULL) {
+      wlr_seat_keyboard_notify_enter(seat,
+          layer->surface->surface,
+          wlr_keyboard->keycodes,
+          wlr_keyboard->num_keycodes,
+          &wlr_keyboard->modifiers);
+    }
 
-    wlr_seat_keyboard_notify_enter(seat,
-        layer->surface->surface,
-        keyboard->keycodes,
-        keyboard->num_keycodes,
-        &keyboard->modifiers);
+    workspace->focus_layer = layer;
   }
 }
 

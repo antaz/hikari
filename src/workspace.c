@@ -397,14 +397,17 @@ hikari_workspace_focus_view(
   if (view != NULL) {
     assert(!hikari_view_is_hidden(view));
 
-    hikari_view_activate(view, true);
-    struct wlr_keyboard *keyboard = wlr_seat_get_keyboard(seat);
+    struct wlr_keyboard *wlr_keyboard = wlr_seat_get_keyboard(seat);
 
-    wlr_seat_keyboard_notify_enter(seat,
-        view->surface,
-        keyboard->keycodes,
-        keyboard->num_keycodes,
-        &keyboard->modifiers);
+    hikari_view_activate(view, true);
+
+    if (wlr_keyboard != NULL) {
+      wlr_seat_keyboard_notify_enter(seat,
+          view->surface,
+          wlr_keyboard->keycodes,
+          wlr_keyboard->num_keycodes,
+          &wlr_keyboard->modifiers);
+    }
 
     if (hikari_server_is_indicating()) {
       if (focus_view == NULL || focus_view->group != view->group) {
