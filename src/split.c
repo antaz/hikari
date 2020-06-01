@@ -113,6 +113,10 @@ copy_split(struct hikari_split *split)
     case HIKARI_SPLIT_TYPE_CONTAINER:
       ret = copy_split_container((struct hikari_split_container *)split);
       break;
+
+    default:
+      ret = NULL;
+      break;
   }
 
   return ret;
