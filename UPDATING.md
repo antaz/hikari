@@ -1,4 +1,6 @@
-20200509
+## 2.0.0
+
+### 20200509
 
 * f4c376ec920298361ccb3beb6031eef5c5dd7c39 adds the `ui` section to the
   configuration.
