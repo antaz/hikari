@@ -1,5 +1,32 @@
 # Changelog
 
+## 2.0.0
+
+* floating views are raised after layout apply
+* sheet is reset before layout apply
+* focus view is raised to layout on layout apply
+* add append/prepend to layout operations
+* remove sheet groups (ungrouped views create a group for their app id instead)
+* groups can now start with digits (no more sheet group overlap)
+* `PREFIX` is needed for all make step (compile in configuration paths)
+* add `sheet-show-group` operation
+* add `workspace-show-group` operation
+* add `workspace-show-invisible` operation
+* add `workspace-show-all` operation
+* add `workspace-clear` operation
+* add `workspace-show-group` operation
+* add `workspace-cycle-[next|prev]` operations
+* add output relative view position configuration (e.g. center, bottom-right)
+* allow tiled views to be moved around
+* migrate views to other outputs using move operations (mouse and keyboard)
+* add move libinput configuration options for pointer devices
+* add `ui` section to configuration
+* add default configuration file
+* add default wallpaper
+* add `hikari.desktop` session file
+* many multi-monitor fixes
+* and many more bugfixes
+
 ## 1.2.1
 
 * fix double selection manager creation
