@@ -178,7 +178,9 @@ make WITH_LAYERSHELL=YES
 
 Building the `hikari` manpage requires [`pandoc`](http://pandoc.org/). To build
 the manpage just run `make VERSION=1.0.0 doc`, where `VERSION` is the version
-number that will be spliced into the manpage.
+number that will be spliced into the manpage. The distribution tarball of
+`hikari` comes with a precompiled manpage removing the need for a `pandoc`
+installation.
 
 #### Installing without SUID
 
