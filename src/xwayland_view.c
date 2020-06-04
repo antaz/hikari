@@ -144,7 +144,6 @@ static void
 first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
 {
   struct hikari_view *view = (struct hikari_view *)xwayland_view;
-  struct hikari_output *output = hikari_server.workspace->output;
   struct wlr_box *geometry = &view->geometry;
 
   view->border.state = HIKARI_BORDER_INACTIVE;
@@ -153,30 +152,21 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
   geometry->height = xwayland_view->surface->height;
   hikari_view_refresh_geometry(view, geometry);
 
-  struct hikari_sheet *sheet;
-  struct hikari_group *group;
-  int x;
-  int y;
-
   const char *app_id = get_class(xwayland_view->surface);
 
-  hikari_view_set_id(view, app_id);
-
-  hikari_configuration_resolve_view_autoconf(
-      hikari_configuration, app_id, view, &sheet, &group, &x, &y, focus);
+  struct hikari_view_autoconf *view_autoconf =
+      hikari_configuration_resolve_view_autoconf(hikari_configuration, app_id);
 
   hikari_view_set_title(view, xwayland_view->surface->title);
-  hikari_view_manage(view, sheet, group);
+  hikari_view_configure(view, app_id, view_autoconf);
 
-  hikari_geometry_constrain_absolute(geometry, &output->usable_area, x, y);
+  struct hikari_output *output = view->output;
 
   wlr_xwayland_surface_configure(xwayland_view->surface,
       output->geometry.x + view->geometry.x,
       output->geometry.y + view->geometry.y,
       geometry->width,
       geometry->height);
-
-  hikari_view_refresh_geometry(view, geometry);
 }
 
 static void
@@ -189,19 +179,11 @@ map(struct hikari_view *view, bool focus)
   struct hikari_xwayland_view *xwayland_view =
       (struct hikari_xwayland_view *)view;
 
-  hikari_view_map(view, xwayland_view->surface->surface);
-
   xwayland_view->commit.notify = commit_handler;
   wl_signal_add(
       &xwayland_view->surface->surface->events.commit, &xwayland_view->commit);
 
-  hikari_view_show(view);
-
-  if (focus) {
-    hikari_view_center_cursor(view);
-  }
-
-  hikari_server_cursor_focus();
+  hikari_view_map(view, xwayland_view->surface->surface);
 }
 
 static void

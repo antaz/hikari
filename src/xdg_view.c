@@ -112,11 +112,8 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
 {
   assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
-  struct hikari_sheet *sheet;
-  struct hikari_group *group;
   struct hikari_view *view = (struct hikari_view *)xdg_view;
   struct wlr_box *geometry = &xdg_view->view.geometry;
-  struct hikari_output *output = hikari_server.workspace->output;
 
   wlr_xdg_surface_get_geometry(xdg_view->surface, geometry);
   hikari_view_refresh_geometry(view, geometry);
@@ -127,19 +124,11 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   printf("APP ID %s\n", app_id);
 #endif
 
-  hikari_view_set_id(view, app_id);
+  struct hikari_view_autoconf *view_autoconf =
+      hikari_configuration_resolve_view_autoconf(hikari_configuration, app_id);
 
-  int x;
-  int y;
-  hikari_configuration_resolve_view_autoconf(
-      hikari_configuration, app_id, view, &sheet, &group, &x, &y, focus);
-
-  hikari_view_manage(view, sheet, group);
   hikari_view_set_title(view, xdg_view->surface->toplevel->title);
-
-  hikari_geometry_constrain_absolute(geometry, &output->usable_area, x, y);
-
-  hikari_view_refresh_geometry(view, geometry);
+  hikari_view_configure(view, app_id, view_autoconf);
 }
 
 static struct wlr_surface *
@@ -171,8 +160,6 @@ map(struct hikari_view *view, bool focus)
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
   struct wlr_xdg_surface *xdg_surface = xdg_view->surface;
 
-  hikari_view_map(view, xdg_surface->surface);
-
   xdg_view->set_title.notify = set_title_handler;
   wl_signal_add(
       &xdg_view->surface->toplevel->events.set_title, &xdg_view->set_title);
@@ -191,13 +178,7 @@ map(struct hikari_view *view, bool focus)
   xdg_view->commit.notify = commit_handler;
   wl_signal_add(&xdg_view->surface->surface->events.commit, &xdg_view->commit);
 
-  hikari_view_show(view);
-
-  if (focus) {
-    hikari_view_center_cursor(view);
-  }
-
-  hikari_server_cursor_focus();
+  hikari_view_map(view, xdg_surface->surface);
 }
 
 static void

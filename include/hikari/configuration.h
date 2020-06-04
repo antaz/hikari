@@ -59,16 +59,9 @@ hikari_configuration_load(
 bool
 hikari_configuration_reload(char *config_path);
 
-void
+struct hikari_view_autoconf *
 hikari_configuration_resolve_view_autoconf(
-    struct hikari_configuration *configuration,
-    const char *app_id,
-    struct hikari_view *view,
-    struct hikari_sheet **sheet,
-    struct hikari_group **group,
-    int *x,
-    int *y,
-    bool *focus);
+    struct hikari_configuration *configuration, const char *app_id);
 
 struct hikari_output_config *
 hikari_configuration_resolve_output_config(

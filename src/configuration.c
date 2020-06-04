@@ -488,138 +488,22 @@ PARSE_SPLIT(vertical, VERTICAL, left, LEFT, right, RIGHT);
 PARSE_SPLIT(horizontal, HORIZONTAL, top, TOP, bottom, BOTTOM);
 #undef PARSE_SPLIT
 
-static struct hikari_view_autoconf *
-resolve_autoconf(struct hikari_configuration *configuration, const char *app_id)
+struct hikari_view_autoconf *
+hikari_configuration_resolve_view_autoconf(
+    struct hikari_configuration *configuration, const char *app_id)
 {
+  assert(app_id != NULL);
+
   if (app_id != NULL) {
-    struct hikari_view_autoconf *autoconf;
-    wl_list_for_each (autoconf, &configuration->autoconfs, link) {
-      if (!strcmp(autoconf->app_id, app_id)) {
-        return autoconf;
+    struct hikari_view_autoconf *view_autoconf;
+    wl_list_for_each (view_autoconf, &configuration->autoconfs, link) {
+      if (!strcmp(view_autoconf->app_id, app_id)) {
+        return view_autoconf;
       }
     }
   }
 
   return NULL;
-}
-
-void
-hikari_configuration_resolve_view_autoconf(
-    struct hikari_configuration *configuration,
-    const char *app_id,
-    struct hikari_view *view,
-    struct hikari_sheet **sheet,
-    struct hikari_group **group,
-    int *x,
-    int *y,
-    bool *focus)
-{
-  assert(app_id != NULL);
-
-  struct hikari_view_autoconf *view_autoconf =
-      resolve_autoconf(configuration, app_id);
-
-  struct hikari_output *output;
-
-  if (view_autoconf != NULL) {
-    *focus = view_autoconf->focus;
-
-    if (view_autoconf->sheet_nr != -1) {
-      *sheet = hikari_server.workspace->sheets + view_autoconf->sheet_nr;
-    } else {
-      *sheet = hikari_server.workspace->sheet;
-    }
-
-    if (view_autoconf->group_name != NULL &&
-        strlen(view_autoconf->group_name) > 0) {
-      *group = hikari_server_find_or_create_group(view_autoconf->group_name);
-    } else {
-      *group = hikari_server_find_or_create_group(app_id);
-    }
-
-    switch (view_autoconf->position.type) {
-      case HIKARI_POSITION_CONFIG_TYPE_ABSOLUTE:
-        *x = view_autoconf->position.config.absolute.x;
-        *y = view_autoconf->position.config.absolute.y;
-        break;
-
-      case HIKARI_POSITION_CONFIG_TYPE_AUTO:
-        output = hikari_server.workspace->output;
-
-        *x = hikari_server.cursor.wlr_cursor->x - output->geometry.x;
-        *y = hikari_server.cursor.wlr_cursor->y - output->geometry.y;
-        break;
-
-      case HIKARI_POSITION_CONFIG_TYPE_RELATIVE:
-        output = hikari_server.workspace->output;
-
-        switch (view_autoconf->position.config.relative) {
-          case HIKARI_POSITION_CONFIG_RELATIVE_BOTTOM_LEFT:
-            hikari_geometry_position_bottom_left(
-                hikari_view_border_geometry(view), &output->usable_area, x, y);
-            break;
-
-          case HIKARI_POSITION_CONFIG_RELATIVE_BOTTOM_MIDDLE:
-            hikari_geometry_position_bottom_middle(
-                hikari_view_border_geometry(view), &output->usable_area, x, y);
-            break;
-
-          case HIKARI_POSITION_CONFIG_RELATIVE_BOTTOM_RIGHT:
-            hikari_geometry_position_bottom_right(
-                hikari_view_border_geometry(view), &output->usable_area, x, y);
-            break;
-
-          case HIKARI_POSITION_CONFIG_RELATIVE_CENTER:
-            hikari_geometry_position_center(
-                hikari_view_border_geometry(view), &output->usable_area, x, y);
-            break;
-
-          case HIKARI_POSITION_CONFIG_RELATIVE_CENTER_LEFT:
-            hikari_geometry_position_center_left(
-                hikari_view_border_geometry(view), &output->usable_area, x, y);
-            break;
-
-          case HIKARI_POSITION_CONFIG_RELATIVE_CENTER_RIGHT:
-            hikari_geometry_position_center_right(
-                hikari_view_border_geometry(view), &output->usable_area, x, y);
-            break;
-
-          case HIKARI_POSITION_CONFIG_RELATIVE_TOP_LEFT:
-            hikari_geometry_position_top_left(
-                hikari_view_border_geometry(view), &output->usable_area, x, y);
-            break;
-
-          case HIKARI_POSITION_CONFIG_RELATIVE_TOP_MIDDLE:
-            hikari_geometry_position_top_middle(
-                hikari_view_border_geometry(view), &output->usable_area, x, y);
-            break;
-
-          case HIKARI_POSITION_CONFIG_RELATIVE_TOP_RIGHT:
-            hikari_geometry_position_top_right(
-                hikari_view_border_geometry(view), &output->usable_area, x, y);
-        }
-        break;
-    }
-
-    if (view_autoconf->mark != NULL && view_autoconf->mark->view == NULL) {
-      hikari_mark_set(view_autoconf->mark, view);
-    }
-
-    if (view_autoconf->invisible) {
-      hikari_view_set_invisible(view);
-    }
-
-    if (view_autoconf->floating) {
-      hikari_view_set_floating(view);
-    }
-  } else {
-    output = hikari_server.workspace->output;
-
-    *sheet = hikari_server.workspace->sheet;
-    *group = hikari_server_find_or_create_group(app_id);
-    *x = hikari_server.cursor.wlr_cursor->x - output->geometry.x;
-    *y = hikari_server.cursor.wlr_cursor->y - output->geometry.y;
-  }
 }
 
 static char *

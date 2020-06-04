@@ -65,7 +65,6 @@ hikari_mark_clear(struct hikari_mark *mark)
   if (mark->view != NULL) {
     mark->view->mark = NULL;
     mark->view = NULL;
-    ;
   }
 }
 

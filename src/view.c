@@ -18,6 +18,7 @@
 #include <hikari/server.h>
 #include <hikari/sheet.h>
 #include <hikari/tile.h>
+#include <hikari/view_autoconf.h>
 #include <hikari/workspace.h>
 #include <hikari/xdg_view.h>
 #include <hikari/xwayland_view.h>
@@ -341,8 +342,8 @@ hikari_view_set_title(struct hikari_view *view, const char *title)
   }
 }
 
-void
-hikari_view_set_id(struct hikari_view *view, const char *id)
+static void
+set_app_id(struct hikari_view *view, const char *id)
 {
   assert(view->id == NULL);
   assert(id != NULL);
@@ -580,14 +581,44 @@ hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
   assert(!hikari_view_is_mapped(view));
 
   struct hikari_sheet *sheet = view->sheet;
-  struct hikari_group *group = view->group;
   struct hikari_output *output = view->output;
+  struct hikari_group *group;
+  bool focus;
 
+  struct hikari_view_autoconf *view_autoconf =
+      hikari_configuration_resolve_view_autoconf(
+          hikari_configuration, view->id);
+
+  if (view_autoconf != NULL) {
+    struct hikari_mark *mark;
+
+    group = hikari_view_autoconf_resolve_group(view_autoconf, view->id);
+    mark = hikari_view_autoconf_resolve_mark(view_autoconf);
+
+    if (mark != NULL && mark->view == NULL) {
+      hikari_mark_set(mark, view);
+    }
+
+    focus = view_autoconf->focus;
+  } else {
+    group = hikari_server_find_or_create_group(view->id);
+    focus = false;
+  }
+
+  view->group = group;
   view->surface = surface;
 
   wl_list_insert(&sheet->views, &view->sheet_views);
   wl_list_insert(&group->views, &view->group_views);
   wl_list_insert(&output->views, &view->output_views);
+
+  hikari_view_show(view);
+
+  if (focus) {
+    hikari_view_center_cursor(view);
+  }
+
+  hikari_server_cursor_focus();
 }
 
 void
@@ -599,38 +630,29 @@ hikari_view_unmap(struct hikari_view *view)
 
   view->surface = NULL;
 
+  struct hikari_mark *mark = view->mark;
+  if (mark != NULL) {
+    hikari_mark_clear(mark);
+  }
+
+  detach_from_group(view);
+  view->group = NULL;
+
+  cancel_tile(view);
+  if (hikari_view_is_tiled(view)) {
+    struct hikari_tile *tile = view->tile;
+    if (hikari_tile_is_attached(tile)) {
+      hikari_tile_detach(tile);
+    }
+  }
+
   wl_list_remove(&view->sheet_views);
   wl_list_init(&view->sheet_views);
 
-  wl_list_remove(&view->group_views);
-  wl_list_init(&view->group_views);
-
   wl_list_remove(&view->output_views);
   wl_list_init(&view->output_views);
-}
 
-void
-hikari_view_manage(struct hikari_view *view,
-    struct hikari_sheet *sheet,
-    struct hikari_group *group)
-{
-  assert(hikari_view_is_hidden(view));
-  assert(hikari_view_is_unmanaged(view));
-
-#if !defined(NDEBUG)
-  printf("VIEW MANAGE %p\n", view);
-#endif
-
-  assert(view != NULL);
-  assert(sheet != NULL);
-  assert(group != NULL);
-
-  view->sheet = sheet;
-  view->output = sheet->workspace->output;
-  view->group = group;
-
-  wl_list_init(&view->workspace_views);
-  wl_list_init(&view->visible_server_views);
+  hikari_view_unset_dirty(view);
 }
 
 void
@@ -1630,4 +1652,56 @@ hikari_view_migrate(
   if (hikari_view_is_hidden(view)) {
     hikari_view_show(view);
   }
+}
+
+void
+hikari_view_configure(struct hikari_view *view,
+    const char *app_id,
+    struct hikari_view_autoconf *view_autoconf)
+{
+  assert(view->id == NULL);
+
+  struct hikari_sheet *sheet;
+  struct hikari_output *output;
+  struct wlr_box *geometry = &view->geometry;
+  int x, y;
+  bool invisible, floating;
+
+  set_app_id(view, app_id);
+
+  if (view_autoconf != NULL) {
+    sheet = hikari_view_autoconf_resolve_sheet(view_autoconf);
+    output = sheet->workspace->output;
+
+    invisible = hikari_view_autoconf_resolve_invisible(view_autoconf);
+    floating = hikari_view_autoconf_resolve_floating(view_autoconf);
+
+    hikari_view_autoconf_resolve_position(view_autoconf, view, &x, &y);
+  } else {
+    sheet = hikari_server.workspace->sheet;
+    output = sheet->workspace->output;
+
+    invisible = false;
+    floating = false;
+
+    x = hikari_server.cursor.wlr_cursor->x - output->geometry.x;
+    y = hikari_server.cursor.wlr_cursor->y - output->geometry.y;
+  }
+
+  view->sheet = sheet;
+  view->output = output;
+
+  wl_list_init(&view->workspace_views);
+  wl_list_init(&view->visible_server_views);
+
+  if (invisible) {
+    hikari_view_set_invisible(view);
+  }
+
+  if (floating) {
+    hikari_view_set_floating(view);
+  }
+
+  hikari_geometry_constrain_absolute(geometry, &output->usable_area, x, y);
+  hikari_view_refresh_geometry(view, geometry);
 }

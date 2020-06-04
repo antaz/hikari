@@ -143,15 +143,7 @@ void
 hikari_view_fini(struct hikari_view *view);
 
 void
-hikari_view_manage(struct hikari_view *view,
-    struct hikari_sheet *sheet,
-    struct hikari_group *group);
-
-void
 hikari_view_set_title(struct hikari_view *view, const char *title);
-
-void
-hikari_view_set_id(struct hikari_view *view, const char *id);
 
 #define VIEW_ACTION(name) void hikari_view_##name(struct hikari_view *view);
 
@@ -230,6 +222,11 @@ hikari_view_activate(struct hikari_view *view, bool active);
 void
 hikari_view_migrate(
     struct hikari_view *view, struct hikari_sheet *sheet, int x, int y);
+
+void
+hikari_view_configure(struct hikari_view *view,
+    const char *app_id,
+    struct hikari_view_autoconf *view_autoconf);
 
 static inline bool
 hikari_view_is_dirty(struct hikari_view *view)
