@@ -573,10 +573,50 @@ hikari_view_move_absolute(struct hikari_view *view, int x, int y)
 }
 
 void
+hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
+{
+  assert(hikari_view_is_hidden(view));
+  assert(!hikari_view_is_unmanaged(view));
+  assert(!hikari_view_is_mapped(view));
+
+  struct hikari_sheet *sheet = view->sheet;
+  struct hikari_group *group = view->group;
+  struct hikari_output *output = view->output;
+
+  view->surface = surface;
+
+  wl_list_insert(&sheet->views, &view->sheet_views);
+  wl_list_insert(&group->views, &view->group_views);
+  wl_list_insert(&output->views, &view->output_views);
+}
+
+void
+hikari_view_unmap(struct hikari_view *view)
+{
+  assert(hikari_view_is_hidden(view));
+  assert(!hikari_view_is_unmanaged(view));
+  assert(hikari_view_is_mapped(view));
+
+  view->surface = NULL;
+
+  wl_list_remove(&view->sheet_views);
+  wl_list_init(&view->sheet_views);
+
+  wl_list_remove(&view->group_views);
+  wl_list_init(&view->group_views);
+
+  wl_list_remove(&view->output_views);
+  wl_list_init(&view->output_views);
+}
+
+void
 hikari_view_manage(struct hikari_view *view,
     struct hikari_sheet *sheet,
     struct hikari_group *group)
 {
+  assert(hikari_view_is_hidden(view));
+  assert(hikari_view_is_unmanaged(view));
+
 #if !defined(NDEBUG)
   printf("VIEW MANAGE %p\n", view);
 #endif
@@ -591,10 +631,6 @@ hikari_view_manage(struct hikari_view *view,
 
   wl_list_init(&view->workspace_views);
   wl_list_init(&view->visible_server_views);
-
-  wl_list_insert(&sheet->views, &view->sheet_views);
-  wl_list_insert(&group->views, &view->group_views);
-  wl_list_insert(&view->output->views, &view->output_views);
 }
 
 void

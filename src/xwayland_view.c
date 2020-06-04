@@ -189,8 +189,7 @@ map(struct hikari_view *view, bool focus)
   struct hikari_xwayland_view *xwayland_view =
       (struct hikari_xwayland_view *)view;
 
-  view->surface = xwayland_view->surface->surface;
-  view->surface->data = (struct hikari_view_interface *)view;
+  hikari_view_map(view, xwayland_view->surface->surface);
 
   xwayland_view->commit.notify = commit_handler;
   wl_signal_add(
@@ -238,7 +237,7 @@ unmap(struct hikari_view *view)
 
   wl_list_remove(&xwayland_view->commit.link);
 
-  view->surface = NULL;
+  hikari_view_unmap(view);
 }
 
 static void

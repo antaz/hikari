@@ -172,6 +172,12 @@ VIEW_ACTION(reset_geometry)
 #undef VIEW_ACTION
 
 void
+hikari_view_map(struct hikari_view *view, struct wlr_surface *surface);
+
+void
+hikari_view_unmap(struct hikari_view *view);
+
+void
 hikari_view_commit_pending_operation(
     struct hikari_view *view, struct wlr_box *geometry);
 

@@ -171,7 +171,7 @@ map(struct hikari_view *view, bool focus)
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
   struct wlr_xdg_surface *xdg_surface = xdg_view->surface;
 
-  view->surface = xdg_surface->surface;
+  hikari_view_map(view, xdg_surface->surface);
 
   xdg_view->set_title.notify = set_title_handler;
   wl_signal_add(
@@ -231,7 +231,7 @@ unmap(struct hikari_view *view)
 
   assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
-  view->surface = NULL;
+  hikari_view_unmap(view);
 
   wl_list_remove(&xdg_view->set_title.link);
   wl_list_remove(&xdg_view->request_fullscreen.link);
