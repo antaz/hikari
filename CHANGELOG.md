@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.1
+
+* fix timing issue with XWayland view unmap/map
+* remove `hikari.desktop` on `uninstall`
+* clean up Makefile `PREFIX`
+
 ## 2.0.0
 
 * floating views are raised after layout apply
