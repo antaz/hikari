@@ -1,6 +1,6 @@
 OS != uname
 VERSION ?= "CURRENT"
-PREFIX ?= usr/local
+PREFIX ?= /usr/local
 ETC_PREFIX ?= ${PREFIX}
 
 OBJS = \
@@ -97,7 +97,7 @@ PERMS = 555
 PERMS = 4555
 .endif
 
-CFLAGS += -Wall -I. -Iinclude -DHIKARI_ETC_PREFIX=/${ETC_PREFIX}
+CFLAGS += -Wall -I. -Iinclude -DHIKARI_ETC_PREFIX=${ETC_PREFIX}
 
 WLROOTS_CFLAGS != pkg-config --cflags wlroots
 WLROOTS_LIBS != pkg-config --libs wlroots
@@ -221,7 +221,7 @@ install: hikari hikari-unlocker share/man/man1/hikari.1
 	mkdir -p ${DESTDIR}/${PREFIX}/share/wayland-sessions
 	mkdir -p ${DESTDIR}/${ETC_PREFIX}/etc/hikari
 	mkdir -p ${DESTDIR}/${ETC_PREFIX}/etc/pam.d
-	sed "s,PREFIX,/${PREFIX}," etc/hikari/hikari.conf > ${DESTDIR}/${ETC_PREFIX}/etc/hikari/hikari.conf
+	sed "s,PREFIX,${PREFIX}," etc/hikari/hikari.conf > ${DESTDIR}/${ETC_PREFIX}/etc/hikari/hikari.conf
 	chmod 644 ${DESTDIR}/${ETC_PREFIX}/etc/hikari/hikari.conf
 	install -m ${PERMS} hikari ${DESTDIR}/${PREFIX}/bin
 	install -m 4555 hikari-unlocker ${DESTDIR}/${PREFIX}/bin
