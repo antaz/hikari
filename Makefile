@@ -235,6 +235,7 @@ uninstall:
 	-rm ${DESTDIR}/${PREFIX}/bin/hikari-unlocker
 	-rm ${DESTDIR}/${PREFIX}/share/man/man1/hikari.1
 	-rm ${DESTDIR}/${PREFIX}/share/backgrounds/hikari/hikari_wallpaper.png
+	-rm ${DESTDIR}/${PREFIX}/share/wayland-sessions/hikari.desktop
 	-rm ${DESTDIR}/${ETC_PREFIX}/etc/pam.d/hikari-unlocker
 	-rm ${DESTDIR}/${ETC_PREFIX}/etc/hikari/hikari.conf
 	-rmdir ${DESTDIR}/${ETC_PREFIX}/etc/hikari
