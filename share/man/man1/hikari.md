@@ -66,6 +66,12 @@ several states.
   **x** is the sheet the _view_ is a member of and **y** is the sheet that is
   currently borrowing the _view_.
 
+* **public**
+
+  *Public* views are also displayed on the lock screen, in this case they will
+  never accept input. Views that display sensible information should never be
+  marked as *public*.
+
 Workspace
 ---------
 A _workspace_ is the set of views that are currently visible. Unlike in most
@@ -164,7 +170,9 @@ General actions
   needs pam.conf(5) to be aware of its existence, therefore there must be a
   _hikari-unlocker_ service file in _pam.d_.
 
-  The lock screen displays all visible sheets that are a member of sheet 0.
+  The lock screen displays all views that are marked as **public** which allows
+  applications to provide information to the user when the computer is locked
+  (e.g. a clock).
 
 * **quit**
 

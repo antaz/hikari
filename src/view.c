@@ -886,6 +886,16 @@ hikari_view_toggle_full_maximize(struct hikari_view *view)
   hikari_view_set_dirty(view);
 }
 
+void
+hikari_view_toggle_public(struct hikari_view *view)
+{
+  if (hikari_view_is_public(view)) {
+    hikari_view_unset_public(view);
+  } else {
+    hikari_view_set_public(view);
+  }
+}
+
 static void
 queue_horizontal_maximize(struct hikari_view *view)
 {
@@ -1666,7 +1676,7 @@ hikari_view_configure(struct hikari_view *view,
   struct hikari_output *output;
   struct wlr_box *geometry = &view->geometry;
   int x, y;
-  bool invisible, floating;
+  bool invisible, floating, publicview;
 
   set_app_id(view, app_id);
 
@@ -1676,6 +1686,7 @@ hikari_view_configure(struct hikari_view *view,
 
     invisible = hikari_view_autoconf_resolve_invisible(view_autoconf);
     floating = hikari_view_autoconf_resolve_floating(view_autoconf);
+    publicview = hikari_view_autoconf_resolve_public(view_autoconf);
 
     hikari_view_autoconf_resolve_position(view_autoconf, view, &x, &y);
   } else {
@@ -1684,6 +1695,7 @@ hikari_view_configure(struct hikari_view *view,
 
     invisible = false;
     floating = false;
+    publicview = false;
 
     x = hikari_server.cursor.wlr_cursor->x - output->geometry.x;
     y = hikari_server.cursor.wlr_cursor->y - output->geometry.y;
@@ -1701,6 +1713,10 @@ hikari_view_configure(struct hikari_view *view,
 
   if (floating) {
     hikari_view_set_floating(view);
+  }
+
+  if (publicview) {
+    hikari_view_set_public(view);
   }
 
   hikari_geometry_constrain_absolute(geometry, &output->usable_area, x, y);

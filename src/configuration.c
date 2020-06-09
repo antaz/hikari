@@ -867,6 +867,17 @@ parse_autoconf(struct hikari_configuration *configuration,
       }
 
       (*autoconf)->floating = floating;
+    } else if (!strcmp(key, "public")) {
+      bool publicview;
+
+      if (!ucl_object_toboolean_safe(cur, &publicview)) {
+        fprintf(stderr,
+            "configuration error: expected boolean for \"views\" "
+            "\"public\"\n");
+        goto done;
+      }
+
+      (*autoconf)->publicview = publicview;
     } else {
       fprintf(
           stderr, "configuration error: unkown \"views\" key \"%s\"\n", key);
@@ -1239,6 +1250,9 @@ parse_binding(struct hikari_configuration *configuration,
     *arg = NULL;
   } else if (!strcmp(str, "view-toggle-invisible")) {
     *action = hikari_server_toggle_view_invisible;
+    *arg = NULL;
+  } else if (!strcmp(str, "view-toggle-public")) {
+    *action = hikari_server_toggle_view_public;
     *arg = NULL;
 
   } else if (!strcmp(str, "view-raise")) {

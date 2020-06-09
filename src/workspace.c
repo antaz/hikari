@@ -777,6 +777,32 @@ hikari_workspace_toggle_view_invisible(struct hikari_workspace *workspace)
 }
 
 void
+hikari_workspace_toggle_view_public(struct hikari_workspace *workspace)
+{
+  FOCUS_GUARD(workspace, focus_view);
+
+  hikari_view_toggle_public(focus_view);
+
+  struct hikari_output *output = workspace->output;
+  struct hikari_indicator *indicator = &hikari_server.indicator;
+  struct wlr_box *geometry = hikari_view_border_geometry(focus_view);
+
+  if (hikari_server_is_indicating()) {
+    hikari_indicator_damage_sheet(indicator, output, geometry);
+  }
+
+  hikari_indicator_update_sheet(indicator,
+      output,
+      focus_view->sheet,
+      focus_view->flags,
+      hikari_configuration->indicator_selected);
+
+  if (hikari_server_is_indicating()) {
+    hikari_indicator_damage_sheet(indicator, output, geometry);
+  }
+}
+
+void
 hikari_workspace_toggle_view_floating(struct hikari_workspace *workspace)
 {
   FOCUS_GUARD(workspace, focus_view);

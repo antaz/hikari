@@ -256,8 +256,28 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
   struct hikari_lock_mode *mode = get_mode();
 
   hikari_output_render_background(output, render_data, 0.1);
-  hikari_output_render_sticky(output, render_data);
+  hikari_output_render_visible_views(output, render_data);
   hikari_lock_indicator_render(mode->lock_indicator, render_data);
+}
+
+static void
+reset_visibility(void)
+{
+  struct hikari_output *output;
+  wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
+    struct hikari_view *view;
+    wl_list_for_each (view, &output->views, output_views) {
+      if (hikari_view_is_forced(view)) {
+        hikari_view_unset_forced(view);
+
+        if (hikari_view_is_hidden(view)) {
+          hikari_view_unset_hidden(view);
+        } else {
+          hikari_view_set_hidden(view);
+        }
+      }
+    }
+  }
 }
 
 static void
@@ -279,6 +299,8 @@ cancel(void)
   hikari_lock_indicator_fini(mode->lock_indicator);
   hikari_free(mode->lock_indicator);
   mode->lock_indicator = NULL;
+
+  reset_visibility();
 
   hikari_cursor_activate(&hikari_server.cursor);
 }
@@ -317,6 +339,28 @@ void
 hikari_lock_mode_fini(struct hikari_lock_mode *lock_mode)
 {
   munlock(input_buffer, BUFFER_SIZE);
+}
+
+static void
+override_visibility(void)
+{
+  struct hikari_output *output;
+  wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
+    struct hikari_view *view;
+    wl_list_for_each (view, &output->views, output_views) {
+      if (hikari_view_is_public(view)) {
+        if (hikari_view_is_hidden(view)) {
+          hikari_view_set_forced(view);
+          hikari_view_unset_hidden(view);
+        }
+      } else {
+        if (!hikari_view_is_hidden(view)) {
+          hikari_view_set_forced(view);
+          hikari_view_set_hidden(view);
+        }
+      }
+    }
+  }
 }
 
 void
@@ -361,6 +405,7 @@ hikari_lock_mode_enter(void)
 
   clear_buffer();
   start_unlocker();
+  override_visibility();
 
   mode->disable_outputs = wl_event_loop_add_timer(
       hikari_server.event_loop, disable_outputs_handler, NULL);

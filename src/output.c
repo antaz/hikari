@@ -246,12 +246,11 @@ render_layer(struct wl_list *layers, struct hikari_render_data *render_data)
 #endif
 
 void
-hikari_output_render_sticky(
+hikari_output_render_visible_views(
     struct hikari_output *output, struct hikari_render_data *render_data)
 {
   struct hikari_view *view;
-  wl_list_for_each_reverse (
-      view, &output->workspace->sheets[0].views, sheet_views) {
+  wl_list_for_each_reverse (view, &output->views, output_views) {
     if (!hikari_view_is_hidden(view)) {
       render_data->geometry = hikari_view_border_geometry(view);
 

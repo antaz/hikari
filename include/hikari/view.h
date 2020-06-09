@@ -132,6 +132,8 @@ hikari_view_subsurface_fini(struct hikari_view_subsurface *view_subsurface);
 FLAG(hidden, 0UL)
 FLAG(invisible, 1UL)
 FLAG(floating, 2UL)
+FLAG(public, 3UL)
+FLAG(forced, 4UL)
 #undef FLAG
 
 void
@@ -160,6 +162,7 @@ VIEW_ACTION(top_left_cursor)
 VIEW_ACTION(bottom_right_cursor)
 VIEW_ACTION(center_cursor)
 VIEW_ACTION(toggle_invisible)
+VIEW_ACTION(toggle_public)
 VIEW_ACTION(reset_geometry)
 #undef VIEW_ACTION
 

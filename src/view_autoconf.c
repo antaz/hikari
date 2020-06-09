@@ -18,6 +18,7 @@ hikari_view_autoconf_init(struct hikari_view_autoconf *view_autoconf)
   view_autoconf->focus = false;
   view_autoconf->invisible = false;
   view_autoconf->floating = false;
+  view_autoconf->publicview = false;
 
   hikari_position_config_init(&view_autoconf->position);
 }

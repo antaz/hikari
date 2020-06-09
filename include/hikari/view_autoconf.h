@@ -25,6 +25,7 @@ struct hikari_view_autoconf {
   bool focus;
   bool invisible;
   bool floating;
+  bool publicview;
 };
 
 void
@@ -68,6 +69,13 @@ hikari_view_autoconf_resolve_floating(
 {
   assert(view_autoconf != NULL);
   return view_autoconf->floating;
+}
+
+static inline bool
+hikari_view_autoconf_resolve_public(struct hikari_view_autoconf *view_autoconf)
+{
+  assert(view_autoconf != NULL);
+  return view_autoconf->publicview;
 }
 
 static inline struct hikari_mark *

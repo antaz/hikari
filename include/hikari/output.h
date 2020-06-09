@@ -78,7 +78,7 @@ hikari_output_render_background(struct hikari_output *output,
     float alpha);
 
 void
-hikari_output_render_sticky(
+hikari_output_render_visible_views(
     struct hikari_output *output, struct hikari_render_data *render_data);
 
 void

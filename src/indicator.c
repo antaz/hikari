@@ -105,10 +105,15 @@ hikari_indicator_update_sheet(struct hikari_indicator *indicator,
 {
   bool invisible = flags & hikari_view_invisible_flag;
   bool floating = flags & hikari_view_floating_flag;
+  bool publicview = flags & hikari_view_public_flag;
   char *output_name = sheet->workspace->output->wlr_output->name;
   int i = 0;
 
-  char *text = hikari_malloc(strlen(output_name) + 12);
+  char *text = hikari_malloc(strlen(output_name) + 13);
+
+  if (publicview) {
+    text[i++] = '!';
+  }
 
   if (floating) {
     text[i++] = '~';
