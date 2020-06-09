@@ -10,6 +10,8 @@
 #include <hikari/render_data.h>
 #include <hikari/server.h>
 
+#define HIKARI_PI 3.14159265358979323846
+
 static struct wlr_texture *
 init_indicator_circle(float color[static 4])
 {
@@ -33,7 +35,7 @@ init_indicator_circle(float color[static 4])
       border_inactive[3]);
   cairo_set_line_width(cairo, 5);
   cairo_translate(cairo, size / 2, size / 2);
-  cairo_arc(cairo, 0, 0, (size - 5) / 2, 0, 2 * M_PI);
+  cairo_arc(cairo, 0, 0, (size - 5) / 2, 0, 2 * HIKARI_PI);
   cairo_stroke_preserve(cairo);
   cairo_set_source_rgba(cairo, color[0], color[1], color[2], color[3]);
   cairo_fill(cairo);
