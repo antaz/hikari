@@ -377,7 +377,7 @@ hikari_lock_mode_enter(void)
     workspace->focus_layer = NULL;
     wlr_seat_pointer_clear_focus(hikari_server.seat);
   } else if (focus_view != NULL) {
-    assert(focus_layer != NULL);
+    assert(focus_layer == NULL);
     hikari_workspace_focus_view(workspace, NULL);
   }
 #else
