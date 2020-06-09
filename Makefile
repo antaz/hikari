@@ -29,6 +29,8 @@ OBJS = \
 	layout.o \
 	layout_config.o \
 	layout_select_mode.o \
+	lock_indicator.o \
+	lock_mode.o \
 	main.o \
 	mark.o \
 	mark_assign_mode.o \
@@ -48,7 +50,6 @@ OBJS = \
 	sheet_assign_mode.o \
 	split.o \
 	tile.o \
-	unlocker.o \
 	view.o \
 	view_autoconf.o \
 	workspace.o \

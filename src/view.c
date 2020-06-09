@@ -50,6 +50,7 @@ static void
 move_to_top(struct hikari_view *view)
 {
   assert(view != NULL);
+  assert(hikari_view_is_mapped(view));
 
   wl_list_remove(&view->sheet_views);
   wl_list_insert(&view->sheet->views, &view->sheet_views);

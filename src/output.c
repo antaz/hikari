@@ -31,7 +31,7 @@
 #include <hikari/xwayland_view.h>
 #endif
 
-static void
+static inline void
 render_image_to_surface(cairo_surface_t *output,
     cairo_surface_t *image,
     enum hikari_background_fit fit)
@@ -123,13 +123,14 @@ done:
   }
 }
 
-static void
+static inline void
 render_texture(struct wlr_output *output,
     pixman_region32_t *damage,
     struct wlr_texture *texture,
     struct wlr_renderer *renderer,
     const float matrix[static 9],
-    struct wlr_box *box)
+    struct wlr_box *box,
+    float alpha)
 {
   pixman_region32_t local_damage;
   pixman_region32_init(&local_damage);
@@ -147,7 +148,7 @@ render_texture(struct wlr_output *output,
   pixman_box32_t *rects = pixman_region32_rectangles(&local_damage, &nrects);
   for (int i = 0; i < nrects; ++i) {
     hikari_output_scissor_render(output, renderer, &rects[i]);
-    wlr_render_texture_with_matrix(renderer, texture, matrix, 1);
+    wlr_render_texture_with_matrix(renderer, texture, matrix, alpha);
   }
 
 damage_finish:
@@ -189,12 +190,14 @@ render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
       texture,
       render_data->renderer,
       matrix,
-      &box);
+      &box,
+      1);
 }
 
-static void
-render_background(
-    struct hikari_output *output, struct hikari_render_data *render_data)
+static inline void
+render_background(struct hikari_output *output,
+    struct hikari_render_data *render_data,
+    float alpha)
 {
   if (output->background == NULL) {
     return;
@@ -214,11 +217,12 @@ render_background(
       output->background,
       render_data->renderer,
       matrix,
-      &geometry);
+      &geometry,
+      alpha);
 }
 
 #ifdef HAVE_LAYERSHELL
-static void
+static inline void
 layer_for_each(struct wl_list *layers,
     void (*func)(struct wlr_surface *, int, int, void *),
     void *data)
@@ -229,7 +233,7 @@ layer_for_each(struct wl_list *layers,
   }
 }
 
-static void
+static inline void
 render_layer(struct wl_list *layers, struct hikari_render_data *render_data)
 {
   struct hikari_layer *layer;
@@ -241,22 +245,86 @@ render_layer(struct wl_list *layers, struct hikari_render_data *render_data)
 }
 #endif
 
-static void
-render_output(struct hikari_output *output,
-    pixman_region32_t *damage,
-    struct timespec *now)
+void
+hikari_output_render_sticky(
+    struct hikari_output *output, struct hikari_render_data *render_data)
 {
-  struct wlr_output *wlr_output = output->wlr_output;
+  struct hikari_view *view;
+  wl_list_for_each_reverse (
+      view, &output->workspace->sheets[0].views, sheet_views) {
+    if (!hikari_view_is_hidden(view)) {
+      render_data->geometry = hikari_view_border_geometry(view);
 
-  struct wlr_renderer *renderer = wlr_backend_get_renderer(wlr_output->backend);
+      if (hikari_view_wants_border(view)) {
+        hikari_border_render(&view->border, render_data);
+      }
 
-  wlr_renderer_begin(renderer, wlr_output->width, wlr_output->height);
+      render_data->geometry = hikari_view_geometry(view);
 
-  if (!pixman_region32_not_empty(damage)) {
-    goto render_end;
+      hikari_view_interface_for_each_surface(
+          (struct hikari_view_interface *)view, render_surface, render_data);
+    }
+  }
+}
+
+static inline void
+render_workspace(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+#ifdef HAVE_LAYERSHELL
+  render_layer(
+      &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], render_data);
+  render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM], render_data);
+#endif
+
+  struct hikari_view *view;
+  wl_list_for_each_reverse (view, &output->workspace->views, workspace_views) {
+    render_data->geometry = hikari_view_border_geometry(view);
+
+    if (hikari_view_wants_border(view)) {
+      hikari_border_render(&view->border, render_data);
+    }
+
+    render_data->geometry = hikari_view_geometry(view);
+
+    hikari_view_interface_for_each_surface(
+        (struct hikari_view_interface *)view, render_surface, render_data);
   }
 
+#ifdef HAVE_LAYERSHELL
+  render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], render_data);
+#endif
+
+#ifdef HAVE_XWAYLAND
+  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view;
+  wl_list_for_each_reverse (xwayland_unmanaged_view,
+      &output->unmanaged_xwayland_views,
+      unmanaged_server_views) {
+
+    render_data->geometry = &xwayland_unmanaged_view->geometry;
+
+    wlr_surface_for_each_surface(
+        xwayland_unmanaged_view->surface->surface, render_surface, render_data);
+  }
+#endif
+}
+
+#ifdef HAVE_LAYERSHELL
+static inline void
+render_overlay(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+  render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], render_data);
+}
+#endif
+
+static inline void
+clear_output(struct hikari_render_data *render_data)
+{
   float *clear_color = hikari_configuration->clear;
+  struct wlr_renderer *renderer = render_data->renderer;
+  struct wlr_output *wlr_output = render_data->output;
+  pixman_region32_t *damage = render_data->damage;
 
 #ifndef NDEBUG
   if (hikari_server.track_damage) {
@@ -272,59 +340,15 @@ render_output(struct hikari_output *output,
     hikari_output_scissor_render(wlr_output, renderer, &rects[i]);
     wlr_renderer_clear(renderer, clear_color);
   }
+}
 
-  struct hikari_render_data render_data = {
-    .output = wlr_output, .renderer = renderer, .when = now, .damage = damage
-  };
+static inline void
+renderer_end(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+  struct wlr_renderer *renderer = render_data->renderer;
+  struct wlr_output *wlr_output = render_data->output;
 
-  render_background(output, &render_data);
-
-#ifdef HAVE_LAYERSHELL
-  render_layer(
-      &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], &render_data);
-  render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM], &render_data);
-#endif
-
-  struct hikari_view *view = NULL;
-  wl_list_for_each_reverse (view, &output->workspace->views, workspace_views) {
-    render_data.geometry = hikari_view_border_geometry(view);
-
-    if (hikari_view_wants_border(view)) {
-      hikari_border_render(&view->border, &render_data);
-    }
-
-    render_data.geometry = hikari_view_geometry(view);
-
-    hikari_view_interface_for_each_surface(
-        (struct hikari_view_interface *)view, render_surface, &render_data);
-  }
-
-#ifdef HAVE_LAYERSHELL
-  render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], &render_data);
-#endif
-
-#ifdef HAVE_XWAYLAND
-  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = NULL;
-  wl_list_for_each_reverse (xwayland_unmanaged_view,
-      &output->unmanaged_xwayland_views,
-      unmanaged_server_views) {
-
-    render_data.geometry = &xwayland_unmanaged_view->geometry;
-
-    wlr_surface_for_each_surface(xwayland_unmanaged_view->surface->surface,
-        render_surface,
-        &render_data);
-  }
-#endif
-
-  hikari_server.mode->render(output, &render_data);
-
-#ifdef HAVE_LAYERSHELL
-  render_layer(
-      &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], &render_data);
-#endif
-
-render_end:
   wlr_renderer_scissor(renderer, NULL);
   wlr_output_render_software_cursors(wlr_output, NULL);
   wlr_renderer_end(renderer);
@@ -346,6 +370,59 @@ render_end:
   wlr_output_commit(wlr_output);
 }
 
+static inline void
+render_output(struct hikari_output *output,
+    pixman_region32_t *damage,
+    struct timespec *now)
+{
+  struct wlr_output *wlr_output = output->wlr_output;
+  struct wlr_renderer *renderer = wlr_backend_get_renderer(wlr_output->backend);
+
+  struct hikari_render_data render_data = {
+    .output = wlr_output, .renderer = renderer, .when = now, .damage = damage
+  };
+
+  wlr_renderer_begin(renderer, wlr_output->width, wlr_output->height);
+
+  if (pixman_region32_not_empty(damage)) {
+    clear_output(&render_data);
+
+    render_background(output, &render_data, 1);
+    render_workspace(output, &render_data);
+
+    hikari_server.mode->render(output, &render_data);
+
+#ifdef HAVE_LAYERSHELL
+    render_overlay(output, &render_data);
+#endif
+  }
+
+  renderer_end(output, &render_data);
+}
+
+static inline void
+render_empty_output(struct hikari_output *output,
+    pixman_region32_t *damage,
+    struct timespec *now)
+{
+  struct wlr_output *wlr_output = output->wlr_output;
+  struct wlr_renderer *renderer = wlr_backend_get_renderer(wlr_output->backend);
+
+  struct hikari_render_data render_data = {
+    .output = wlr_output, .renderer = renderer, .when = now, .damage = damage
+  };
+
+  wlr_renderer_begin(renderer, wlr_output->width, wlr_output->height);
+
+  if (pixman_region32_not_empty(damage)) {
+    clear_output(&render_data);
+
+    hikari_server.mode->render(output, &render_data);
+  }
+
+  renderer_end(output, &render_data);
+}
+
 static void
 send_frame_done(struct wlr_surface *surface, int sx, int sy, void *data)
 {
@@ -355,53 +432,78 @@ send_frame_done(struct wlr_surface *surface, int sx, int sy, void *data)
   wlr_surface_send_frame_done(surface, now);
 }
 
-static void
-damage_frame_handler(struct wl_listener *listener, void *data)
+static inline void
+frame_done(struct hikari_output *output, struct timespec *now)
 {
-  assert(!hikari_server.locked);
-
-  bool needs_frame;
-  struct timespec now;
-  struct hikari_output *output =
-      wl_container_of(listener, output, damage_frame);
-
-  pixman_region32_t buffer_damage;
-  pixman_region32_init(&buffer_damage);
-
-  if (!wlr_output_damage_attach_render(
-          output->damage, &needs_frame, &buffer_damage)) {
-    goto buffer_damage_end;
-  }
-
-  if (needs_frame) {
-    clock_gettime(CLOCK_MONOTONIC, &now);
-    render_output(output, &buffer_damage, &now);
-  }
-
-buffer_damage_end:
-  pixman_region32_fini(&buffer_damage);
-
-  struct hikari_view *view = NULL;
+  struct hikari_view *view;
   wl_list_for_each_reverse (view, &output->views, output_views) {
     hikari_view_interface_for_each_surface(
-        (struct hikari_view_interface *)view, send_frame_done, &now);
+        (struct hikari_view_interface *)view, send_frame_done, now);
   }
 
 #ifdef HAVE_XWAYLAND
-  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = NULL;
+  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view;
   wl_list_for_each_reverse (xwayland_unmanaged_view,
       &output->unmanaged_xwayland_views,
       unmanaged_server_views) {
     wlr_surface_for_each_surface(
-        xwayland_unmanaged_view->surface->surface, send_frame_done, &now);
+        xwayland_unmanaged_view->surface->surface, send_frame_done, now);
   }
 #endif
 
 #ifdef HAVE_LAYERSHELL
   for (int i = 0; i < 4; i++) {
-    layer_for_each(&output->layers[i], send_frame_done, &now);
+    layer_for_each(&output->layers[i], send_frame_done, now);
   }
 #endif
+}
+
+#define DAMAGE_HANDLER(name, render)                                           \
+  static void name##_handler(struct wl_listener *listener, void *data)         \
+  {                                                                            \
+    bool needs_frame;                                                          \
+    struct timespec now;                                                       \
+    struct hikari_output *output =                                             \
+        wl_container_of(listener, output, damage_frame);                       \
+                                                                               \
+    pixman_region32_t buffer_damage;                                           \
+    pixman_region32_init(&buffer_damage);                                      \
+                                                                               \
+    clock_gettime(CLOCK_MONOTONIC, &now);                                      \
+                                                                               \
+    if (wlr_output_damage_attach_render(                                       \
+            output->damage, &needs_frame, &buffer_damage) &&                   \
+        needs_frame) {                                                         \
+      render(output, &buffer_damage, &now);                                    \
+    }                                                                          \
+                                                                               \
+    pixman_region32_fini(&buffer_damage);                                      \
+                                                                               \
+    frame_done(output, &now);                                                  \
+  }
+
+DAMAGE_HANDLER(damage_frame, render_output)
+DAMAGE_HANDLER(damage_empty_frame, render_empty_output)
+#undef DAMAGE_HANDLER
+
+void
+hikari_output_disable_content(struct hikari_output *output)
+{
+  wl_list_remove(&output->damage_frame.link);
+  output->damage_frame.notify = damage_empty_frame_handler;
+  wl_signal_add(&output->damage->events.frame, &output->damage_frame);
+
+  hikari_output_damage_whole(output);
+}
+
+void
+hikari_output_enable_content(struct hikari_output *output)
+{
+  wl_list_remove(&output->damage_frame.link);
+  output->damage_frame.notify = damage_frame_handler;
+  wl_signal_add(&output->damage->events.frame, &output->damage_frame);
+
+  hikari_output_damage_whole(output);
 }
 
 void
@@ -421,6 +523,7 @@ hikari_output_disable(struct hikari_output *output)
   struct wlr_output *wlr_output = output->wlr_output;
 
   wl_list_remove(&output->damage_frame.link);
+  wl_list_init(&output->damage_frame.link);
 
   wlr_output_rollback(wlr_output);
   wlr_output_enable(wlr_output, false);
@@ -437,8 +540,6 @@ hikari_output_enable(struct hikari_output *output)
 
   struct wlr_output *wlr_output = output->wlr_output;
 
-  output->damage_frame.notify = damage_frame_handler;
-  wl_signal_add(&output->damage->events.frame, &output->damage_frame);
 
   wlr_output_enable(wlr_output, true);
   wlr_output_commit(wlr_output);
@@ -592,8 +693,16 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
     wlr_output_set_mode(wlr_output, mode);
   }
 
-  if (!hikari_server.locked) {
+  wl_list_init(&output->damage_frame.link);
+
+  if (!hikari_server_in_lock_mode()) {
+    hikari_output_enable_content(output);
     hikari_output_enable(output);
+  } else {
+    hikari_output_disable_content(output);
+    if (hikari_lock_mode_are_outputs_disabled(&hikari_server.lock_mode)) {
+      hikari_output_disable(output);
+    }
   }
 
   struct hikari_output_config *output_config =
@@ -654,4 +763,12 @@ hikari_output_move(struct hikari_output *output, double lx, double ly)
 {
   wlr_output_layout_move(
       hikari_server.output_layout, output->wlr_output, lx, ly);
+}
+
+void
+hikari_output_render_background(struct hikari_output *output,
+    struct hikari_render_data *render_data,
+    float alpha)
+{
+  render_background(output, render_data, alpha);
 }

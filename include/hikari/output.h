@@ -11,6 +11,8 @@
 
 #include <hikari/output_config.h>
 
+struct hikari_render_data;
+
 struct hikari_output {
   struct wlr_output *wlr_output;
   struct wlr_output_damage *damage;
@@ -60,9 +62,24 @@ void
 hikari_output_enable(struct hikari_output *output);
 
 void
+hikari_output_enable_content(struct hikari_output *output);
+
+void
+hikari_output_disable_content(struct hikari_output *output);
+
+void
 hikari_output_load_background(struct hikari_output *output,
     const char *path,
     enum hikari_background_fit background_fit);
+
+void
+hikari_output_render_background(struct hikari_output *output,
+    struct hikari_render_data *render_data,
+    float alpha);
+
+void
+hikari_output_render_sticky(
+    struct hikari_output *output, struct hikari_render_data *render_data);
 
 void
 hikari_output_move(struct hikari_output *output, double lx, double ly);

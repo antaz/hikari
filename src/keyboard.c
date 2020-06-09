@@ -8,7 +8,6 @@
 #include <hikari/memory.h>
 #include <hikari/mode.h>
 #include <hikari/server.h>
-#include <hikari/unlocker.h>
 
 static void
 update_mod_state(struct hikari_keyboard *keyboard)
@@ -30,11 +29,6 @@ key_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
 
-  if (hikari_server.locked) {
-    hikari_unlocker_key_handler(listener, data);
-    return;
-  }
-
   hikari_server.mode->key_handler(listener, data);
 }
 
@@ -45,10 +39,6 @@ modifiers_handler(struct wl_listener *listener, void *data)
       wl_container_of(listener, keyboard, modifiers);
 
   update_mod_state(keyboard);
-
-  if (hikari_server.locked) {
-    return;
-  }
 
   hikari_server.mode->modifier_handler(listener, data);
 }

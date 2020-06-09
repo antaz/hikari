@@ -79,9 +79,8 @@ hikari_cursor_deactivate(struct hikari_cursor *cursor)
   wl_list_remove(&cursor->button.link);
   wl_list_remove(&cursor->axis.link);
   wl_list_remove(&cursor->request_set_cursor.link);
-  wl_list_remove(&cursor->surface_destroy.link);
 
-  wl_list_init(&cursor->surface_destroy.link);
+  hikari_cursor_set_image(cursor, NULL);
 }
 
 void
@@ -90,8 +89,12 @@ hikari_cursor_set_image(struct hikari_cursor *cursor, const char *path)
   wl_list_remove(&cursor->surface_destroy.link);
   wl_list_init(&cursor->surface_destroy.link);
 
-  wlr_xcursor_manager_set_cursor_image(
-      hikari_server.cursor_mgr, path, cursor->wlr_cursor);
+  if (path != NULL) {
+    wlr_xcursor_manager_set_cursor_image(
+        hikari_server.cursor_mgr, path, cursor->wlr_cursor);
+  } else {
+    wlr_cursor_set_image(cursor->wlr_cursor, NULL, 0, 0, 0, 0, 0, 0);
+  }
 }
 
 void
@@ -111,7 +114,7 @@ motion_absolute_handler(struct wl_listener *listener, void *data)
   struct hikari_cursor *cursor =
       wl_container_of(listener, cursor, motion_absolute);
 
-  assert(!hikari_server.locked);
+  assert(!hikari_server_in_lock_mode());
 
   struct wlr_event_pointer_motion_absolute *event = data;
 
@@ -124,7 +127,7 @@ motion_absolute_handler(struct wl_listener *listener, void *data)
 static void
 frame_handler(struct wl_listener *listener, void *data)
 {
-  assert(!hikari_server.locked);
+  assert(!hikari_server_in_lock_mode());
 
   wlr_seat_pointer_notify_frame(hikari_server.seat);
 }
@@ -134,7 +137,7 @@ motion_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_cursor *cursor = wl_container_of(listener, cursor, motion);
 
-  assert(!hikari_server.locked);
+  assert(!hikari_server_in_lock_mode());
 
   struct wlr_event_pointer_motion *event = data;
 
@@ -147,7 +150,7 @@ motion_handler(struct wl_listener *listener, void *data)
 static void
 button_handler(struct wl_listener *listener, void *data)
 {
-  assert(!hikari_server.locked);
+  assert(!hikari_server_in_lock_mode());
 
   hikari_server.mode->button_handler(listener, data);
 }
@@ -155,7 +158,7 @@ button_handler(struct wl_listener *listener, void *data)
 static void
 axis_handler(struct wl_listener *listener, void *data)
 {
-  assert(!hikari_server.locked);
+  assert(!hikari_server_in_lock_mode());
 
   struct wlr_event_pointer_axis *event = data;
 

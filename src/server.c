@@ -51,7 +51,6 @@
 #include <hikari/pointer.h>
 #include <hikari/pointer_config.h>
 #include <hikari/sheet.h>
-#include <hikari/unlocker.h>
 #include <hikari/workspace.h>
 #include <hikari/xdg_view.h>
 
@@ -342,10 +341,6 @@ hikari_server_view_interface_at(double x,
 void
 hikari_server_cursor_focus(void)
 {
-  if (!hikari_server_in_normal_mode()) {
-    return;
-  }
-
   struct timespec now;
   uint32_t time_msec = (uint32_t)clock_gettime(CLOCK_MONOTONIC, &now);
   hikari_server.mode->cursor_move(time_msec);
@@ -744,7 +739,6 @@ server_init(struct hikari_server *server, char *config_path)
   server->keyboard_state.mod_changed = false;
   server->keyboard_state.mod_pressed = false;
 
-  server->locked = false;
   server->cycling = false;
   server->workspace = NULL;
 
@@ -752,8 +746,6 @@ server_init(struct hikari_server *server, char *config_path)
       &server->indicator, hikari_configuration->indicator_selected);
 
   wl_list_init(&server->outputs);
-
-  hikari_unlocker_init();
 
   signal(SIGPIPE, SIG_IGN);
 
@@ -823,6 +815,7 @@ server_init(struct hikari_server *server, char *config_path)
   hikari_group_assign_mode_init(&server->group_assign_mode);
   hikari_input_grab_mode_init(&server->input_grab_mode);
   hikari_layout_select_mode_init(&server->layout_select_mode);
+  hikari_lock_mode_init(&server->lock_mode);
   hikari_mark_assign_mode_init(&server->mark_assign_mode);
   hikari_mark_select_mode_init(&server->mark_select_mode);
   hikari_move_mode_init(&server->move_mode);
@@ -885,6 +878,7 @@ hikari_server_stop(void)
 
   hikari_cursor_fini(&hikari_server.cursor);
   hikari_indicator_fini(&hikari_server.indicator);
+  hikari_lock_mode_fini(&hikari_server.lock_mode);
   hikari_mark_assign_mode_fini(&hikari_server.mark_assign_mode);
 
   wlr_seat_destroy(hikari_server.seat);
@@ -928,42 +922,13 @@ hikari_server_find_or_create_group(const char *group_name)
 void
 hikari_server_lock(void *arg)
 {
-  hikari_unlocker_start();
-
-  hikari_server.locked = true;
-
-  hikari_cursor_deactivate(&hikari_server.cursor);
-
-  if (hikari_server.workspace->focus_view != NULL) {
-    hikari_workspace_focus_view(hikari_server.workspace, NULL);
-  }
-
-  wlr_seat_pointer_clear_focus(hikari_server.seat);
-
-  struct hikari_output *output = NULL;
-  wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
-    hikari_output_disable(output);
-  }
+  hikari_lock_mode_enter();
 }
 
 void
 hikari_server_reload(void *arg)
 {
   hikari_configuration_reload(hikari_server.config_path);
-}
-
-void
-hikari_server_unlock(void)
-{
-  hikari_server.locked = false;
-
-  struct hikari_output *output = NULL;
-  wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
-    hikari_output_enable(output);
-  }
-
-  hikari_cursor_activate(&hikari_server.cursor);
-  hikari_server_cursor_focus();
 }
 
 #define CYCLE_VIEW(name, link)                                                 \

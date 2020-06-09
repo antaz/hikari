@@ -12,6 +12,7 @@
 #include <hikari/input_grab_mode.h>
 #include <hikari/layer_shell.h>
 #include <hikari/layout_select_mode.h>
+#include <hikari/lock_mode.h>
 #include <hikari/mark_assign_mode.h>
 #include <hikari/mark_select_mode.h>
 #include <hikari/move_mode.h>
@@ -27,7 +28,6 @@ struct hikari_output;
 struct hikari_group;
 
 struct hikari_server {
-  bool locked;
   bool cycling;
 #ifndef NDEBUG
   bool track_damage;
@@ -95,6 +95,7 @@ struct hikari_server {
   struct hikari_group_assign_mode group_assign_mode;
   struct hikari_input_grab_mode input_grab_mode;
   struct hikari_layout_select_mode layout_select_mode;
+  struct hikari_lock_mode lock_mode;
   struct hikari_mark_assign_mode mark_assign_mode;
   struct hikari_mark_select_mode mark_select_mode;
   struct hikari_move_mode move_mode;
@@ -172,9 +173,6 @@ hikari_server_reload(void *arg);
 
 void
 hikari_server_execute_command(void *arg);
-
-void
-hikari_server_unlock(void);
 
 struct hikari_group *
 hikari_server_find_group(const char *group_name);
@@ -354,6 +352,7 @@ hikari_server_clear_workspace(void *arg)
 MODE(group_assign)
 MODE(input_grab)
 MODE(layout_select)
+MODE(lock)
 MODE(mark_assign)
 MODE(mark_select)
 MODE(move)

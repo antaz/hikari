@@ -164,6 +164,8 @@ General actions
   needs pam.conf(5) to be aware of its existence, therefore there must be a
   _hikari-unlocker_ service file in _pam.d_.
 
+  The lock screen displays all visible sheets that are a member of sheet 0.
+
 * **quit**
 
   Quit **hikari**.
