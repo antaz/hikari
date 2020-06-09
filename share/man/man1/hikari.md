@@ -610,6 +610,11 @@ can be used to specify certain properties you want for that view to apply.
 
   This allows positioning a view relative to the ouptut.
 
+* **public**
+
+  Takes a boolean to specify the view's **public** state on startup. The default
+  value is *false*.
+
 * **sheet**
 
   Takes an integer that references the sheet this view should be assigned to. If
