@@ -594,19 +594,18 @@ static void
 new_popup_popup_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_layer_popup *layer_popup =
-      wl_container_of(listener, layer_popup, commit);
+      wl_container_of(listener, layer_popup, new_popup);
 
 #ifndef NDEBUG
   printf("NEW LAYER POPUP POPUP %p\n", layer_popup);
 #endif
 
-  struct hikari_layer_popup *parent = layer_popup->parent.node.popup;
   struct wlr_xdg_popup *wlr_popup = data;
 
   struct hikari_layer_popup *layer_popup_popup =
       hikari_malloc(sizeof(struct hikari_layer_popup));
 
-  init_popup_popup(layer_popup_popup, parent, wlr_popup);
+  init_popup_popup(layer_popup_popup, layer_popup, wlr_popup);
 }
 
 static void
