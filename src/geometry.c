@@ -123,7 +123,8 @@ hikari_geometry_constrain_relative(
     int center_usable_area_##coord = usable_area->dim / 2;                     \
     int center_geometry_##coord = geometry->dim / 2;                           \
                                                                                \
-    return center_usable_area_##coord - center_geometry_##coord;               \
+    return usable_area->coord + center_usable_area_##coord -                   \
+           center_geometry_##coord;                                            \
   }
 
 CENTER(x, width)
@@ -133,20 +134,22 @@ CENTER(y, height)
 static int
 right_x(struct wlr_box *geometry, struct wlr_box *usable_area)
 {
-  return usable_area->width - geometry->width + hikari_configuration->border;
+  return usable_area->x + usable_area->width - geometry->width +
+         hikari_configuration->border;
 }
 
 static int
 bottom_y(struct wlr_box *geometry, struct wlr_box *usable_area)
 {
-  return usable_area->height - geometry->height + hikari_configuration->border;
+  return usable_area->y + usable_area->height - geometry->height +
+         hikari_configuration->border;
 }
 
 void
 hikari_geometry_position_bottom_left(
     struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y)
 {
-  *x = 0;
+  *x = usable_area->x;
   *y = bottom_y(geometry, usable_area);
 }
 
@@ -178,7 +181,7 @@ void
 hikari_geometry_position_center_left(
     struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y)
 {
-  *x = 0;
+  *x = usable_area->x;
   *y = center_y(geometry, usable_area);
 }
 
@@ -194,8 +197,8 @@ void
 hikari_geometry_position_top_left(
     struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y)
 {
-  *x = 0;
-  *y = 0;
+  *x = usable_area->x;
+  *y = usable_area->y;
 }
 
 void
@@ -203,7 +206,7 @@ hikari_geometry_position_top_middle(
     struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y)
 {
   *x = center_x(geometry, usable_area);
-  *y = 0;
+  *y = usable_area->y;
 }
 
 void
@@ -211,7 +214,7 @@ hikari_geometry_position_top_right(
     struct wlr_box *geometry, struct wlr_box *usable_area, int *x, int *y)
 {
   *x = right_x(geometry, usable_area);
-  *y = 0;
+  *y = usable_area->y;
 }
 
 void
