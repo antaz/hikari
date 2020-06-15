@@ -640,11 +640,21 @@ hikari_view_unmap(struct hikari_view *view)
   view->group = NULL;
 
   cancel_tile(view);
+
   if (hikari_view_is_tiled(view)) {
+    struct wlr_box geometry;
     struct hikari_tile *tile = view->tile;
+
+    memcpy(&geometry, hikari_view_geometry(view), sizeof(struct wlr_box));
+
     if (hikari_tile_is_attached(tile)) {
       hikari_tile_detach(tile);
     }
+
+    hikari_free(tile);
+    view->tile = NULL;
+
+    hikari_view_refresh_geometry(view, &geometry);
   }
 
   wl_list_remove(&view->sheet_views);
@@ -654,6 +664,9 @@ hikari_view_unmap(struct hikari_view *view)
   wl_list_init(&view->output_views);
 
   hikari_view_unset_dirty(view);
+
+  assert(!hikari_view_is_tiling(view));
+  assert(!hikari_view_is_tiled(view));
 }
 
 void
