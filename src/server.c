@@ -285,6 +285,7 @@ view_interface_at(double lx,
       wlr_output_layout_output_at(hikari_server.output_layout, lx, ly);
 
   if (wlr_output == NULL) {
+    *workspace = hikari_server.workspace;
     return NULL;
   }
 
