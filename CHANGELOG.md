@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.2
+
+* fix nested popups in layer-shell
+* fix tiling state handling for unmapped views
+* fix exclusive area handling for output relative positions
+
 ## 2.0.1
 
 * fix timing issue with XWayland view unmap/map
