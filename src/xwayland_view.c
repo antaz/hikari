@@ -90,7 +90,9 @@ commit_handler(struct wl_listener *listener, void *data)
         surface->height != geometry->height ||
         surface_x_in_hikari != geometry->x ||
         surface_y_in_hikari != geometry->y) {
-      if (!hikari_view_is_hidden(view)) {
+      bool visible = !hikari_view_is_hidden(view);
+
+      if (visible) {
         hikari_indicator_damage(&hikari_server.indicator, view);
         hikari_view_damage_whole(view);
       }
@@ -102,16 +104,24 @@ commit_handler(struct wl_listener *listener, void *data)
 
       hikari_view_refresh_geometry(view, geometry);
 
-      if (!hikari_view_is_hidden(view)) {
+      if (visible) {
         hikari_view_damage_whole(view);
+      } else if (output->enabled) {
+        wlr_output_schedule_frame(output->wlr_output);
       }
-    } else if (view->output->enabled && !hikari_view_is_hidden(view)) {
-      pixman_region32_t damage;
-      pixman_region32_init(&damage);
-      wlr_surface_get_effective_damage(surface->surface, &damage);
-      pixman_region32_translate(&damage, geometry->x, geometry->y);
-      wlr_output_damage_add(output->damage, &damage);
-      pixman_region32_fini(&damage);
+    } else if (output->enabled) {
+      bool visible = !hikari_view_is_hidden(view);
+
+      if (visible) {
+        pixman_region32_t damage;
+        pixman_region32_init(&damage);
+        wlr_surface_get_effective_damage(surface->surface, &damage);
+        pixman_region32_translate(&damage, geometry->x, geometry->y);
+        wlr_output_damage_add(output->damage, &damage);
+        pixman_region32_fini(&damage);
+      } else {
+        wlr_output_schedule_frame(output->wlr_output);
+      }
     }
   }
 }

@@ -47,28 +47,29 @@ commit_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_xdg_view *xdg_view =
       wl_container_of(listener, xdg_view, commit);
+
   struct hikari_view *view = (struct hikari_view *)xdg_view;
+  struct wlr_xdg_surface *surface = xdg_view->surface;
+  uint32_t serial = surface->configure_serial;
 
   assert(view->surface != NULL);
 
-  uint32_t serial = xdg_view->surface->configure_serial;
-
   if (hikari_view_was_updated(view, serial)) {
     struct wlr_box new_geometry;
-    wlr_xdg_surface_get_geometry(xdg_view->surface, &new_geometry);
+    wlr_xdg_surface_get_geometry(surface, &new_geometry);
 
     switch (view->pending_operation.type) {
       case HIKARI_OPERATION_TYPE_TILE:
       case HIKARI_OPERATION_TYPE_FULL_MAXIMIZE:
       case HIKARI_OPERATION_TYPE_VERTICAL_MAXIMIZE:
       case HIKARI_OPERATION_TYPE_HORIZONTAL_MAXIMIZE:
-        wlr_xdg_toplevel_set_tiled(xdg_view->surface,
+        wlr_xdg_toplevel_set_tiled(surface,
             WLR_EDGE_LEFT | WLR_EDGE_RIGHT | WLR_EDGE_TOP | WLR_EDGE_BOTTOM);
         break;
 
       case HIKARI_OPERATION_TYPE_RESET:
       case HIKARI_OPERATION_TYPE_UNMAXIMIZE:
-        wlr_xdg_toplevel_set_tiled(xdg_view->surface, WLR_EDGE_NONE);
+        wlr_xdg_toplevel_set_tiled(surface, WLR_EDGE_NONE);
         break;
 
       case HIKARI_OPERATION_TYPE_RESIZE:
@@ -77,13 +78,15 @@ commit_handler(struct wl_listener *listener, void *data)
     hikari_view_commit_pending_operation(view, &new_geometry);
   } else {
     struct wlr_box *geometry = hikari_view_geometry(view);
+    struct hikari_output *output = view->output;
+    bool visible = !hikari_view_is_hidden(view);
 
     struct wlr_box new_geometry;
-    wlr_xdg_surface_get_geometry(xdg_view->surface, &new_geometry);
+    wlr_xdg_surface_get_geometry(surface, &new_geometry);
 
     if (new_geometry.width != geometry->width ||
         new_geometry.height != geometry->height) {
-      if (!hikari_view_is_hidden(view)) {
+      if (visible) {
         hikari_view_damage_whole(view);
       }
 
@@ -92,16 +95,22 @@ commit_handler(struct wl_listener *listener, void *data)
 
       hikari_view_refresh_geometry(view, geometry);
 
-      if (!hikari_view_is_hidden(view)) {
+      if (visible) {
         hikari_view_damage_whole(view);
+      } else if (output->enabled) {
+        wlr_output_schedule_frame(output->wlr_output);
       }
-    } else if (!hikari_view_is_hidden(view) && view->output->enabled) {
-      pixman_region32_t damage;
-      pixman_region32_init(&damage);
-      wlr_surface_get_effective_damage(xdg_view->surface->surface, &damage);
-      pixman_region32_translate(&damage, geometry->x, geometry->y);
-      wlr_output_damage_add(view->output->damage, &damage);
-      pixman_region32_fini(&damage);
+    } else if (output->enabled) {
+      if (visible) {
+        pixman_region32_t damage;
+        pixman_region32_init(&damage);
+        wlr_surface_get_effective_damage(surface->surface, &damage);
+        pixman_region32_translate(&damage, geometry->x, geometry->y);
+        wlr_output_damage_add(output->damage, &damage);
+        pixman_region32_fini(&damage);
+      } else {
+        wlr_output_schedule_frame(output->wlr_output);
+      }
     }
   }
 }
