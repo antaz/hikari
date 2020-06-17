@@ -675,6 +675,11 @@ drop_privileges(struct hikari_server *server)
     }
   }
 
+  if (geteuid() == 0 || getegid() == 0) {
+    fprintf(stderr, "running as root is prohibited\n");
+    return false;
+  }
+
   return true;
 }
 
