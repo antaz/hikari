@@ -16,6 +16,7 @@
 #include <hikari/keyboard.h>
 #include <hikari/lock_indicator.h>
 #include <hikari/output.h>
+#include <hikari/render.h>
 #include <hikari/render_data.h>
 #include <hikari/server.h>
 #include <hikari/utf8.h>
@@ -255,8 +256,8 @@ render(struct hikari_output *output, struct hikari_render_data *render_data)
 {
   struct hikari_lock_mode *mode = get_mode();
 
-  hikari_output_render_background(output, render_data, 0.1);
-  hikari_output_render_visible_views(output, render_data);
+  hikari_render_background(output, render_data, 0.1);
+  hikari_render_visible_views(output, render_data);
   hikari_lock_indicator_render(mode->lock_indicator, render_data);
 }
 

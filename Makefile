@@ -44,6 +44,7 @@ OBJS = \
 	pointer.o \
 	pointer_config.o \
 	position_config.o \
+	render.o \
 	resize_mode.o \
 	server.o \
 	sheet.o \
