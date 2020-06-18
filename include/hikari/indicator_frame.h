@@ -17,9 +17,4 @@ void
 hikari_indicator_frame_refresh_geometry(
     struct hikari_indicator_frame *indicator_frame, struct hikari_view *view);
 
-void
-hikari_indicator_frame_render(struct hikari_indicator_frame *indicator_frame,
-    float color[static 4],
-    struct hikari_renderer *renderer);
-
 #endif

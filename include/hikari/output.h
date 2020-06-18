@@ -48,11 +48,6 @@ void
 hikari_output_fini(struct hikari_output *output);
 
 void
-hikari_output_scissor_render(struct wlr_output *wlr_output,
-    struct wlr_renderer *renderer,
-    pixman_box32_t *rect);
-
-void
 hikari_output_damage_whole(struct hikari_output *output);
 
 void
@@ -71,15 +66,6 @@ void
 hikari_output_load_background(struct hikari_output *output,
     const char *path,
     enum hikari_background_fit background_fit);
-
-void
-hikari_output_render_background(struct hikari_output *output,
-    struct hikari_renderer *renderer,
-    float alpha);
-
-void
-hikari_output_render_visible_views(
-    struct hikari_output *output, struct hikari_renderer *renderer);
 
 void
 hikari_output_move(struct hikari_output *output, double lx, double ly);

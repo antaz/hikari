@@ -24,10 +24,6 @@ void
 hikari_indicator_fini(struct hikari_indicator *indicator);
 
 void
-hikari_indicator_render(
-    struct hikari_indicator *indicator, struct hikari_renderer *renderer);
-
-void
 hikari_indicator_update(struct hikari_indicator *indicator,
     struct hikari_view *view,
     float background[static 4]);

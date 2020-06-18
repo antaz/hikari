@@ -143,28 +143,6 @@ hikari_output_enable(struct hikari_output *output)
   output->enabled = true;
 }
 
-void
-hikari_output_scissor_render(struct wlr_output *wlr_output,
-    struct wlr_renderer *renderer,
-    pixman_box32_t *rect)
-{
-  assert(wlr_output != NULL);
-
-  struct wlr_box box = { .x = rect->x1,
-    .y = rect->y1,
-    .width = rect->x2 - rect->x1,
-    .height = rect->y2 - rect->y1 };
-
-  /* int ow, oh; */
-  /* wlr_output_transformed_resolution(wlr_output, &ow, &oh); */
-
-  /* enum wl_output_transform transform = */
-  /*   wlr_output_transform_invert(wlr_output->transform); */
-  /* wlr_box_transform(&box, &box, transform, ow, oh); */
-
-  wlr_renderer_scissor(renderer, &box);
-}
-
 static void
 output_geometry(struct hikari_output *output)
 {

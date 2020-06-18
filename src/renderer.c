@@ -24,6 +24,215 @@
 #endif
 
 static inline void
+renderer_scissor(struct wlr_output *wlr_output,
+    struct wlr_renderer *renderer,
+    pixman_box32_t *rect)
+{
+  assert(wlr_output != NULL);
+
+  struct wlr_box box = { .x = rect->x1,
+    .y = rect->y1,
+    .width = rect->x2 - rect->x1,
+    .height = rect->y2 - rect->y1 };
+
+  wlr_renderer_scissor(renderer, &box);
+}
+
+static inline void
+rect_render(float color[static 4],
+    struct wlr_box *box,
+    struct hikari_renderer *renderer)
+{
+  pixman_region32_t damage;
+  pixman_region32_init(&damage);
+  pixman_region32_union_rect(
+      &damage, &damage, box->x, box->y, box->width, box->height);
+
+  pixman_region32_intersect(&damage, &damage, renderer->damage);
+  bool damaged = pixman_region32_not_empty(&damage);
+  if (!damaged) {
+    goto buffer_damage_finish;
+  }
+
+  struct wlr_renderer *wlr_renderer = renderer->wlr_renderer;
+  struct wlr_output *wlr_output = renderer->wlr_output;
+  assert(renderer);
+
+  float matrix[9];
+  wlr_matrix_project_box(
+      matrix, box, WL_OUTPUT_TRANSFORM_NORMAL, 0, wlr_output->transform_matrix);
+
+  int nrects;
+  pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
+  for (int i = 0; i < nrects; i++) {
+    renderer_scissor(wlr_output, wlr_renderer, &rects[i]);
+    wlr_render_quad_with_matrix(wlr_renderer, color, matrix);
+  }
+
+buffer_damage_finish:
+  pixman_region32_fini(&damage);
+}
+
+static inline void
+render_border(struct hikari_border *border, struct hikari_renderer *renderer)
+{
+  if (border->state == HIKARI_BORDER_NONE) {
+    return;
+  }
+
+  struct wlr_box *geometry = &border->geometry;
+
+  pixman_region32_t damage;
+  pixman_region32_init(&damage);
+  pixman_region32_union_rect(&damage,
+      &damage,
+      geometry->x,
+      geometry->y,
+      geometry->width,
+      geometry->height);
+  pixman_region32_intersect(&damage, &damage, renderer->damage);
+
+  bool damaged = pixman_region32_not_empty(&damage);
+  if (!damaged) {
+    goto buffer_damage_finish;
+  }
+
+  float *color;
+  switch (border->state) {
+    case HIKARI_BORDER_INACTIVE:
+      color = hikari_configuration->border_inactive;
+      break;
+
+    case HIKARI_BORDER_ACTIVE:
+      color = hikari_configuration->border_active;
+      break;
+
+    default:
+      goto buffer_damage_finish;
+  }
+
+  struct wlr_renderer *wlr_renderer = renderer->wlr_renderer;
+  struct wlr_output *wlr_output = renderer->wlr_output;
+  assert(renderer);
+
+  float matrix[9];
+  wlr_matrix_project_box(matrix,
+      geometry,
+      WL_OUTPUT_TRANSFORM_NORMAL,
+      0,
+      wlr_output->transform_matrix);
+
+  int nrects;
+  pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
+  for (int i = 0; i < nrects; i++) {
+    renderer_scissor(wlr_output, wlr_renderer, &rects[i]);
+    rect_render(color, &border->top, renderer);
+    rect_render(color, &border->bottom, renderer);
+    rect_render(color, &border->left, renderer);
+    rect_render(color, &border->right, renderer);
+  }
+
+buffer_damage_finish:
+  pixman_region32_fini(&damage);
+}
+
+static inline void
+render_indicator(
+    struct hikari_indicator *indicator, struct hikari_renderer *renderer)
+{
+  struct wlr_box *border_geometry = renderer->geometry;
+  struct wlr_box geometry = *border_geometry;
+
+  renderer->geometry = &geometry;
+
+  geometry.x += 5;
+
+  struct hikari_indicator_bar *title_bar = &indicator->title;
+  geometry.y += 5;
+  hikari_indicator_bar_render(title_bar, renderer);
+
+  int bar_height = hikari_configuration->font.height;
+
+  struct hikari_indicator_bar *sheet_bar = &indicator->sheet;
+  geometry.y += bar_height + 5;
+  hikari_indicator_bar_render(sheet_bar, renderer);
+
+  struct hikari_indicator_bar *group_bar = &indicator->group;
+  geometry.y += bar_height + 5;
+  hikari_indicator_bar_render(group_bar, renderer);
+
+  struct hikari_indicator_bar *mark_bar = &indicator->mark;
+  geometry.y += bar_height + 5;
+  hikari_indicator_bar_render(mark_bar, renderer);
+
+  renderer->geometry = border_geometry;
+}
+
+static inline void
+render_indicator_frame(struct hikari_indicator_frame *indicator_frame,
+    float color[static 4],
+    struct hikari_renderer *renderer)
+{
+  struct wlr_box *box = renderer->geometry;
+
+  pixman_region32_t damage;
+  pixman_region32_init(&damage);
+  pixman_region32_union_rect(
+      &damage, &damage, box->x, box->y, box->width, box->height);
+
+  pixman_region32_intersect(&damage, &damage, renderer->damage);
+  bool damaged = pixman_region32_not_empty(&damage);
+  if (!damaged) {
+    goto buffer_damage_finish;
+  }
+
+  struct wlr_renderer *wlr_renderer = renderer->wlr_renderer;
+  struct wlr_output *wlr_output = renderer->wlr_output;
+
+  float top_matrix[9];
+  float bottom_matrix[9];
+  float left_matrix[9];
+  float right_matrix[9];
+
+  wlr_matrix_project_box(top_matrix,
+      &indicator_frame->top,
+      WL_OUTPUT_TRANSFORM_NORMAL,
+      0,
+      wlr_output->transform_matrix);
+
+  wlr_matrix_project_box(bottom_matrix,
+      &indicator_frame->bottom,
+      WL_OUTPUT_TRANSFORM_NORMAL,
+      0,
+      wlr_output->transform_matrix);
+
+  wlr_matrix_project_box(left_matrix,
+      &indicator_frame->left,
+      WL_OUTPUT_TRANSFORM_NORMAL,
+      0,
+      wlr_output->transform_matrix);
+
+  wlr_matrix_project_box(right_matrix,
+      &indicator_frame->right,
+      WL_OUTPUT_TRANSFORM_NORMAL,
+      0,
+      wlr_output->transform_matrix);
+
+  int nrects;
+  pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
+  for (int i = 0; i < nrects; i++) {
+    renderer_scissor(wlr_output, wlr_renderer, &rects[i]);
+    wlr_render_quad_with_matrix(wlr_renderer, color, top_matrix);
+    wlr_render_quad_with_matrix(wlr_renderer, color, bottom_matrix);
+    wlr_render_quad_with_matrix(wlr_renderer, color, left_matrix);
+    wlr_render_quad_with_matrix(wlr_renderer, color, right_matrix);
+  }
+
+buffer_damage_finish:
+  pixman_region32_fini(&damage);
+}
+
+static inline void
 clear_output(struct hikari_renderer *renderer)
 {
   float *clear_color = hikari_configuration->clear;
@@ -42,7 +251,7 @@ clear_output(struct hikari_renderer *renderer)
   int nrects;
   pixman_box32_t *rects = pixman_region32_rectangles(damage, &nrects);
   for (int i = 0; i < nrects; ++i) {
-    hikari_output_scissor_render(wlr_output, wlr_renderer, &rects[i]);
+    renderer_scissor(wlr_output, wlr_renderer, &rects[i]);
     wlr_renderer_clear(wlr_renderer, clear_color);
   }
 }
@@ -98,7 +307,7 @@ render_texture(struct wlr_texture *texture,
   int nrects;
   pixman_box32_t *rects = pixman_region32_rectangles(&local_damage, &nrects);
   for (int i = 0; i < nrects; ++i) {
-    hikari_output_scissor_render(output, renderer, &rects[i]);
+    renderer_scissor(output, renderer, &rects[i]);
     wlr_render_texture_with_matrix(renderer, texture, matrix, alpha);
   }
 
@@ -197,7 +406,7 @@ render_workspace(struct hikari_renderer *renderer)
     renderer->geometry = hikari_view_border_geometry(view);
 
     if (hikari_view_wants_border(view)) {
-      hikari_border_render(&view->border, renderer);
+      render_border(&view->border, renderer);
     }
 
     renderer->geometry = hikari_view_geometry(view);
@@ -341,7 +550,7 @@ render_visible_views(struct hikari_renderer *renderer)
       renderer->geometry = hikari_view_border_geometry(view);
 
       if (hikari_view_wants_border(view)) {
-        hikari_border_render(&view->border, renderer);
+        render_border(&view->border, renderer);
       }
 
       renderer->geometry = hikari_view_geometry(view);
@@ -374,10 +583,10 @@ hikari_renderer_normal_mode(struct hikari_renderer *renderer)
         renderer->geometry = hikari_view_border_geometry(view);
 
         if (first == view) {
-          hikari_indicator_frame_render(
+          render_indicator_frame(
               &view->indicator_frame, indicator_first, renderer);
         } else {
-          hikari_indicator_frame_render(
+          render_indicator_frame(
               &view->indicator_frame, indicator_grouped, renderer);
         }
       }
@@ -386,11 +595,11 @@ hikari_renderer_normal_mode(struct hikari_renderer *renderer)
     if (focus_view->output == output) {
       renderer->geometry = hikari_view_border_geometry(focus_view);
 
-      hikari_indicator_frame_render(&focus_view->indicator_frame,
+      render_indicator_frame(&focus_view->indicator_frame,
           hikari_configuration->indicator_selected,
           renderer);
 
-      hikari_indicator_render(&hikari_server.indicator, renderer);
+      render_indicator(&hikari_server.indicator, renderer);
     }
   }
 
@@ -428,10 +637,10 @@ hikari_renderer_group_assign_mode(struct hikari_renderer *renderer)
         renderer->geometry = hikari_view_border_geometry(view);
 
         if (first == view) {
-          hikari_indicator_frame_render(
+          render_indicator_frame(
               &view->indicator_frame, indicator_first, renderer);
         } else {
-          hikari_indicator_frame_render(
+          render_indicator_frame(
               &view->indicator_frame, indicator_grouped, renderer);
         }
       }
@@ -441,11 +650,11 @@ hikari_renderer_group_assign_mode(struct hikari_renderer *renderer)
   if (focus_view->output == output) {
     renderer->geometry = hikari_view_border_geometry(focus_view);
 
-    hikari_indicator_frame_render(&focus_view->indicator_frame,
+    render_indicator_frame(&focus_view->indicator_frame,
         hikari_configuration->indicator_selected,
         renderer);
 
-    hikari_indicator_render(&hikari_server.indicator, renderer);
+    render_indicator(&hikari_server.indicator, renderer);
   }
 
 #ifdef HAVE_LAYERSHELL
@@ -467,7 +676,7 @@ hikari_renderer_input_grab_mode(struct hikari_renderer *renderer)
 
   if (view->output == output) {
     renderer->geometry = hikari_view_border_geometry(view);
-    hikari_indicator_frame_render(&view->indicator_frame,
+    render_indicator_frame(&view->indicator_frame,
         hikari_configuration->indicator_insert,
         renderer);
   }
@@ -508,20 +717,20 @@ hikari_renderer_mark_assign_mode(struct hikari_renderer *renderer)
       mode->pending_mark->view->output == output) {
     renderer->geometry = hikari_view_border_geometry(mode->pending_mark->view);
 
-    hikari_indicator_frame_render(&mode->pending_mark->view->indicator_frame,
+    render_indicator_frame(&mode->pending_mark->view->indicator_frame,
         hikari_configuration->indicator_conflict,
         renderer);
-    hikari_indicator_render(&mode->indicator, renderer);
+    render_indicator(&mode->indicator, renderer);
   }
 
   if (view->output == output) {
     renderer->geometry = hikari_view_border_geometry(view);
 
-    hikari_indicator_frame_render(&view->indicator_frame,
+    render_indicator_frame(&view->indicator_frame,
         hikari_configuration->indicator_selected,
         renderer);
 
-    hikari_indicator_render(&hikari_server.indicator, renderer);
+    render_indicator(&hikari_server.indicator, renderer);
   }
 
 #ifdef HAVE_LAYERSHELL
@@ -542,11 +751,11 @@ hikari_renderer_move_mode(struct hikari_renderer *renderer)
   if (focus_view->output == output && !hikari_view_is_hidden(focus_view)) {
     renderer->geometry = hikari_view_border_geometry(focus_view);
 
-    hikari_indicator_frame_render(&focus_view->indicator_frame,
+    render_indicator_frame(&focus_view->indicator_frame,
         hikari_configuration->indicator_insert,
         renderer);
 
-    hikari_indicator_render(&hikari_server.indicator, renderer);
+    render_indicator(&hikari_server.indicator, renderer);
   }
 
 #ifdef HAVE_LAYERSHELL
@@ -567,11 +776,11 @@ hikari_renderer_resize_mode(struct hikari_renderer *renderer)
   if (focus_view->output == output) {
     renderer->geometry = hikari_view_border_geometry(focus_view);
 
-    hikari_indicator_frame_render(&focus_view->indicator_frame,
+    render_indicator_frame(&focus_view->indicator_frame,
         hikari_configuration->indicator_insert,
         renderer);
 
-    hikari_indicator_render(&hikari_server.indicator, renderer);
+    render_indicator(&hikari_server.indicator, renderer);
   }
 
 #ifdef HAVE_LAYERSHELL
@@ -593,11 +802,11 @@ hikari_renderer_sheet_assign_mode(struct hikari_renderer *renderer)
   if (view->output == output) {
     renderer->geometry = hikari_view_border_geometry(view);
 
-    hikari_indicator_frame_render(&view->indicator_frame,
+    render_indicator_frame(&view->indicator_frame,
         hikari_configuration->indicator_selected,
         renderer);
 
-    hikari_indicator_render(&hikari_server.indicator, renderer);
+    render_indicator(&hikari_server.indicator, renderer);
   }
 
 #ifdef HAVE_LAYERSHELL

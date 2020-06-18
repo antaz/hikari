@@ -30,10 +30,6 @@ hikari_border_geometry(struct hikari_border *border)
 }
 
 void
-hikari_border_render(
-    struct hikari_border *border, struct hikari_renderer *renderer);
-
-void
 hikari_border_refresh_geometry(
     struct hikari_border *border, struct wlr_box *geometry);
 
