@@ -17,7 +17,6 @@
 #include <hikari/lock_indicator.h>
 #include <hikari/output.h>
 #include <hikari/render.h>
-#include <hikari/render_data.h>
 #include <hikari/server.h>
 #include <hikari/utf8.h>
 #include <hikari/view.h>
@@ -252,16 +251,6 @@ button_handler(struct wl_listener *listener, void *data)
 {}
 
 static void
-render(struct hikari_output *output, struct hikari_render_data *render_data)
-{
-  struct hikari_lock_mode *mode = get_mode();
-
-  hikari_render_background(output, render_data, 0.1);
-  hikari_render_visible_views(output, render_data);
-  hikari_lock_indicator_render(mode->lock_indicator, render_data);
-}
-
-static void
 reset_visibility(void)
 {
   struct hikari_output *output;
@@ -326,7 +315,7 @@ hikari_lock_mode_init(struct hikari_lock_mode *lock_mode)
   lock_mode->mode.key_handler = key_handler;
   lock_mode->mode.button_handler = button_handler;
   lock_mode->mode.modifier_handler = modifier_handler;
-  lock_mode->mode.render = render;
+  lock_mode->mode.render = hikari_render_lock_mode;
   lock_mode->mode.cancel = cancel;
   lock_mode->mode.cursor_move = cursor_move;
 

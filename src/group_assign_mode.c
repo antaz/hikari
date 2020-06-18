@@ -15,7 +15,7 @@
 #include <hikari/keyboard.h>
 #include <hikari/memory.h>
 #include <hikari/normal_mode.h>
-#include <hikari/render_data.h>
+#include <hikari/render.h>
 #include <hikari/server.h>
 #include <hikari/sheet.h>
 #include <hikari/view.h>
@@ -268,48 +268,6 @@ modifier_handler(struct wl_listener *listener, void *data)
 {}
 
 static void
-render(struct hikari_output *output, struct hikari_render_data *render_data)
-{
-  struct hikari_group_assign_mode *mode = get_mode();
-  struct hikari_group *group = mode->group;
-  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
-
-  assert(focus_view != NULL);
-
-  if (group != NULL) {
-    struct hikari_view *first = hikari_group_first_view(group);
-    float *indicator_first = hikari_configuration->indicator_first;
-    float *indicator_grouped = hikari_configuration->indicator_grouped;
-
-    struct hikari_view *view;
-    wl_list_for_each_reverse (
-        view, &group->visible_views, visible_group_views) {
-      if (view->output == output && view != focus_view) {
-        render_data->geometry = hikari_view_border_geometry(view);
-
-        if (first == view) {
-          hikari_indicator_frame_render(
-              &view->indicator_frame, indicator_first, render_data);
-        } else {
-          hikari_indicator_frame_render(
-              &view->indicator_frame, indicator_grouped, render_data);
-        }
-      }
-    }
-  }
-
-  if (focus_view->output == output) {
-    render_data->geometry = hikari_view_border_geometry(focus_view);
-
-    hikari_indicator_frame_render(&focus_view->indicator_frame,
-        hikari_configuration->indicator_selected,
-        render_data);
-
-    hikari_indicator_render(&hikari_server.indicator, render_data);
-  }
-}
-
-static void
 cancel(void)
 {
   struct hikari_workspace *workspace = hikari_server.workspace;
@@ -354,7 +312,7 @@ hikari_group_assign_mode_init(
   group_assign_mode->mode.key_handler = key_handler;
   group_assign_mode->mode.button_handler = button_handler;
   group_assign_mode->mode.modifier_handler = modifier_handler;
-  group_assign_mode->mode.render = render;
+  group_assign_mode->mode.render = hikari_render_group_assign_mode;
   group_assign_mode->mode.cancel = cancel;
   group_assign_mode->mode.cursor_move = cursor_move;
   group_assign_mode->group = NULL;

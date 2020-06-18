@@ -11,7 +11,7 @@
 #include <hikari/keyboard.h>
 #include <hikari/layout_config.h>
 #include <hikari/normal_mode.h>
-#include <hikari/render_data.h>
+#include <hikari/render.h>
 #include <hikari/view.h>
 #include <hikari/workspace.h>
 
@@ -73,10 +73,6 @@ button_handler(struct wl_listener *listener, void *data)
 {}
 
 static void
-render(struct hikari_output *output, struct hikari_render_data *render_data)
-{}
-
-static void
 cancel(void)
 {}
 
@@ -91,7 +87,7 @@ hikari_layout_select_mode_init(
   layout_select_mode->mode.key_handler = key_handler;
   layout_select_mode->mode.button_handler = button_handler;
   layout_select_mode->mode.modifier_handler = modifier_handler;
-  layout_select_mode->mode.render = render;
+  layout_select_mode->mode.render = hikari_render_layout_select_mode;
   layout_select_mode->mode.cancel = cancel;
   layout_select_mode->mode.cursor_move = cursor_move;
 }

@@ -404,3 +404,218 @@ hikari_render_background(struct hikari_output *output,
 {
   render_background(output, render_data, alpha);
 }
+
+void
+hikari_render_normal_mode(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  if (hikari_server.keyboard_state.mod_pressed && focus_view != NULL) {
+    struct hikari_group *group = focus_view->group;
+    struct hikari_view *first = hikari_group_first_view(group);
+    float *indicator_first = hikari_configuration->indicator_first;
+    float *indicator_grouped = hikari_configuration->indicator_grouped;
+
+    struct hikari_view *view;
+    wl_list_for_each_reverse (
+        view, &group->visible_views, visible_group_views) {
+      if (view != focus_view && view->output == output) {
+        render_data->geometry = hikari_view_border_geometry(view);
+
+        if (first == view) {
+          hikari_indicator_frame_render(
+              &view->indicator_frame, indicator_first, render_data);
+        } else {
+          hikari_indicator_frame_render(
+              &view->indicator_frame, indicator_grouped, render_data);
+        }
+      }
+    }
+
+    if (focus_view->output == output) {
+      render_data->geometry = hikari_view_border_geometry(focus_view);
+
+      hikari_indicator_frame_render(&focus_view->indicator_frame,
+          hikari_configuration->indicator_selected,
+          render_data);
+
+      hikari_indicator_render(&hikari_server.indicator, render_data);
+    }
+  }
+}
+
+void
+hikari_render_group_assign_mode(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+  struct hikari_group_assign_mode *mode = &hikari_server.group_assign_mode;
+
+  assert(mode == (struct hikari_group_assign_mode *)hikari_server.mode);
+
+  struct hikari_group *group = mode->group;
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  assert(focus_view != NULL);
+
+  if (group != NULL) {
+    struct hikari_view *first = hikari_group_first_view(group);
+    float *indicator_first = hikari_configuration->indicator_first;
+    float *indicator_grouped = hikari_configuration->indicator_grouped;
+
+    struct hikari_view *view;
+    wl_list_for_each_reverse (
+        view, &group->visible_views, visible_group_views) {
+      if (view->output == output && view != focus_view) {
+        render_data->geometry = hikari_view_border_geometry(view);
+
+        if (first == view) {
+          hikari_indicator_frame_render(
+              &view->indicator_frame, indicator_first, render_data);
+        } else {
+          hikari_indicator_frame_render(
+              &view->indicator_frame, indicator_grouped, render_data);
+        }
+      }
+    }
+  }
+
+  if (focus_view->output == output) {
+    render_data->geometry = hikari_view_border_geometry(focus_view);
+
+    hikari_indicator_frame_render(&focus_view->indicator_frame,
+        hikari_configuration->indicator_selected,
+        render_data);
+
+    hikari_indicator_render(&hikari_server.indicator, render_data);
+  }
+}
+
+void
+hikari_render_input_grab_mode(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+  assert(hikari_server.workspace->focus_view != NULL);
+
+  struct hikari_view *view = hikari_server.workspace->focus_view;
+
+  if (view->output == output) {
+    render_data->geometry = hikari_view_border_geometry(view);
+    hikari_indicator_frame_render(&view->indicator_frame,
+        hikari_configuration->indicator_insert,
+        render_data);
+  }
+}
+
+void
+hikari_render_lock_mode(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+  struct hikari_lock_mode *mode = &hikari_server.lock_mode;
+
+  assert(mode == (struct hikari_lock_mode *)hikari_server.mode);
+
+  hikari_render_background(output, render_data, 0.1);
+  hikari_render_visible_views(output, render_data);
+  hikari_lock_indicator_render(mode->lock_indicator, render_data);
+}
+
+void
+hikari_render_mark_assign_mode(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+  struct hikari_mark_assign_mode *mode = &hikari_server.mark_assign_mode;
+
+  assert(mode == (struct hikari_mark_assign_mode *)hikari_server.mode);
+  assert(hikari_server.workspace->focus_view != NULL);
+
+  struct hikari_view *view = hikari_server.workspace->focus_view;
+
+  if (mode->pending_mark != NULL && mode->pending_mark->view != NULL &&
+      mode->pending_mark->view->output == output) {
+    render_data->geometry =
+        hikari_view_border_geometry(mode->pending_mark->view);
+
+    hikari_indicator_frame_render(&mode->pending_mark->view->indicator_frame,
+        hikari_configuration->indicator_conflict,
+        render_data);
+    hikari_indicator_render(&mode->indicator, render_data);
+  }
+
+  if (view->output == output) {
+    render_data->geometry = hikari_view_border_geometry(view);
+
+    hikari_indicator_frame_render(&view->indicator_frame,
+        hikari_configuration->indicator_selected,
+        render_data);
+
+    hikari_indicator_render(&hikari_server.indicator, render_data);
+  }
+}
+
+void
+hikari_render_mark_select_mode(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{}
+
+void
+hikari_render_move_mode(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  if (focus_view->output == output && !hikari_view_is_hidden(focus_view)) {
+    render_data->geometry = hikari_view_border_geometry(focus_view);
+
+    hikari_indicator_frame_render(&focus_view->indicator_frame,
+        hikari_configuration->indicator_insert,
+        render_data);
+
+    hikari_indicator_render(&hikari_server.indicator, render_data);
+  }
+}
+
+void
+hikari_render_resize_mode(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  if (focus_view->output == output) {
+    render_data->geometry = hikari_view_border_geometry(focus_view);
+
+    hikari_indicator_frame_render(&focus_view->indicator_frame,
+        hikari_configuration->indicator_insert,
+        render_data);
+
+    hikari_indicator_render(&hikari_server.indicator, render_data);
+  }
+}
+
+void
+hikari_render_sheet_assign_mode(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{
+  assert(hikari_server.workspace->focus_view != NULL);
+  struct hikari_view *view = hikari_server.workspace->focus_view;
+
+  if (view->output == output) {
+    render_data->geometry = hikari_view_border_geometry(view);
+
+    hikari_indicator_frame_render(&view->indicator_frame,
+        hikari_configuration->indicator_selected,
+        render_data);
+
+    hikari_indicator_render(&hikari_server.indicator, render_data);
+  }
+}
+
+void
+hikari_render_dnd_mode(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{}
+
+void
+hikari_render_layout_select_mode(
+    struct hikari_output *output, struct hikari_render_data *render_data)
+{}

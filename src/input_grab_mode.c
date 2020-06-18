@@ -12,7 +12,7 @@
 #include <hikari/keyboard.h>
 #include <hikari/normal_mode.h>
 #include <hikari/output.h>
-#include <hikari/render_data.h>
+#include <hikari/render.h>
 #include <hikari/server.h>
 #include <hikari/view.h>
 #include <hikari/workspace.h>
@@ -47,21 +47,6 @@ input_grab_key_handler(struct hikari_workspace *workspace,
   wlr_seat_set_keyboard(hikari_server.seat, keyboard->device);
   wlr_seat_keyboard_notify_key(
       hikari_server.seat, event->time_msec, event->keycode, event->state);
-}
-
-static void
-render(struct hikari_output *output, struct hikari_render_data *render_data)
-{
-  assert(hikari_server.workspace->focus_view != NULL);
-
-  struct hikari_view *view = hikari_server.workspace->focus_view;
-
-  if (view->output == output) {
-    render_data->geometry = hikari_view_border_geometry(view);
-    hikari_indicator_frame_render(&view->indicator_frame,
-        hikari_configuration->indicator_insert,
-        render_data);
-  }
 }
 
 static void
@@ -128,7 +113,7 @@ hikari_input_grab_mode_init(struct hikari_input_grab_mode *input_grab_mode)
   input_grab_mode->mode.key_handler = key_handler;
   input_grab_mode->mode.button_handler = button_handler;
   input_grab_mode->mode.modifier_handler = modifier_handler;
-  input_grab_mode->mode.render = render;
+  input_grab_mode->mode.render = hikari_render_input_grab_mode;
   input_grab_mode->mode.cancel = cancel;
   input_grab_mode->mode.cursor_move = cursor_move;
 }

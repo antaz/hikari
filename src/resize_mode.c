@@ -6,7 +6,7 @@
 #include <hikari/configuration.h>
 #include <hikari/keybinding.h>
 #include <hikari/keyboard.h>
-#include <hikari/render_data.h>
+#include <hikari/render.h>
 #include <hikari/server.h>
 #include <hikari/view.h>
 
@@ -46,22 +46,6 @@ modifier_handler(struct wl_listener *listener, void *data)
 {}
 
 static void
-render(struct hikari_output *output, struct hikari_render_data *render_data)
-{
-  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
-
-  if (focus_view->output == output) {
-    render_data->geometry = hikari_view_border_geometry(focus_view);
-
-    hikari_indicator_frame_render(&focus_view->indicator_frame,
-        hikari_configuration->indicator_insert,
-        render_data);
-
-    hikari_indicator_render(&hikari_server.indicator, render_data);
-  }
-}
-
-static void
 cursor_move(uint32_t time_msec)
 {
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
@@ -99,7 +83,7 @@ hikari_resize_mode_init(struct hikari_resize_mode *resize_mode)
   resize_mode->mode.key_handler = key_handler;
   resize_mode->mode.button_handler = button_handler;
   resize_mode->mode.modifier_handler = modifier_handler;
-  resize_mode->mode.render = render;
+  resize_mode->mode.render = hikari_render_resize_mode;
   resize_mode->mode.cancel = cancel;
   resize_mode->mode.cursor_move = cursor_move;
 }

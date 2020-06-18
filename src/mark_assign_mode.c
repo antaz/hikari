@@ -8,7 +8,7 @@
 #include <hikari/keyboard.h>
 #include <hikari/mark.h>
 #include <hikari/normal_mode.h>
-#include <hikari/render_data.h>
+#include <hikari/render.h>
 #include <hikari/view.h>
 
 static struct hikari_mark_assign_mode *
@@ -175,36 +175,6 @@ modifier_handler(struct wl_listener *listener, void *data)
 {}
 
 static void
-render(struct hikari_output *output, struct hikari_render_data *render_data)
-{
-  assert(hikari_server.workspace->focus_view != NULL);
-
-  struct hikari_view *view = hikari_server.workspace->focus_view;
-  struct hikari_mark_assign_mode *mode = get_mode();
-
-  if (mode->pending_mark != NULL && mode->pending_mark->view != NULL &&
-      mode->pending_mark->view->output == output) {
-    render_data->geometry =
-        hikari_view_border_geometry(mode->pending_mark->view);
-
-    hikari_indicator_frame_render(&mode->pending_mark->view->indicator_frame,
-        hikari_configuration->indicator_conflict,
-        render_data);
-    hikari_indicator_render(&mode->indicator, render_data);
-  }
-
-  if (view->output == output) {
-    render_data->geometry = hikari_view_border_geometry(view);
-
-    hikari_indicator_frame_render(&view->indicator_frame,
-        hikari_configuration->indicator_selected,
-        render_data);
-
-    hikari_indicator_render(&hikari_server.indicator, render_data);
-  }
-}
-
-static void
 cancel(void)
 {
   struct hikari_workspace *workspace = hikari_server.workspace;
@@ -248,7 +218,7 @@ hikari_mark_assign_mode_init(struct hikari_mark_assign_mode *mark_assign_mode)
   mark_assign_mode->mode.key_handler = key_handler;
   mark_assign_mode->mode.button_handler = button_handler;
   mark_assign_mode->mode.modifier_handler = modifier_handler;
-  mark_assign_mode->mode.render = render;
+  mark_assign_mode->mode.render = hikari_render_mark_assign_mode;
   mark_assign_mode->mode.cancel = cancel;
   mark_assign_mode->mode.cursor_move = cursor_move;
 

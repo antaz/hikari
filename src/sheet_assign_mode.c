@@ -7,7 +7,7 @@
 #include <hikari/indicator_frame.h>
 #include <hikari/keyboard.h>
 #include <hikari/normal_mode.h>
-#include <hikari/render_data.h>
+#include <hikari/render.h>
 #include <hikari/sheet.h>
 #include <hikari/view.h>
 #include <hikari/workspace.h>
@@ -175,23 +175,6 @@ modifier_handler(struct wl_listener *listener, void *data)
 {}
 
 static void
-render(struct hikari_output *output, struct hikari_render_data *render_data)
-{
-  assert(hikari_server.workspace->focus_view != NULL);
-  struct hikari_view *view = hikari_server.workspace->focus_view;
-
-  if (view->output == output) {
-    render_data->geometry = hikari_view_border_geometry(view);
-
-    hikari_indicator_frame_render(&view->indicator_frame,
-        hikari_configuration->indicator_selected,
-        render_data);
-
-    hikari_indicator_render(&hikari_server.indicator, render_data);
-  }
-}
-
-static void
 cancel(void)
 {
   struct hikari_workspace *workspace = hikari_server.workspace;
@@ -231,7 +214,7 @@ hikari_sheet_assign_mode_init(
   sheet_assign_mode->mode.key_handler = key_handler;
   sheet_assign_mode->mode.button_handler = button_handler;
   sheet_assign_mode->mode.modifier_handler = modifier_handler;
-  sheet_assign_mode->mode.render = render;
+  sheet_assign_mode->mode.render = hikari_render_sheet_assign_mode;
   sheet_assign_mode->mode.cancel = cancel;
   sheet_assign_mode->mode.cursor_move = cursor_move;
   sheet_assign_mode->sheet = NULL;

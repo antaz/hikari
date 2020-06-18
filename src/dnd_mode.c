@@ -8,7 +8,7 @@
 #include <hikari/configuration.h>
 #include <hikari/keybinding.h>
 #include <hikari/keyboard.h>
-#include <hikari/render_data.h>
+#include <hikari/render.h>
 #include <hikari/server.h>
 #include <hikari/view.h>
 
@@ -32,10 +32,6 @@ key_handler(struct wl_listener *listener, void *data)
 
 static void
 modifier_handler(struct wl_listener *listener, void *data)
-{}
-
-static void
-render(struct hikari_output *output, struct hikari_render_data *render_data)
 {}
 
 static void
@@ -79,7 +75,7 @@ hikari_dnd_mode_init(struct hikari_dnd_mode *dnd_mode)
   dnd_mode->mode.key_handler = key_handler;
   dnd_mode->mode.button_handler = button_handler;
   dnd_mode->mode.modifier_handler = modifier_handler;
-  dnd_mode->mode.render = render;
+  dnd_mode->mode.render = hikari_render_dnd_mode;
   dnd_mode->mode.cancel = cancel;
   dnd_mode->mode.cursor_move = cursor_move;
 }

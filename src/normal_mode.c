@@ -10,6 +10,7 @@
 #include <hikari/indicator_frame.h>
 #include <hikari/keybinding.h>
 #include <hikari/keyboard.h>
+#include <hikari/render.h>
 #include <hikari/render_data.h>
 #include <hikari/server.h>
 #include <hikari/view.h>
@@ -238,45 +239,6 @@ modifier_handler(struct wl_listener *listener, void *data)
 }
 
 static void
-render(struct hikari_output *output, struct hikari_render_data *render_data)
-{
-  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
-
-  if (hikari_server.keyboard_state.mod_pressed && focus_view != NULL) {
-    struct hikari_group *group = focus_view->group;
-    struct hikari_view *first = hikari_group_first_view(group);
-    float *indicator_first = hikari_configuration->indicator_first;
-    float *indicator_grouped = hikari_configuration->indicator_grouped;
-
-    struct hikari_view *view;
-    wl_list_for_each_reverse (
-        view, &group->visible_views, visible_group_views) {
-      if (view != focus_view && view->output == output) {
-        render_data->geometry = hikari_view_border_geometry(view);
-
-        if (first == view) {
-          hikari_indicator_frame_render(
-              &view->indicator_frame, indicator_first, render_data);
-        } else {
-          hikari_indicator_frame_render(
-              &view->indicator_frame, indicator_grouped, render_data);
-        }
-      }
-    }
-
-    if (focus_view->output == output) {
-      render_data->geometry = hikari_view_border_geometry(focus_view);
-
-      hikari_indicator_frame_render(&focus_view->indicator_frame,
-          hikari_configuration->indicator_selected,
-          render_data);
-
-      hikari_indicator_render(&hikari_server.indicator, render_data);
-    }
-  }
-}
-
-static void
 cancel(void)
 {}
 
@@ -330,7 +292,7 @@ hikari_normal_mode_init(struct hikari_normal_mode *normal_mode)
   normal_mode->mode.key_handler = key_handler;
   normal_mode->mode.button_handler = button_handler;
   normal_mode->mode.modifier_handler = modifier_handler;
-  normal_mode->mode.render = render;
+  normal_mode->mode.render = hikari_render_normal_mode;
   normal_mode->mode.cancel = cancel;
   normal_mode->mode.cursor_move = cursor_move;
   normal_mode->pending_action = NULL;
