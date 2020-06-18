@@ -9,40 +9,38 @@
 #include <hikari/color.h>
 #include <hikari/configuration.h>
 #include <hikari/output.h>
-#include <hikari/render_data.h>
+#include <hikari/renderer.h>
 #include <hikari/view_interface.h>
 
 static void
 rect_render(float color[static 4],
     struct wlr_box *box,
-    struct hikari_render_data *render_data)
+    struct hikari_renderer *renderer)
 {
   pixman_region32_t damage;
   pixman_region32_init(&damage);
   pixman_region32_union_rect(
       &damage, &damage, box->x, box->y, box->width, box->height);
 
-  pixman_region32_intersect(&damage, &damage, render_data->damage);
+  pixman_region32_intersect(&damage, &damage, renderer->damage);
   bool damaged = pixman_region32_not_empty(&damage);
   if (!damaged) {
     goto buffer_damage_finish;
   }
 
-  struct wlr_renderer *renderer = render_data->renderer;
+  struct wlr_renderer *wlr_renderer = renderer->wlr_renderer;
+  struct wlr_output *wlr_output = renderer->wlr_output;
   assert(renderer);
 
   float matrix[9];
-  wlr_matrix_project_box(matrix,
-      box,
-      WL_OUTPUT_TRANSFORM_NORMAL,
-      0,
-      render_data->output->transform_matrix);
+  wlr_matrix_project_box(
+      matrix, box, WL_OUTPUT_TRANSFORM_NORMAL, 0, wlr_output->transform_matrix);
 
   int nrects;
   pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
   for (int i = 0; i < nrects; i++) {
-    hikari_output_scissor_render(render_data->output, renderer, &rects[i]);
-    wlr_render_quad_with_matrix(renderer, color, matrix);
+    hikari_output_scissor_render(wlr_output, wlr_renderer, &rects[i]);
+    wlr_render_quad_with_matrix(wlr_renderer, color, matrix);
   }
 
 buffer_damage_finish:
@@ -51,7 +49,7 @@ buffer_damage_finish:
 
 void
 hikari_border_render(
-    struct hikari_border *border, struct hikari_render_data *render_data)
+    struct hikari_border *border, struct hikari_renderer *renderer)
 {
   if (border->state == HIKARI_BORDER_NONE) {
     return;
@@ -67,7 +65,7 @@ hikari_border_render(
       geometry->y,
       geometry->width,
       geometry->height);
-  pixman_region32_intersect(&damage, &damage, render_data->damage);
+  pixman_region32_intersect(&damage, &damage, renderer->damage);
 
   bool damaged = pixman_region32_not_empty(&damage);
   if (!damaged) {
@@ -88,7 +86,8 @@ hikari_border_render(
       goto buffer_damage_finish;
   }
 
-  struct wlr_renderer *renderer = render_data->renderer;
+  struct wlr_renderer *wlr_renderer = renderer->wlr_renderer;
+  struct wlr_output *wlr_output = renderer->wlr_output;
   assert(renderer);
 
   float matrix[9];
@@ -96,16 +95,16 @@ hikari_border_render(
       geometry,
       WL_OUTPUT_TRANSFORM_NORMAL,
       0,
-      render_data->output->transform_matrix);
+      wlr_output->transform_matrix);
 
   int nrects;
   pixman_box32_t *rects = pixman_region32_rectangles(&damage, &nrects);
   for (int i = 0; i < nrects; i++) {
-    hikari_output_scissor_render(render_data->output, renderer, &rects[i]);
-    rect_render(color, &border->top, render_data);
-    rect_render(color, &border->bottom, render_data);
-    rect_render(color, &border->left, render_data);
-    rect_render(color, &border->right, render_data);
+    hikari_output_scissor_render(wlr_output, wlr_renderer, &rects[i]);
+    rect_render(color, &border->top, renderer);
+    rect_render(color, &border->bottom, renderer);
+    rect_render(color, &border->left, renderer);
+    rect_render(color, &border->right, renderer);
   }
 
 buffer_damage_finish:

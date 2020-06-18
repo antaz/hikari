@@ -5,7 +5,7 @@
 
 #include <hikari/configuration.h>
 #include <hikari/mark.h>
-#include <hikari/render_data.h>
+#include <hikari/renderer.h>
 #include <hikari/sheet.h>
 #include <hikari/view.h>
 
@@ -60,34 +60,34 @@ hikari_indicator_update(struct hikari_indicator *indicator,
 
 void
 hikari_indicator_render(
-    struct hikari_indicator *indicator, struct hikari_render_data *render_data)
+    struct hikari_indicator *indicator, struct hikari_renderer *renderer)
 {
-  struct wlr_box *border_geometry = render_data->geometry;
+  struct wlr_box *border_geometry = renderer->geometry;
   struct wlr_box geometry = *border_geometry;
 
-  render_data->geometry = &geometry;
+  renderer->geometry = &geometry;
 
   geometry.x += 5;
 
   struct hikari_indicator_bar *title_bar = &indicator->title;
   geometry.y += 5;
-  hikari_indicator_bar_render(title_bar, render_data);
+  hikari_indicator_bar_render(title_bar, renderer);
 
   int bar_height = hikari_configuration->font.height;
 
   struct hikari_indicator_bar *sheet_bar = &indicator->sheet;
   geometry.y += bar_height + 5;
-  hikari_indicator_bar_render(sheet_bar, render_data);
+  hikari_indicator_bar_render(sheet_bar, renderer);
 
   struct hikari_indicator_bar *group_bar = &indicator->group;
   geometry.y += bar_height + 5;
-  hikari_indicator_bar_render(group_bar, render_data);
+  hikari_indicator_bar_render(group_bar, renderer);
 
   struct hikari_indicator_bar *mark_bar = &indicator->mark;
   geometry.y += bar_height + 5;
-  hikari_indicator_bar_render(mark_bar, render_data);
+  hikari_indicator_bar_render(mark_bar, renderer);
 
-  render_data->geometry = border_geometry;
+  renderer->geometry = border_geometry;
 }
 
 static char

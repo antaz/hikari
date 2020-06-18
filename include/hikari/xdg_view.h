@@ -7,7 +7,7 @@
 
 #include <hikari/view.h>
 
-struct hikari_render_data;
+struct hikari_renderer;
 
 struct hikari_xdg_view {
   struct hikari_view view;

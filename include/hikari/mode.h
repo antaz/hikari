@@ -5,7 +5,7 @@
 
 struct hikari_keyboard;
 struct hikari_output;
-struct hikari_render_data;
+struct hikari_renderer;
 struct hikari_workspace;
 
 struct hikari_mode {
@@ -18,7 +18,7 @@ struct hikari_mode {
   void (*cursor_move)(uint32_t time_msec);
 
   void (*render)(
-      struct hikari_output *output, struct hikari_render_data *render_data);
+      struct hikari_renderer *renderer, struct hikari_output *output);
 };
 
 #endif

@@ -11,7 +11,7 @@
 
 #include <hikari/output_config.h>
 
-struct hikari_render_data;
+struct hikari_renderer;
 
 struct hikari_output {
   struct wlr_output *wlr_output;
@@ -74,12 +74,12 @@ hikari_output_load_background(struct hikari_output *output,
 
 void
 hikari_output_render_background(struct hikari_output *output,
-    struct hikari_render_data *render_data,
+    struct hikari_renderer *renderer,
     float alpha);
 
 void
 hikari_output_render_visible_views(
-    struct hikari_output *output, struct hikari_render_data *render_data);
+    struct hikari_output *output, struct hikari_renderer *renderer);
 
 void
 hikari_output_move(struct hikari_output *output, double lx, double ly);

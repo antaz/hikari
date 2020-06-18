@@ -11,7 +11,7 @@
 #include <hikari/keyboard.h>
 #include <hikari/layout_config.h>
 #include <hikari/normal_mode.h>
-#include <hikari/render.h>
+#include <hikari/renderer.h>
 #include <hikari/view.h>
 #include <hikari/workspace.h>
 
@@ -87,7 +87,7 @@ hikari_layout_select_mode_init(
   layout_select_mode->mode.key_handler = key_handler;
   layout_select_mode->mode.button_handler = button_handler;
   layout_select_mode->mode.modifier_handler = modifier_handler;
-  layout_select_mode->mode.render = hikari_render_layout_select_mode;
+  layout_select_mode->mode.render = hikari_renderer_layout_select_mode;
   layout_select_mode->mode.cancel = cancel;
   layout_select_mode->mode.cursor_move = cursor_move;
 }

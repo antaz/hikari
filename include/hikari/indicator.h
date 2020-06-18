@@ -5,7 +5,7 @@
 #include <hikari/indicator_bar.h>
 #include <hikari/sheet.h>
 
-struct hikari_render_data;
+struct hikari_renderer;
 struct hikari_view;
 struct hikari_output;
 
@@ -25,7 +25,7 @@ hikari_indicator_fini(struct hikari_indicator *indicator);
 
 void
 hikari_indicator_render(
-    struct hikari_indicator *indicator, struct hikari_render_data *render_data);
+    struct hikari_indicator *indicator, struct hikari_renderer *renderer);
 
 void
 hikari_indicator_update(struct hikari_indicator *indicator,

@@ -12,7 +12,7 @@
 #include <hikari/keyboard.h>
 #include <hikari/normal_mode.h>
 #include <hikari/output.h>
-#include <hikari/render.h>
+#include <hikari/renderer.h>
 #include <hikari/server.h>
 #include <hikari/view.h>
 #include <hikari/workspace.h>
@@ -113,7 +113,7 @@ hikari_input_grab_mode_init(struct hikari_input_grab_mode *input_grab_mode)
   input_grab_mode->mode.key_handler = key_handler;
   input_grab_mode->mode.button_handler = button_handler;
   input_grab_mode->mode.modifier_handler = modifier_handler;
-  input_grab_mode->mode.render = hikari_render_input_grab_mode;
+  input_grab_mode->mode.render = hikari_renderer_input_grab_mode;
   input_grab_mode->mode.cancel = cancel;
   input_grab_mode->mode.cursor_move = cursor_move;
 }

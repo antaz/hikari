@@ -3,7 +3,7 @@
 
 #include <wlr/types/wlr_box.h>
 
-struct hikari_render_data;
+struct hikari_renderer;
 struct hikari_sheet;
 struct hikari_view;
 

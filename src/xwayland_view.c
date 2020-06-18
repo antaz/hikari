@@ -11,7 +11,6 @@
 #include <hikari/configuration.h>
 #include <hikari/geometry.h>
 #include <hikari/output.h>
-#include <hikari/render_data.h>
 #include <hikari/server.h>
 #include <hikari/sheet.h>
 #include <hikari/view.h>

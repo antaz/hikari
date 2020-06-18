@@ -8,7 +8,7 @@
 #include <hikari/keyboard.h>
 #include <hikari/mark.h>
 #include <hikari/normal_mode.h>
-#include <hikari/render.h>
+#include <hikari/renderer.h>
 #include <hikari/view.h>
 
 static struct hikari_mark_assign_mode *
@@ -218,7 +218,7 @@ hikari_mark_assign_mode_init(struct hikari_mark_assign_mode *mark_assign_mode)
   mark_assign_mode->mode.key_handler = key_handler;
   mark_assign_mode->mode.button_handler = button_handler;
   mark_assign_mode->mode.modifier_handler = modifier_handler;
-  mark_assign_mode->mode.render = hikari_render_mark_assign_mode;
+  mark_assign_mode->mode.render = hikari_renderer_mark_assign_mode;
   mark_assign_mode->mode.cancel = cancel;
   mark_assign_mode->mode.cursor_move = cursor_move;
 

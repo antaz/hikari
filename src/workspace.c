@@ -21,7 +21,6 @@
 #include <hikari/mark_assign_mode.h>
 #include <hikari/mark_select_mode.h>
 #include <hikari/normal_mode.h>
-#include <hikari/render_data.h>
 #include <hikari/server.h>
 #include <hikari/sheet.h>
 #include <hikari/xdg_view.h>

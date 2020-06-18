@@ -3,7 +3,7 @@
 #include <wlr/backend.h>
 
 #include <hikari/memory.h>
-#include <hikari/render.h>
+#include <hikari/renderer.h>
 #include <hikari/server.h>
 
 static inline void
@@ -133,7 +133,7 @@ hikari_output_enable(struct hikari_output *output)
   struct wlr_output *wlr_output = output->wlr_output;
 
   wl_list_remove(&output->damage_frame.link);
-  output->damage_frame.notify = hikari_render_damage_frame_handler;
+  output->damage_frame.notify = hikari_renderer_damage_frame_handler;
   wl_signal_add(&output->damage->events.frame, &output->damage_frame);
 
   wlr_output_enable(wlr_output, true);

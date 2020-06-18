@@ -8,7 +8,7 @@
 struct hikari_layer;
 #endif
 struct hikari_output;
-struct hikari_render_data;
+struct hikari_renderer;
 struct hikari_sheet;
 struct hikari_split;
 struct hikari_view;

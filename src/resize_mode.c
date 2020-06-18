@@ -6,7 +6,7 @@
 #include <hikari/configuration.h>
 #include <hikari/keybinding.h>
 #include <hikari/keyboard.h>
-#include <hikari/render.h>
+#include <hikari/renderer.h>
 #include <hikari/server.h>
 #include <hikari/view.h>
 
@@ -83,7 +83,7 @@ hikari_resize_mode_init(struct hikari_resize_mode *resize_mode)
   resize_mode->mode.key_handler = key_handler;
   resize_mode->mode.button_handler = button_handler;
   resize_mode->mode.modifier_handler = modifier_handler;
-  resize_mode->mode.render = hikari_render_resize_mode;
+  resize_mode->mode.render = hikari_renderer_resize_mode;
   resize_mode->mode.cancel = cancel;
   resize_mode->mode.cursor_move = cursor_move;
 }

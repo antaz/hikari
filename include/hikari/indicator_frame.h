@@ -4,7 +4,7 @@
 #include <wlr/types/wlr_box.h>
 
 struct hikari_view;
-struct hikari_render_data;
+struct hikari_renderer;
 
 struct hikari_indicator_frame {
   struct wlr_box top;
@@ -20,6 +20,6 @@ hikari_indicator_frame_refresh_geometry(
 void
 hikari_indicator_frame_render(struct hikari_indicator_frame *indicator_frame,
     float color[static 4],
-    struct hikari_render_data *render_data);
+    struct hikari_renderer *renderer);
 
 #endif

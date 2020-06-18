@@ -1,12 +1,8 @@
 #include <hikari/split.h>
 
-#include <wlr/render/wlr_renderer.h>
-#include <wlr/types/wlr_matrix.h>
-
 #include <hikari/color.h>
 #include <hikari/configuration.h>
 #include <hikari/geometry.h>
-#include <hikari/render_data.h>
 #include <hikari/view.h>
 
 const double hikari_split_scale_min = 0.1;

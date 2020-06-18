@@ -14,7 +14,7 @@
 #include <hikari/font.h>
 #include <hikari/indicator.h>
 #include <hikari/output.h>
-#include <hikari/render_data.h>
+#include <hikari/renderer.h>
 #include <hikari/server.h>
 #include <hikari/view.h>
 
@@ -67,7 +67,7 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
   struct hikari_font *font = &hikari_configuration->font;
   int width = hikari_configuration->font.character_width * len + 8;
   int height = hikari_configuration->font.height;
-  struct wlr_renderer *renderer =
+  struct wlr_renderer *wlr_renderer =
       wlr_backend_get_renderer(output->wlr_output->backend);
 
   indicator_bar->width = width;
@@ -106,7 +106,7 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
   int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
 
   indicator_bar->texture = wlr_texture_from_pixels(
-      renderer, WL_SHM_FORMAT_ARGB8888, stride, width, height, data);
+      wlr_renderer, WL_SHM_FORMAT_ARGB8888, stride, width, height, data);
 
   cairo_surface_destroy(surface);
   g_object_unref(layout);
@@ -115,23 +115,24 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
 
 void
 hikari_indicator_bar_render(struct hikari_indicator_bar *indicator_bar,
-    struct hikari_render_data *render_data)
+    struct hikari_renderer *renderer)
 {
   if (indicator_bar->texture == NULL) {
     return;
   }
 
-  struct wlr_box *geometry = render_data->geometry;
-  struct wlr_renderer *renderer = render_data->renderer;
-  struct wlr_output *output = render_data->output;
+  struct wlr_box *geometry = renderer->geometry;
+  struct wlr_renderer *wlr_renderer = renderer->wlr_renderer;
+  struct wlr_output *wlr_output = renderer->wlr_output;
 
   float matrix[9];
 
   geometry->width = indicator_bar->width;
   geometry->height = hikari_configuration->font.height;
 
-  wlr_renderer_scissor(renderer, geometry);
-  wlr_matrix_project_box(matrix, geometry, 0, 0, output->transform_matrix);
+  wlr_renderer_scissor(wlr_renderer, geometry);
+  wlr_matrix_project_box(matrix, geometry, 0, 0, wlr_output->transform_matrix);
 
-  wlr_render_texture_with_matrix(renderer, indicator_bar->texture, matrix, 1);
+  wlr_render_texture_with_matrix(
+      wlr_renderer, indicator_bar->texture, matrix, 1);
 }

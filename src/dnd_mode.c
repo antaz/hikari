@@ -8,7 +8,7 @@
 #include <hikari/configuration.h>
 #include <hikari/keybinding.h>
 #include <hikari/keyboard.h>
-#include <hikari/render.h>
+#include <hikari/renderer.h>
 #include <hikari/server.h>
 #include <hikari/view.h>
 
@@ -75,7 +75,7 @@ hikari_dnd_mode_init(struct hikari_dnd_mode *dnd_mode)
   dnd_mode->mode.key_handler = key_handler;
   dnd_mode->mode.button_handler = button_handler;
   dnd_mode->mode.modifier_handler = modifier_handler;
-  dnd_mode->mode.render = hikari_render_dnd_mode;
+  dnd_mode->mode.render = hikari_renderer_dnd_mode;
   dnd_mode->mode.cancel = cancel;
   dnd_mode->mode.cursor_move = cursor_move;
 }

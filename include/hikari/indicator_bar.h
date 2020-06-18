@@ -4,7 +4,7 @@
 #include <wlr/types/wlr_surface.h>
 
 struct hikari_indicator;
-struct hikari_render_data;
+struct hikari_renderer;
 struct hikari_output;
 
 struct hikari_indicator_bar {
@@ -31,7 +31,7 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
 
 void
 hikari_indicator_bar_render(struct hikari_indicator_bar *indicator_bar,
-    struct hikari_render_data *render_data);
+    struct hikari_renderer *renderer);
 
 void
 hikari_indicator_bar_damage(struct hikari_indicator_bar *indicator_bar,

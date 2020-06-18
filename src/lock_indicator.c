@@ -7,7 +7,7 @@
 #include <hikari/configuration.h>
 #include <hikari/geometry.h>
 #include <hikari/output.h>
-#include <hikari/render_data.h>
+#include <hikari/renderer.h>
 #include <hikari/server.h>
 
 #define HIKARI_PI 3.14159265358979323846
@@ -18,7 +18,7 @@ init_indicator_circle(float color[static 4])
   const int size = 100;
 
   struct wlr_texture *texture;
-  struct wlr_renderer *renderer =
+  struct wlr_renderer *wlr_renderer =
       wlr_backend_get_renderer(hikari_server.backend);
 
   cairo_surface_t *surface =
@@ -46,7 +46,7 @@ init_indicator_circle(float color[static 4])
   int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, size);
 
   texture = wlr_texture_from_pixels(
-      renderer, WL_SHM_FORMAT_ARGB8888, stride, size, size, data);
+      wlr_renderer, WL_SHM_FORMAT_ARGB8888, stride, size, size, data);
 
   cairo_surface_destroy(surface);
   g_object_unref(layout);
@@ -164,7 +164,7 @@ get_geometry(struct hikari_output *output, struct wlr_box *geometry)
 
 void
 hikari_lock_indicator_render(struct hikari_lock_indicator *lock_indicator,
-    struct hikari_render_data *render_data)
+    struct hikari_renderer *renderer)
 {
   assert(lock_indicator != NULL);
 
@@ -175,15 +175,15 @@ hikari_lock_indicator_render(struct hikari_lock_indicator *lock_indicator,
   }
 
   float matrix[9];
-  struct wlr_renderer *renderer = render_data->renderer;
-  struct wlr_output *output = render_data->output;
+  struct wlr_renderer *wlr_renderer = renderer->wlr_renderer;
+  struct wlr_output *wlr_output = renderer->wlr_output;
 
   struct wlr_box geometry;
-  get_geometry(output->data, &geometry);
-  wlr_renderer_scissor(renderer, &geometry);
-  wlr_matrix_project_box(matrix, &geometry, 0, 0, output->transform_matrix);
+  get_geometry(wlr_output->data, &geometry);
+  wlr_renderer_scissor(wlr_renderer, &geometry);
+  wlr_matrix_project_box(matrix, &geometry, 0, 0, wlr_output->transform_matrix);
 
-  wlr_render_texture_with_matrix(renderer, texture, matrix, 1);
+  wlr_render_texture_with_matrix(wlr_renderer, texture, matrix, 1);
 }
 
 void

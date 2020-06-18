@@ -21,7 +21,7 @@
 #include <hikari/workspace.h>
 
 struct hikari_mark;
-struct hikari_render_data;
+struct hikari_renderer;
 
 enum hikari_view_type { HIKARI_XDG_VIEW, HIKARI_XWAYLAND_VIEW };
 
