@@ -99,26 +99,6 @@ done:
 }
 
 void
-hikari_output_disable_content(struct hikari_output *output)
-{
-  wl_list_remove(&output->damage_frame.link);
-  output->damage_frame.notify = damage_empty_frame_handler;
-  wl_signal_add(&output->damage->events.frame, &output->damage_frame);
-
-  hikari_output_damage_whole(output);
-}
-
-void
-hikari_output_enable_content(struct hikari_output *output)
-{
-  wl_list_remove(&output->damage_frame.link);
-  output->damage_frame.notify = damage_frame_handler;
-  wl_signal_add(&output->damage->events.frame, &output->damage_frame);
-
-  hikari_output_damage_whole(output);
-}
-
-void
 hikari_output_damage_whole(struct hikari_output *output)
 {
   assert(output != NULL);
@@ -151,6 +131,10 @@ hikari_output_enable(struct hikari_output *output)
   assert(!output->enabled);
 
   struct wlr_output *wlr_output = output->wlr_output;
+
+  wl_list_remove(&output->damage_frame.link);
+  output->damage_frame.notify = hikari_render_damage_frame_handler;
+  wl_signal_add(&output->damage->events.frame, &output->damage_frame);
 
   wlr_output_enable(wlr_output, true);
   wlr_output_commit(wlr_output);
@@ -307,13 +291,9 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
   wl_list_init(&output->damage_frame.link);
 
   if (!hikari_server_in_lock_mode()) {
-    hikari_output_enable_content(output);
     hikari_output_enable(output);
-  } else {
-    hikari_output_disable_content(output);
-    if (hikari_lock_mode_are_outputs_disabled(&hikari_server.lock_mode)) {
-      hikari_output_disable(output);
-    }
+  } else if (hikari_lock_mode_are_outputs_disabled(&hikari_server.lock_mode)) {
+    hikari_output_disable(output);
   }
 
   struct hikari_output_config *output_config =

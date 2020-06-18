@@ -226,18 +226,6 @@ render_workspace(
 #endif
 }
 
-void
-hikari_render_texture(struct wlr_texture *texture,
-    struct wlr_output *output,
-    pixman_region32_t *damage,
-    struct wlr_renderer *renderer,
-    const float matrix[static 9],
-    struct wlr_box *box,
-    float alpha)
-{
-  render_texture(texture, output, damage, renderer, matrix, box, alpha);
-}
-
 #ifdef HAVE_LAYERSHELL
 static inline void
 render_overlay(
@@ -264,14 +252,7 @@ render_output(struct hikari_output *output,
   if (pixman_region32_not_empty(damage)) {
     clear_output(&render_data);
 
-    render_background(output, &render_data, 1);
-    render_workspace(output, &render_data);
-
     hikari_server.mode->render(output, &render_data);
-
-#ifdef HAVE_LAYERSHELL
-    render_overlay(output, &render_data);
-#endif
   }
 
   renderer_end(output, &render_data);
@@ -289,29 +270,6 @@ layer_for_each(struct wl_list *layers,
   }
 }
 #endif
-
-static inline void
-render_empty_output(struct hikari_output *output,
-    pixman_region32_t *damage,
-    struct timespec *now)
-{
-  struct wlr_output *wlr_output = output->wlr_output;
-  struct wlr_renderer *renderer = wlr_backend_get_renderer(wlr_output->backend);
-
-  struct hikari_render_data render_data = {
-    .output = wlr_output, .renderer = renderer, .when = now, .damage = damage
-  };
-
-  wlr_renderer_begin(renderer, wlr_output->width, wlr_output->height);
-
-  if (pixman_region32_not_empty(damage)) {
-    clear_output(&render_data);
-
-    hikari_server.mode->render(output, &render_data);
-  }
-
-  renderer_end(output, &render_data);
-}
 
 static void
 send_frame_done(struct wlr_surface *surface, int sx, int sy, void *data)
@@ -348,36 +306,32 @@ frame_done(struct hikari_output *output, struct timespec *now)
 #endif
 }
 
-#define DAMAGE_HANDLER(name, render)                                           \
-  void name##_handler(struct wl_listener *listener, void *data)                \
-  {                                                                            \
-    bool needs_frame;                                                          \
-    struct timespec now;                                                       \
-    struct hikari_output *output =                                             \
-        wl_container_of(listener, output, damage_frame);                       \
-                                                                               \
-    pixman_region32_t buffer_damage;                                           \
-    pixman_region32_init(&buffer_damage);                                      \
-                                                                               \
-    clock_gettime(CLOCK_MONOTONIC, &now);                                      \
-                                                                               \
-    if (wlr_output_damage_attach_render(                                       \
-            output->damage, &needs_frame, &buffer_damage) &&                   \
-        needs_frame) {                                                         \
-      render(output, &buffer_damage, &now);                                    \
-    }                                                                          \
-                                                                               \
-    pixman_region32_fini(&buffer_damage);                                      \
-                                                                               \
-    frame_done(output, &now);                                                  \
+void
+hikari_render_damage_frame_handler(struct wl_listener *listener, void *data)
+{
+  bool needs_frame;
+  struct timespec now;
+  struct hikari_output *output =
+      wl_container_of(listener, output, damage_frame);
+
+  pixman_region32_t buffer_damage;
+  pixman_region32_init(&buffer_damage);
+
+  clock_gettime(CLOCK_MONOTONIC, &now);
+
+  if (wlr_output_damage_attach_render(
+          output->damage, &needs_frame, &buffer_damage) &&
+      needs_frame) {
+    render_output(output, &buffer_damage, &now);
   }
 
-DAMAGE_HANDLER(damage_frame, render_output)
-DAMAGE_HANDLER(damage_empty_frame, render_empty_output)
-#undef DAMAGE_HANDLER
+  pixman_region32_fini(&buffer_damage);
 
-void
-hikari_render_visible_views(
+  frame_done(output, &now);
+}
+
+static inline void
+render_visible_views(
     struct hikari_output *output, struct hikari_render_data *render_data)
 {
   struct hikari_view *view;
@@ -398,17 +352,12 @@ hikari_render_visible_views(
 }
 
 void
-hikari_render_background(struct hikari_output *output,
-    struct hikari_render_data *render_data,
-    float alpha)
-{
-  render_background(output, render_data, alpha);
-}
-
-void
 hikari_render_normal_mode(
     struct hikari_output *output, struct hikari_render_data *render_data)
 {
+  render_background(output, render_data, 1);
+  render_workspace(output, render_data);
+
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
   if (hikari_server.keyboard_state.mod_pressed && focus_view != NULL) {
@@ -443,12 +392,19 @@ hikari_render_normal_mode(
       hikari_indicator_render(&hikari_server.indicator, render_data);
     }
   }
+
+#ifdef HAVE_LAYERSHELL
+  render_overlay(output, render_data);
+#endif
 }
 
 void
 hikari_render_group_assign_mode(
     struct hikari_output *output, struct hikari_render_data *render_data)
 {
+  render_background(output, render_data, 1);
+  render_workspace(output, render_data);
+
   struct hikari_group_assign_mode *mode = &hikari_server.group_assign_mode;
 
   assert(mode == (struct hikari_group_assign_mode *)hikari_server.mode);
@@ -489,12 +445,19 @@ hikari_render_group_assign_mode(
 
     hikari_indicator_render(&hikari_server.indicator, render_data);
   }
+
+#ifdef HAVE_LAYERSHELL
+  render_overlay(output, render_data);
+#endif
 }
 
 void
 hikari_render_input_grab_mode(
     struct hikari_output *output, struct hikari_render_data *render_data)
 {
+  render_background(output, render_data, 1);
+  render_workspace(output, render_data);
+
   assert(hikari_server.workspace->focus_view != NULL);
 
   struct hikari_view *view = hikari_server.workspace->focus_view;
@@ -505,6 +468,10 @@ hikari_render_input_grab_mode(
         hikari_configuration->indicator_insert,
         render_data);
   }
+
+#ifdef HAVE_LAYERSHELL
+  render_overlay(output, render_data);
+#endif
 }
 
 void
@@ -515,8 +482,8 @@ hikari_render_lock_mode(
 
   assert(mode == (struct hikari_lock_mode *)hikari_server.mode);
 
-  hikari_render_background(output, render_data, 0.1);
-  hikari_render_visible_views(output, render_data);
+  render_background(output, render_data, 0.1);
+  render_visible_views(output, render_data);
   hikari_lock_indicator_render(mode->lock_indicator, render_data);
 }
 
@@ -524,6 +491,9 @@ void
 hikari_render_mark_assign_mode(
     struct hikari_output *output, struct hikari_render_data *render_data)
 {
+  render_background(output, render_data, 1);
+  render_workspace(output, render_data);
+
   struct hikari_mark_assign_mode *mode = &hikari_server.mark_assign_mode;
 
   assert(mode == (struct hikari_mark_assign_mode *)hikari_server.mode);
@@ -551,17 +521,19 @@ hikari_render_mark_assign_mode(
 
     hikari_indicator_render(&hikari_server.indicator, render_data);
   }
-}
 
-void
-hikari_render_mark_select_mode(
-    struct hikari_output *output, struct hikari_render_data *render_data)
-{}
+#ifdef HAVE_LAYERSHELL
+  render_overlay(output, render_data);
+#endif
+}
 
 void
 hikari_render_move_mode(
     struct hikari_output *output, struct hikari_render_data *render_data)
 {
+  render_background(output, render_data, 1);
+  render_workspace(output, render_data);
+
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
   if (focus_view->output == output && !hikari_view_is_hidden(focus_view)) {
@@ -573,6 +545,10 @@ hikari_render_move_mode(
 
     hikari_indicator_render(&hikari_server.indicator, render_data);
   }
+
+#ifdef HAVE_LAYERSHELL
+  render_overlay(output, render_data);
+#endif
 }
 
 void

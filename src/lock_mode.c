@@ -168,7 +168,6 @@ enable_outputs(void)
   struct hikari_output *output;
   wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
     if (!output->enabled) {
-      hikari_output_disable_content(output);
       hikari_output_enable(output);
     }
   }
@@ -280,10 +279,11 @@ cancel(void)
 
   struct hikari_output *output;
   wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
-    hikari_output_enable_content(output);
     if (!output->enabled) {
       hikari_output_enable(output);
     }
+
+    hikari_output_damage_whole(output);
   }
 
   hikari_lock_indicator_fini(mode->lock_indicator);
@@ -376,11 +376,6 @@ hikari_lock_mode_enter(void)
   }
 #endif
 
-  struct hikari_output *output;
-  wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
-    hikari_output_disable_content(output);
-  }
-
   hikari_cursor_deactivate(&hikari_server.cursor);
 
   hikari_server.mode = (struct hikari_mode *)&hikari_server.lock_mode;
@@ -399,6 +394,11 @@ hikari_lock_mode_enter(void)
 
   mode->disable_outputs = wl_event_loop_add_timer(
       hikari_server.event_loop, disable_outputs_handler, NULL);
+
+  struct hikari_output *output;
+  wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
+    hikari_output_damage_whole(output);
+  }
 
   wl_event_source_timer_update(mode->disable_outputs, 1000);
 }
