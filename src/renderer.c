@@ -14,8 +14,10 @@
 
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
+#include <wlr/types/wlr_matrix.h>
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_output_damage.h>
+#include <wlr/util/region.h>
 
 #ifdef HAVE_XWAYLAND
 #include <wlr/xwayland.h>
@@ -104,7 +106,7 @@ damage_finish:
   pixman_region32_fini(&local_damage);
 }
 
-void
+static void
 render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 {
   assert(surface != NULL);
@@ -140,9 +142,10 @@ render_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 }
 
 static inline void
-render_background(
-    struct hikari_output *output, struct hikari_renderer *renderer, float alpha)
+render_background(struct hikari_renderer *renderer, float alpha)
 {
+  struct hikari_output *output = renderer->wlr_output->data;
+
   if (output->background == NULL) {
     return;
   }
@@ -180,8 +183,10 @@ render_layer(struct wl_list *layers, struct hikari_renderer *renderer)
 #endif
 
 static inline void
-render_workspace(struct hikari_output *output, struct hikari_renderer *renderer)
+render_workspace(struct hikari_renderer *renderer)
 {
+  struct hikari_output *output = renderer->wlr_output->data;
+
 #ifdef HAVE_LAYERSHELL
   render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], renderer);
   render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM], renderer);
@@ -221,8 +226,9 @@ render_workspace(struct hikari_output *output, struct hikari_renderer *renderer)
 
 #ifdef HAVE_LAYERSHELL
 static inline void
-render_overlay(struct hikari_output *output, struct hikari_renderer *renderer)
+render_overlay(struct hikari_renderer *renderer)
 {
+  struct hikari_output *output = renderer->wlr_output->data;
   render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY], renderer);
 }
 #endif
@@ -246,7 +252,7 @@ render_output(struct hikari_output *output,
   if (pixman_region32_not_empty(damage)) {
     clear_output(&renderer);
 
-    hikari_server.mode->render(&renderer, output);
+    hikari_server.mode->render(&renderer);
   }
 
   renderer_end(output, &renderer);
@@ -325,9 +331,10 @@ hikari_renderer_damage_frame_handler(struct wl_listener *listener, void *data)
 }
 
 static inline void
-render_visible_views(
-    struct hikari_output *output, struct hikari_renderer *renderer)
+render_visible_views(struct hikari_renderer *renderer)
 {
+  struct hikari_output *output = renderer->wlr_output->data;
+
   struct hikari_view *view;
   wl_list_for_each_reverse (view, &output->views, output_views) {
     if (!hikari_view_is_hidden(view)) {
@@ -346,15 +353,15 @@ render_visible_views(
 }
 
 void
-hikari_renderer_normal_mode(
-    struct hikari_renderer *renderer, struct hikari_output *output)
+hikari_renderer_normal_mode(struct hikari_renderer *renderer)
 {
-  render_background(output, renderer, 1);
-  render_workspace(output, renderer);
+  render_background(renderer, 1);
+  render_workspace(renderer);
 
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
   if (hikari_server.keyboard_state.mod_pressed && focus_view != NULL) {
+    struct hikari_output *output = renderer->wlr_output->data;
     struct hikari_group *group = focus_view->group;
     struct hikari_view *first = hikari_group_first_view(group);
     float *indicator_first = hikari_configuration->indicator_first;
@@ -388,16 +395,17 @@ hikari_renderer_normal_mode(
   }
 
 #ifdef HAVE_LAYERSHELL
-  render_overlay(output, renderer);
+  render_overlay(renderer);
 #endif
 }
 
 void
-hikari_renderer_group_assign_mode(
-    struct hikari_renderer *renderer, struct hikari_output *output)
+hikari_renderer_group_assign_mode(struct hikari_renderer *renderer)
 {
-  render_background(output, renderer, 1);
-  render_workspace(output, renderer);
+  struct hikari_output *output = renderer->wlr_output->data;
+
+  render_background(renderer, 1);
+  render_workspace(renderer);
 
   struct hikari_group_assign_mode *mode = &hikari_server.group_assign_mode;
 
@@ -441,16 +449,17 @@ hikari_renderer_group_assign_mode(
   }
 
 #ifdef HAVE_LAYERSHELL
-  render_overlay(output, renderer);
+  render_overlay(renderer);
 #endif
 }
 
 void
-hikari_renderer_input_grab_mode(
-    struct hikari_renderer *renderer, struct hikari_output *output)
+hikari_renderer_input_grab_mode(struct hikari_renderer *renderer)
 {
-  render_background(output, renderer, 1);
-  render_workspace(output, renderer);
+  struct hikari_output *output = renderer->wlr_output->data;
+
+  render_background(renderer, 1);
+  render_workspace(renderer);
 
   assert(hikari_server.workspace->focus_view != NULL);
 
@@ -464,29 +473,29 @@ hikari_renderer_input_grab_mode(
   }
 
 #ifdef HAVE_LAYERSHELL
-  render_overlay(output, renderer);
+  render_overlay(renderer);
 #endif
 }
 
 void
-hikari_renderer_lock_mode(
-    struct hikari_renderer *renderer, struct hikari_output *output)
+hikari_renderer_lock_mode(struct hikari_renderer *renderer)
 {
   struct hikari_lock_mode *mode = &hikari_server.lock_mode;
 
   assert(mode == (struct hikari_lock_mode *)hikari_server.mode);
 
-  render_background(output, renderer, 0.1);
-  render_visible_views(output, renderer);
+  render_background(renderer, 0.1);
+  render_visible_views(renderer);
   hikari_lock_indicator_render(mode->lock_indicator, renderer);
 }
 
 void
-hikari_renderer_mark_assign_mode(
-    struct hikari_renderer *renderer, struct hikari_output *output)
+hikari_renderer_mark_assign_mode(struct hikari_renderer *renderer)
 {
-  render_background(output, renderer, 1);
-  render_workspace(output, renderer);
+  struct hikari_output *output = renderer->wlr_output->data;
+
+  render_background(renderer, 1);
+  render_workspace(renderer);
 
   struct hikari_mark_assign_mode *mode = &hikari_server.mark_assign_mode;
 
@@ -516,16 +525,17 @@ hikari_renderer_mark_assign_mode(
   }
 
 #ifdef HAVE_LAYERSHELL
-  render_overlay(output, renderer);
+  render_overlay(renderer);
 #endif
 }
 
 void
-hikari_renderer_move_mode(
-    struct hikari_renderer *renderer, struct hikari_output *output)
+hikari_renderer_move_mode(struct hikari_renderer *renderer)
 {
-  render_background(output, renderer, 1);
-  render_workspace(output, renderer);
+  struct hikari_output *output = renderer->wlr_output->data;
+
+  render_background(renderer, 1);
+  render_workspace(renderer);
 
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
@@ -540,16 +550,17 @@ hikari_renderer_move_mode(
   }
 
 #ifdef HAVE_LAYERSHELL
-  render_overlay(output, renderer);
+  render_overlay(renderer);
 #endif
 }
 
 void
-hikari_renderer_resize_mode(
-    struct hikari_renderer *renderer, struct hikari_output *output)
+hikari_renderer_resize_mode(struct hikari_renderer *renderer)
 {
-  render_background(output, renderer, 1);
-  render_workspace(output, renderer);
+  struct hikari_output *output = renderer->wlr_output->data;
+
+  render_background(renderer, 1);
+  render_workspace(renderer);
 
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
@@ -564,16 +575,17 @@ hikari_renderer_resize_mode(
   }
 
 #ifdef HAVE_LAYERSHELL
-  render_overlay(output, renderer);
+  render_overlay(renderer);
 #endif
 }
 
 void
-hikari_renderer_sheet_assign_mode(
-    struct hikari_renderer *renderer, struct hikari_output *output)
+hikari_renderer_sheet_assign_mode(struct hikari_renderer *renderer)
 {
-  render_background(output, renderer, 1);
-  render_workspace(output, renderer);
+  struct hikari_output *output = renderer->wlr_output->data;
+
+  render_background(renderer, 1);
+  render_workspace(renderer);
 
   assert(hikari_server.workspace->focus_view != NULL);
   struct hikari_view *view = hikari_server.workspace->focus_view;
@@ -589,38 +601,34 @@ hikari_renderer_sheet_assign_mode(
   }
 
 #ifdef HAVE_LAYERSHELL
-  render_overlay(output, renderer);
+  render_overlay(renderer);
 #endif
 }
 
 static inline void
-render_default_workspace(
-    struct hikari_output *output, struct hikari_renderer *renderer)
+render_default_workspace(struct hikari_renderer *renderer)
 {
-  render_background(output, renderer, 1);
-  render_workspace(output, renderer);
+  render_background(renderer, 1);
+  render_workspace(renderer);
 #ifdef HAVE_LAYERSHELL
-  render_overlay(output, renderer);
+  render_overlay(renderer);
 #endif
 }
 
 void
-hikari_renderer_dnd_mode(
-    struct hikari_renderer *renderer, struct hikari_output *output)
+hikari_renderer_dnd_mode(struct hikari_renderer *renderer)
 {
-  render_default_workspace(output, renderer);
+  render_default_workspace(renderer);
 }
 
 void
-hikari_renderer_layout_select_mode(
-    struct hikari_renderer *renderer, struct hikari_output *output)
+hikari_renderer_layout_select_mode(struct hikari_renderer *renderer)
 {
-  render_default_workspace(output, renderer);
+  render_default_workspace(renderer);
 }
 
 void
-hikari_renderer_mark_select_mode(
-    struct hikari_renderer *renderer, struct hikari_output *output)
+hikari_renderer_mark_select_mode(struct hikari_renderer *renderer)
 {
-  render_default_workspace(output, renderer);
+  render_default_workspace(renderer);
 }

@@ -17,8 +17,7 @@ struct hikari_mode {
 
   void (*cursor_move)(uint32_t time_msec);
 
-  void (*render)(
-      struct hikari_renderer *renderer, struct hikari_output *output);
+  void (*render)(struct hikari_renderer *renderer);
 };
 
 #endif
