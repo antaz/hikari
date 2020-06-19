@@ -631,7 +631,9 @@ render_cycling_workspace(
     }
   }
 
-  render_view(renderer, focus_view);
+  if (focus_view->output == output) {
+    render_view(renderer, focus_view);
+  }
 
 #ifdef HAVE_LAYERSHELL
   render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], renderer);
