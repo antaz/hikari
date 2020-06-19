@@ -6,7 +6,6 @@
 #include <wlr/render/wlr_texture.h>
 
 struct hikari_output;
-struct hikari_renderer;
 
 struct hikari_lock_indicator {
   struct wlr_texture *wait;
@@ -42,9 +41,5 @@ hikari_lock_indicator_clear(struct hikari_lock_indicator *lock_indicator);
 
 void
 hikari_lock_indicator_damage(struct hikari_lock_indicator *lock_indicator);
-
-void
-hikari_lock_indicator_render(struct hikari_lock_indicator *lock_indicator,
-    struct hikari_renderer *renderer);
 
 #endif

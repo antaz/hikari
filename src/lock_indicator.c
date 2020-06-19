@@ -7,7 +7,6 @@
 #include <hikari/configuration.h>
 #include <hikari/geometry.h>
 #include <hikari/output.h>
-#include <hikari/renderer.h>
 #include <hikari/server.h>
 
 #define HIKARI_PI 3.14159265358979323846
@@ -158,32 +157,13 @@ get_geometry(struct hikari_output *output, struct wlr_box *geometry)
   geometry->width = size;
   geometry->height = size;
 
+  struct wlr_box output_geometry = { .x = 0,
+    .y = 0,
+    .width = output->geometry.width,
+    .height = output->geometry.height };
+
   hikari_geometry_position_center(
-      geometry, &output->geometry, &geometry->x, &geometry->y);
-}
-
-void
-hikari_lock_indicator_render(struct hikari_lock_indicator *lock_indicator,
-    struct hikari_renderer *renderer)
-{
-  assert(lock_indicator != NULL);
-
-  struct wlr_texture *texture = lock_indicator->current;
-
-  if (texture == NULL) {
-    return;
-  }
-
-  float matrix[9];
-  struct wlr_renderer *wlr_renderer = renderer->wlr_renderer;
-  struct wlr_output *wlr_output = renderer->wlr_output;
-
-  struct wlr_box geometry;
-  get_geometry(wlr_output->data, &geometry);
-  wlr_renderer_scissor(wlr_renderer, &geometry);
-  wlr_matrix_project_box(matrix, &geometry, 0, 0, wlr_output->transform_matrix);
-
-  wlr_render_texture_with_matrix(wlr_renderer, texture, matrix, 1);
+      geometry, &output_geometry, &geometry->x, &geometry->y);
 }
 
 void
