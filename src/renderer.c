@@ -392,6 +392,40 @@ render_layer(struct wl_list *layers, struct hikari_renderer *renderer)
 #endif
 
 static inline void
+render_view(struct hikari_renderer *renderer, struct hikari_view *view)
+{
+  renderer->geometry = hikari_view_border_geometry(view);
+
+  if (hikari_view_wants_border(view)) {
+    render_border(&view->border, renderer);
+  }
+
+  renderer->geometry = hikari_view_geometry(view);
+
+  hikari_view_interface_for_each_surface(
+      (struct hikari_view_interface *)view, render_surface, renderer);
+}
+
+#ifdef HAVE_XWAYLAND
+static inline void
+render_unmanaged_views(struct hikari_renderer *renderer)
+{
+  struct hikari_output *output = renderer->wlr_output->data;
+
+  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view;
+  wl_list_for_each_reverse (xwayland_unmanaged_view,
+      &output->unmanaged_xwayland_views,
+      unmanaged_server_views) {
+
+    renderer->geometry = &xwayland_unmanaged_view->geometry;
+
+    wlr_surface_for_each_surface(
+        xwayland_unmanaged_view->surface->surface, render_surface, renderer);
+  }
+}
+#endif
+
+static inline void
 render_workspace(struct hikari_renderer *renderer)
 {
   struct hikari_output *output = renderer->wlr_output->data;
@@ -403,16 +437,7 @@ render_workspace(struct hikari_renderer *renderer)
 
   struct hikari_view *view;
   wl_list_for_each_reverse (view, &output->workspace->views, workspace_views) {
-    renderer->geometry = hikari_view_border_geometry(view);
-
-    if (hikari_view_wants_border(view)) {
-      render_border(&view->border, renderer);
-    }
-
-    renderer->geometry = hikari_view_geometry(view);
-
-    hikari_view_interface_for_each_surface(
-        (struct hikari_view_interface *)view, render_surface, renderer);
+    render_view(renderer, view);
   }
 
 #ifdef HAVE_LAYERSHELL
@@ -420,16 +445,7 @@ render_workspace(struct hikari_renderer *renderer)
 #endif
 
 #ifdef HAVE_XWAYLAND
-  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view;
-  wl_list_for_each_reverse (xwayland_unmanaged_view,
-      &output->unmanaged_xwayland_views,
-      unmanaged_server_views) {
-
-    renderer->geometry = &xwayland_unmanaged_view->geometry;
-
-    wlr_surface_for_each_surface(
-        xwayland_unmanaged_view->surface->surface, render_surface, renderer);
-  }
+  render_unmanaged_views(renderer);
 #endif
 }
 
@@ -561,45 +577,90 @@ render_visible_views(struct hikari_renderer *renderer)
   }
 }
 
+static inline void
+render_normal_mode_indication(
+    struct hikari_renderer *renderer, struct hikari_view *focus_view)
+{
+  struct hikari_output *output = renderer->wlr_output->data;
+  struct hikari_group *group = focus_view->group;
+  struct hikari_view *first = hikari_group_first_view(group);
+  float *indicator_first = hikari_configuration->indicator_first;
+  float *indicator_grouped = hikari_configuration->indicator_grouped;
+
+  struct hikari_view *view;
+  wl_list_for_each_reverse (view, &group->visible_views, visible_group_views) {
+    if (view != focus_view && view->output == output) {
+      renderer->geometry = hikari_view_border_geometry(view);
+
+      if (first == view) {
+        render_indicator_frame(
+            &view->indicator_frame, indicator_first, renderer);
+      } else {
+        render_indicator_frame(
+            &view->indicator_frame, indicator_grouped, renderer);
+      }
+    }
+  }
+
+  if (focus_view->output == output) {
+    renderer->geometry = hikari_view_border_geometry(focus_view);
+
+    render_indicator_frame(&focus_view->indicator_frame,
+        hikari_configuration->indicator_selected,
+        renderer);
+
+    render_indicator(&hikari_server.indicator, renderer);
+  }
+}
+
+static inline void
+render_cycling_workspace(
+    struct hikari_renderer *renderer, struct hikari_view *focus_view)
+{
+  struct hikari_output *output = renderer->wlr_output->data;
+
+#ifdef HAVE_LAYERSHELL
+  render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND], renderer);
+  render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM], renderer);
+#endif
+
+  struct hikari_view *view;
+  wl_list_for_each_reverse (view, &output->workspace->views, workspace_views) {
+    if (view != focus_view) {
+      render_view(renderer, view);
+    }
+  }
+
+  render_view(renderer, focus_view);
+
+#ifdef HAVE_LAYERSHELL
+  render_layer(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], renderer);
+#endif
+
+#ifdef HAVE_XWAYLAND
+  render_unmanaged_views(renderer);
+#endif
+}
+
 void
 hikari_renderer_normal_mode(struct hikari_renderer *renderer)
 {
   render_background(renderer, 1);
-  render_workspace(renderer);
 
-  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+  if (!hikari_server_is_indicating()) {
+    render_workspace(renderer);
+  } else {
+    struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
-  if (hikari_server.keyboard_state.mod_pressed && focus_view != NULL) {
-    struct hikari_output *output = renderer->wlr_output->data;
-    struct hikari_group *group = focus_view->group;
-    struct hikari_view *first = hikari_group_first_view(group);
-    float *indicator_first = hikari_configuration->indicator_first;
-    float *indicator_grouped = hikari_configuration->indicator_grouped;
-
-    struct hikari_view *view;
-    wl_list_for_each_reverse (
-        view, &group->visible_views, visible_group_views) {
-      if (view != focus_view && view->output == output) {
-        renderer->geometry = hikari_view_border_geometry(view);
-
-        if (first == view) {
-          render_indicator_frame(
-              &view->indicator_frame, indicator_first, renderer);
-        } else {
-          render_indicator_frame(
-              &view->indicator_frame, indicator_grouped, renderer);
-        }
+    if (focus_view != NULL) {
+      if (hikari_server_is_cycling()) {
+        render_cycling_workspace(renderer, focus_view);
+      } else {
+        render_workspace(renderer);
       }
-    }
-
-    if (focus_view->output == output) {
-      renderer->geometry = hikari_view_border_geometry(focus_view);
-
-      render_indicator_frame(&focus_view->indicator_frame,
-          hikari_configuration->indicator_selected,
-          renderer);
-
-      render_indicator(&hikari_server.indicator, renderer);
+      render_normal_mode_indication(renderer, focus_view);
+    } else {
+      render_workspace(renderer);
     }
   }
 
