@@ -459,6 +459,8 @@ hikari_workspace_lower_view(struct hikari_workspace *workspace)
 {
   FOCUS_GUARD(workspace, focus_view);
 
+  hikari_server_unset_cycling();
+
   hikari_view_lower(focus_view);
 
   struct hikari_group *group = focus_view->group;
