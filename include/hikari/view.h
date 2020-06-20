@@ -229,7 +229,7 @@ hikari_view_migrate(
 void
 hikari_view_configure(struct hikari_view *view,
     const char *app_id,
-    struct hikari_view_autoconf *view_autoconf);
+    struct hikari_view_config *view_config);
 
 static inline bool
 hikari_view_is_dirty(struct hikari_view *view)

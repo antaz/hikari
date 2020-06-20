@@ -20,7 +20,7 @@
 #include <hikari/server.h>
 #include <hikari/sheet.h>
 #include <hikari/view.h>
-#include <hikari/view_autoconf.h>
+#include <hikari/view_config.h>
 #include <hikari/workspace.h>
 
 static void
@@ -132,11 +132,11 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   printf("APP ID %s\n", app_id);
 #endif
 
-  struct hikari_view_autoconf *view_autoconf =
-      hikari_configuration_resolve_view_autoconf(hikari_configuration, app_id);
+  struct hikari_view_config *view_config =
+      hikari_configuration_resolve_view_config(hikari_configuration, app_id);
 
   hikari_view_set_title(view, xdg_view->surface->toplevel->title);
-  hikari_view_configure(view, app_id, view_autoconf);
+  hikari_view_configure(view, app_id, view_config);
 }
 
 static struct wlr_surface *

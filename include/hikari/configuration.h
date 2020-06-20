@@ -37,7 +37,7 @@ struct hikari_configuration {
 
   struct hikari_exec execs[HIKARI_NR_OF_EXECS];
 
-  struct wl_list autoconfs;
+  struct wl_list view_configs;
   struct wl_list output_configs;
   struct wl_list pointer_configs;
   struct wl_list layout_configs;
@@ -59,8 +59,8 @@ hikari_configuration_load(
 bool
 hikari_configuration_reload(char *config_path);
 
-struct hikari_view_autoconf *
-hikari_configuration_resolve_view_autoconf(
+struct hikari_view_config *
+hikari_configuration_resolve_view_config(
     struct hikari_configuration *configuration, const char *app_id);
 
 struct hikari_output_config *

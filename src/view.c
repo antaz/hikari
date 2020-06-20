@@ -18,7 +18,7 @@
 #include <hikari/server.h>
 #include <hikari/sheet.h>
 #include <hikari/tile.h>
-#include <hikari/view_autoconf.h>
+#include <hikari/view_config.h>
 #include <hikari/workspace.h>
 #include <hikari/xdg_view.h>
 #include <hikari/xwayland_view.h>
@@ -586,21 +586,20 @@ hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
   struct hikari_group *group;
   bool focus;
 
-  struct hikari_view_autoconf *view_autoconf =
-      hikari_configuration_resolve_view_autoconf(
-          hikari_configuration, view->id);
+  struct hikari_view_config *view_config =
+      hikari_configuration_resolve_view_config(hikari_configuration, view->id);
 
-  if (view_autoconf != NULL) {
+  if (view_config != NULL) {
     struct hikari_mark *mark;
 
-    group = hikari_view_autoconf_resolve_group(view_autoconf, view->id);
-    mark = hikari_view_autoconf_resolve_mark(view_autoconf);
+    group = hikari_view_config_resolve_group(view_config, view->id);
+    mark = hikari_view_config_resolve_mark(view_config);
 
     if (mark != NULL && mark->view == NULL) {
       hikari_mark_set(mark, view);
     }
 
-    focus = view_autoconf->focus;
+    focus = view_config->focus;
   } else {
     group = hikari_server_find_or_create_group(view->id);
     focus = false;
@@ -1684,7 +1683,7 @@ hikari_view_migrate(
 void
 hikari_view_configure(struct hikari_view *view,
     const char *app_id,
-    struct hikari_view_autoconf *view_autoconf)
+    struct hikari_view_config *view_config)
 {
   assert(view->id == NULL);
 
@@ -1696,15 +1695,15 @@ hikari_view_configure(struct hikari_view *view,
 
   set_app_id(view, app_id);
 
-  if (view_autoconf != NULL) {
-    sheet = hikari_view_autoconf_resolve_sheet(view_autoconf);
+  if (view_config != NULL) {
+    sheet = hikari_view_config_resolve_sheet(view_config);
     output = sheet->workspace->output;
 
-    invisible = hikari_view_autoconf_resolve_invisible(view_autoconf);
-    floating = hikari_view_autoconf_resolve_floating(view_autoconf);
-    publicview = hikari_view_autoconf_resolve_public(view_autoconf);
+    invisible = hikari_view_config_resolve_invisible(view_config);
+    floating = hikari_view_config_resolve_floating(view_config);
+    publicview = hikari_view_config_resolve_public(view_config);
 
-    hikari_view_autoconf_resolve_position(view_autoconf, view, &x, &y);
+    hikari_view_config_resolve_position(view_config, view, &x, &y);
   } else {
     sheet = hikari_server.workspace->sheet;
     output = sheet->workspace->output;

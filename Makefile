@@ -52,7 +52,7 @@ OBJS = \
 	split.o \
 	tile.o \
 	view.o \
-	view_autoconf.o \
+	view_config.o \
 	workspace.o \
 	xdg_view.o \
 	xwayland_unmanaged_view.o \

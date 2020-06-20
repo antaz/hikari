@@ -29,7 +29,7 @@
 #include <hikari/split.h>
 #include <hikari/tile.h>
 #include <hikari/view.h>
-#include <hikari/view_autoconf.h>
+#include <hikari/view_config.h>
 #include <hikari/workspace.h>
 
 struct hikari_configuration *hikari_configuration = NULL;
@@ -488,17 +488,17 @@ PARSE_SPLIT(vertical, VERTICAL, left, LEFT, right, RIGHT);
 PARSE_SPLIT(horizontal, HORIZONTAL, top, TOP, bottom, BOTTOM);
 #undef PARSE_SPLIT
 
-struct hikari_view_autoconf *
-hikari_configuration_resolve_view_autoconf(
+struct hikari_view_config *
+hikari_configuration_resolve_view_config(
     struct hikari_configuration *configuration, const char *app_id)
 {
   assert(app_id != NULL);
 
   if (app_id != NULL) {
-    struct hikari_view_autoconf *view_autoconf;
-    wl_list_for_each (view_autoconf, &configuration->autoconfs, link) {
-      if (!strcmp(view_autoconf->app_id, app_id)) {
-        return view_autoconf;
+    struct hikari_view_config *view_config;
+    wl_list_for_each (view_config, &configuration->view_configs, link) {
+      if (!strcmp(view_config->app_id, app_id)) {
+        return view_config;
       }
     }
   }
@@ -736,15 +736,15 @@ done:
 }
 
 static bool
-parse_autoconf(struct hikari_configuration *configuration,
-    const ucl_object_t *autoconf_obj,
-    struct hikari_view_autoconf **autoconf)
+parse_view_config(struct hikari_configuration *configuration,
+    const ucl_object_t *view_config_obj,
+    struct hikari_view_config **view_config)
 {
   bool success = false;
 
-  hikari_view_autoconf_init(*autoconf);
+  hikari_view_config_init(*view_config);
 
-  ucl_object_iter_t it = ucl_object_iterate_new(autoconf_obj);
+  ucl_object_iter_t it = ucl_object_iterate_new(view_config_obj);
 
   const ucl_object_t *cur;
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
@@ -765,7 +765,7 @@ parse_autoconf(struct hikari_configuration *configuration,
         goto done;
       }
 
-      (*autoconf)->group_name = group_name;
+      (*view_config)->group_name = group_name;
 
     } else if (!strcmp(key, "sheet")) {
       int64_t sheet_nr;
@@ -776,7 +776,7 @@ parse_autoconf(struct hikari_configuration *configuration,
         goto done;
       }
 
-      (*autoconf)->sheet_nr = sheet_nr;
+      (*view_config)->sheet_nr = sheet_nr;
     } else if (!strcmp(key, "mark")) {
       const char *mark_name;
 
@@ -794,7 +794,7 @@ parse_autoconf(struct hikari_configuration *configuration,
         goto done;
       }
 
-      (*autoconf)->mark = &hikari_marks[mark_name[0] - 'a'];
+      (*view_config)->mark = &hikari_marks[mark_name[0] - 'a'];
     } else if (!strcmp(key, "position")) {
       ucl_type_t type = ucl_object_type(cur);
       int x;
@@ -811,7 +811,7 @@ parse_autoconf(struct hikari_configuration *configuration,
             goto done;
           }
 
-          hikari_position_config_set_absolute(&(*autoconf)->position, x, y);
+          hikari_position_config_set_absolute(&(*view_config)->position, x, y);
           break;
 
         case UCL_STRING:
@@ -825,7 +825,7 @@ parse_autoconf(struct hikari_configuration *configuration,
           }
 
           hikari_position_config_set_relative(
-              &(*autoconf)->position, relative_config);
+              &(*view_config)->position, relative_config);
           break;
 
         default:
@@ -844,7 +844,7 @@ parse_autoconf(struct hikari_configuration *configuration,
         goto done;
       }
 
-      (*autoconf)->focus = focus;
+      (*view_config)->focus = focus;
     } else if (!strcmp(key, "invisible")) {
       bool invisible;
 
@@ -855,7 +855,7 @@ parse_autoconf(struct hikari_configuration *configuration,
         goto done;
       }
 
-      (*autoconf)->invisible = invisible;
+      (*view_config)->invisible = invisible;
     } else if (!strcmp(key, "floating")) {
       bool floating;
 
@@ -866,7 +866,7 @@ parse_autoconf(struct hikari_configuration *configuration,
         goto done;
       }
 
-      (*autoconf)->floating = floating;
+      (*view_config)->floating = floating;
     } else if (!strcmp(key, "public")) {
       bool publicview;
 
@@ -877,7 +877,7 @@ parse_autoconf(struct hikari_configuration *configuration,
         goto done;
       }
 
-      (*autoconf)->publicview = publicview;
+      (*view_config)->publicview = publicview;
     } else {
       fprintf(
           stderr, "configuration error: unkown \"views\" key \"%s\"\n", key);
@@ -894,7 +894,7 @@ done:
 }
 
 static bool
-parse_autoconfs(
+parse_view_configs(
     struct hikari_configuration *configuration, const ucl_object_t *obj)
 {
   bool success = false;
@@ -902,18 +902,18 @@ parse_autoconfs(
 
   const ucl_object_t *cur;
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
-    struct hikari_view_autoconf *autoconf =
-        hikari_malloc(sizeof(struct hikari_view_autoconf));
+    struct hikari_view_config *view_config =
+        hikari_malloc(sizeof(struct hikari_view_config));
 
-    wl_list_insert(&configuration->autoconfs, &autoconf->link);
+    wl_list_insert(&configuration->view_configs, &view_config->link);
 
     const char *key = ucl_object_key(cur);
     size_t keylen = strlen(key);
 
-    autoconf->app_id = hikari_malloc(keylen + 1);
-    strcpy(autoconf->app_id, key);
+    view_config->app_id = hikari_malloc(keylen + 1);
+    strcpy(view_config->app_id, key);
 
-    if (!parse_autoconf(configuration, cur, &autoconf)) {
+    if (!parse_view_config(configuration, cur, &view_config)) {
       fprintf(stderr,
           "configuration error: failed to parse \"views\" \"%s\"\n",
           key);
@@ -2289,7 +2289,7 @@ hikari_configuration_load(
         goto done;
       }
     } else if (!strcmp(key, "views")) {
-      if (!parse_autoconfs(configuration, cur)) {
+      if (!parse_view_configs(configuration, cur)) {
         goto done;
       }
     } else if (!strcmp(key, "marks")) {
@@ -2425,7 +2425,7 @@ hikari_configuration_reload(char *config_path)
 void
 hikari_configuration_init(struct hikari_configuration *configuration)
 {
-  wl_list_init(&configuration->autoconfs);
+  wl_list_init(&configuration->view_configs);
   wl_list_init(&configuration->output_configs);
   wl_list_init(&configuration->pointer_configs);
   wl_list_init(&configuration->layout_configs);
@@ -2459,13 +2459,13 @@ hikari_configuration_fini(struct hikari_configuration *configuration)
 {
   hikari_bindings_fini(&configuration->bindings);
 
-  struct hikari_view_autoconf *autoconf, *autoconf_temp;
+  struct hikari_view_config *view_config, *view_config_temp;
   wl_list_for_each_safe (
-      autoconf, autoconf_temp, &configuration->autoconfs, link) {
-    wl_list_remove(&autoconf->link);
+      view_config, view_config_temp, &configuration->view_configs, link) {
+    wl_list_remove(&view_config->link);
 
-    hikari_view_autoconf_fini(autoconf);
-    hikari_free(autoconf);
+    hikari_view_config_fini(view_config);
+    hikari_free(view_config);
   }
 
   struct hikari_output_config *output_config, *output_config_temp;

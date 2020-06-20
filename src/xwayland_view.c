@@ -163,11 +163,11 @@ first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
 
   const char *app_id = get_class(xwayland_view->surface);
 
-  struct hikari_view_autoconf *view_autoconf =
-      hikari_configuration_resolve_view_autoconf(hikari_configuration, app_id);
+  struct hikari_view_config *view_config =
+      hikari_configuration_resolve_view_config(hikari_configuration, app_id);
 
   hikari_view_set_title(view, xwayland_view->surface->title);
-  hikari_view_configure(view, app_id, view_autoconf);
+  hikari_view_configure(view, app_id, view_config);
 
   struct hikari_output *output = view->output;
 

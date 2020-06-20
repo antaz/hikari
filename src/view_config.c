@@ -1,4 +1,4 @@
-#include <hikari/view_autoconf.h>
+#include <hikari/view_config.h>
 
 #include <assert.h>
 #include <stdlib.h>
@@ -10,37 +10,37 @@
 #include <hikari/view.h>
 
 void
-hikari_view_autoconf_init(struct hikari_view_autoconf *view_autoconf)
+hikari_view_config_init(struct hikari_view_config *view_config)
 {
-  view_autoconf->group_name = NULL;
-  view_autoconf->sheet_nr = -1;
-  view_autoconf->mark = NULL;
-  view_autoconf->focus = false;
-  view_autoconf->invisible = false;
-  view_autoconf->floating = false;
-  view_autoconf->publicview = false;
+  view_config->group_name = NULL;
+  view_config->sheet_nr = -1;
+  view_config->mark = NULL;
+  view_config->focus = false;
+  view_config->invisible = false;
+  view_config->floating = false;
+  view_config->publicview = false;
 
-  hikari_position_config_init(&view_autoconf->position);
+  hikari_position_config_init(&view_config->position);
 }
 
 void
-hikari_view_autoconf_fini(struct hikari_view_autoconf *view_autoconf)
+hikari_view_config_fini(struct hikari_view_config *view_config)
 {
-  assert(view_autoconf != NULL);
+  assert(view_config != NULL);
 
-  hikari_free(view_autoconf->app_id);
-  hikari_free(view_autoconf->group_name);
+  hikari_free(view_config->app_id);
+  hikari_free(view_config->group_name);
 }
 
 struct hikari_sheet *
-hikari_view_autoconf_resolve_sheet(struct hikari_view_autoconf *view_autoconf)
+hikari_view_config_resolve_sheet(struct hikari_view_config *view_config)
 {
-  assert(view_autoconf != NULL);
+  assert(view_config != NULL);
 
   struct hikari_sheet *sheet;
 
-  if (view_autoconf->sheet_nr != -1) {
-    sheet = hikari_server.workspace->sheets + view_autoconf->sheet_nr;
+  if (view_config->sheet_nr != -1) {
+    sheet = hikari_server.workspace->sheets + view_config->sheet_nr;
   } else {
     sheet = hikari_server.workspace->sheet;
   }
@@ -49,15 +49,15 @@ hikari_view_autoconf_resolve_sheet(struct hikari_view_autoconf *view_autoconf)
 }
 
 struct hikari_group *
-hikari_view_autoconf_resolve_group(
-    struct hikari_view_autoconf *view_autoconf, const char *app_id)
+hikari_view_config_resolve_group(
+    struct hikari_view_config *view_config, const char *app_id)
 {
   struct hikari_group *group;
 
-  if (view_autoconf != NULL) {
-    if (view_autoconf->group_name != NULL &&
-        strlen(view_autoconf->group_name) > 0) {
-      group = hikari_server_find_or_create_group(view_autoconf->group_name);
+  if (view_config != NULL) {
+    if (view_config->group_name != NULL &&
+        strlen(view_config->group_name) > 0) {
+      group = hikari_server_find_or_create_group(view_config->group_name);
     } else {
       group = hikari_server_find_or_create_group(app_id);
     }
@@ -69,21 +69,20 @@ hikari_view_autoconf_resolve_group(
 }
 
 void
-hikari_view_autoconf_resolve_position(
-    struct hikari_view_autoconf *view_autoconf,
+hikari_view_config_resolve_position(struct hikari_view_config *view_config,
     struct hikari_view *view,
     int *x,
     int *y)
 {
-  assert(view_autoconf != NULL);
+  assert(view_config != NULL);
 
   struct hikari_output *output = hikari_server.workspace->output;
   struct wlr_box *geometry = hikari_view_border_geometry(view);
 
-  switch (view_autoconf->position.type) {
+  switch (view_config->position.type) {
     case HIKARI_POSITION_CONFIG_TYPE_ABSOLUTE:
-      *x = view_autoconf->position.config.absolute.x;
-      *y = view_autoconf->position.config.absolute.y;
+      *x = view_config->position.config.absolute.x;
+      *y = view_config->position.config.absolute.y;
       break;
 
     case HIKARI_POSITION_CONFIG_TYPE_AUTO:
@@ -92,7 +91,7 @@ hikari_view_autoconf_resolve_position(
       break;
 
     case HIKARI_POSITION_CONFIG_TYPE_RELATIVE:
-      switch (view_autoconf->position.config.relative) {
+      switch (view_config->position.config.relative) {
         case HIKARI_POSITION_CONFIG_RELATIVE_BOTTOM_LEFT:
           hikari_geometry_position_bottom_left(
               geometry, &output->usable_area, x, y);
