@@ -1406,7 +1406,16 @@ commit_pending_operation(
     }
   } else {
     hikari_view_refresh_geometry(view, &operation->geometry);
-    move_to_top(view);
+
+    if (hikari_sheet_is_visible(view->sheet)) {
+      hikari_view_show(view);
+      if (operation->center) {
+        hikari_view_center_cursor(view);
+        hikari_server_cursor_focus();
+      }
+    } else {
+      move_to_top(view);
+    }
   }
 }
 
@@ -1441,14 +1450,6 @@ commit_reset(struct hikari_view *view, struct hikari_operation *operation)
   }
 
   commit_pending_operation(view, operation);
-
-  if (hikari_view_is_hidden(view) && hikari_sheet_is_visible(view->sheet)) {
-    hikari_view_show(view);
-    if (operation->center) {
-      hikari_view_center_cursor(view);
-      hikari_server_cursor_focus();
-    }
-  }
 }
 
 static void
