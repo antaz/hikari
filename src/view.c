@@ -1559,6 +1559,8 @@ commit_tile(struct hikari_view *view, struct hikari_operation *operation)
     }
   }
 
+  assert(hikari_tile_is_attached(operation->tile));
+
   if (hikari_view_is_tiled(view)) {
     struct hikari_tile *tile = view->tile;
 
