@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.3
+
+* disallow running `hikari` as root
+* unset cycling bit when lowering a view
+
 ## 2.0.2
 
 * fix nested popups in layer-shell
