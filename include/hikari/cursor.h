@@ -3,6 +3,8 @@
 
 #include <wlr/types/wlr_cursor.h>
 
+#include <hikari/binding_group.h>
+
 struct hikari_output;
 
 struct hikari_cursor {
@@ -15,6 +17,8 @@ struct hikari_cursor {
   struct wl_listener button;
   struct wl_listener surface_destroy;
   struct wl_listener request_set_cursor;
+
+  struct hikari_binding_group bindings[HIKARI_BINDING_GROUP_MASK];
 };
 
 void
@@ -22,6 +26,10 @@ hikari_cursor_init(struct hikari_cursor *cursor, struct wlr_cursor *wlr_cursor);
 
 void
 hikari_cursor_fini(struct hikari_cursor *cursor);
+
+void
+hikari_cursor_configure_bindings(
+    struct hikari_cursor *cursor, struct wl_list *bindings);
 
 void
 hikari_cursor_activate(struct hikari_cursor *cursor);

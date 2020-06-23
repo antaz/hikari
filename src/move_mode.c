@@ -3,8 +3,8 @@
 #include <wlr/types/wlr_cursor.h>
 #include <wlr/types/wlr_seat.h>
 
+#include <hikari/binding.h>
 #include <hikari/configuration.h>
-#include <hikari/keybinding.h>
 #include <hikari/keyboard.h>
 #include <hikari/renderer.h>
 #include <hikari/server.h>

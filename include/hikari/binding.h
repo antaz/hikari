@@ -1,11 +1,11 @@
-#if !defined(HIKARI_KEYBINDING_H)
-#define HIKARI_KEYBINDING_H
+#if !defined(HIKARI_BINDING_H)
+#define HIKARI_BINDING_H
 
 #include <stdint.h>
 
 struct hikari_action;
 
-struct hikari_keybinding {
+struct hikari_binding {
   uint32_t keycode;
   struct hikari_action *action;
 };

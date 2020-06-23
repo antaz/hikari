@@ -4,11 +4,11 @@
 #include <wlr/types/wlr_seat.h>
 
 #include <hikari/action.h>
-#include <hikari/bindings.h>
+#include <hikari/binding.h>
+#include <hikari/binding_group.h>
 #include <hikari/configuration.h>
 #include <hikari/indicator.h>
 #include <hikari/indicator_frame.h>
-#include <hikari/keybinding.h>
 #include <hikari/keyboard.h>
 #include <hikari/renderer.h>
 #include <hikari/server.h>
@@ -21,13 +21,13 @@
 #endif
 
 static bool
-handle_input(struct hikari_modifier_bindings *map, uint32_t code)
+handle_input(struct hikari_binding_group *map, uint32_t code)
 {
   int nbindings = map->nbindings;
-  struct hikari_keybinding *bindings = map->bindings;
+  struct hikari_binding *bindings = map->bindings;
 
   for (int i = 0; i < nbindings; i++) {
-    struct hikari_keybinding *binding = &bindings[i];
+    struct hikari_binding *binding = &bindings[i];
 
     if (binding->keycode == code) {
       struct hikari_event_action *event_action;
@@ -73,10 +73,9 @@ normal_mode_keyboard_handler(struct hikari_workspace *workspace,
 
   if (event->state == WLR_KEY_PRESSED) {
     uint32_t modifiers = hikari_server.keyboard_state.modifiers;
-    struct hikari_modifier_bindings *map =
-        &hikari_configuration->bindings.keyboard[modifiers];
+    struct hikari_binding_group *bindings = &keyboard->bindings[modifiers];
 
-    if (handle_input(map, event->keycode)) {
+    if (handle_input(bindings, event->keycode)) {
       return;
     }
   }
@@ -88,7 +87,7 @@ normal_mode_keyboard_handler(struct hikari_workspace *workspace,
 
 static void
 normal_mode_button_handler(
-    struct hikari_workspace *workspace, struct wlr_event_pointer_button *event)
+    struct hikari_cursor *cursor, struct wlr_event_pointer_button *event)
 {
   if (handle_pending_action()) {
     return;
@@ -96,8 +95,7 @@ normal_mode_button_handler(
 
   if (event->state == WLR_BUTTON_PRESSED) {
     uint32_t modifiers = hikari_server.keyboard_state.modifiers;
-    struct hikari_modifier_bindings *map =
-        &hikari_configuration->bindings.mouse[modifiers];
+    struct hikari_binding_group *map = &cursor->bindings[modifiers];
 
     if (handle_input(map, event->button)) {
       return;
@@ -111,10 +109,10 @@ normal_mode_button_handler(
 static void
 button_handler(struct wl_listener *listener, void *data)
 {
+  struct hikari_cursor *cursor = wl_container_of(listener, cursor, button);
   struct wlr_event_pointer_button *event = data;
-  struct hikari_workspace *workspace = hikari_server.workspace;
 
-  normal_mode_button_handler(workspace, event);
+  normal_mode_button_handler(cursor, event);
 }
 
 static void

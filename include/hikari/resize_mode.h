@@ -3,7 +3,7 @@
 
 #include <hikari/mode.h>
 
-struct hikari_keybinding;
+struct hikari_binding;
 struct hikari_view;
 
 struct hikari_resize_mode {

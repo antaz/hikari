@@ -6,7 +6,8 @@ ETC_PREFIX ?= ${PREFIX}
 OBJS = \
 	action.o \
 	action_config.o \
-	bindings.o \
+	binding_config.o \
+	binding_group.o \
 	border.o \
 	command.o \
 	completion.o \

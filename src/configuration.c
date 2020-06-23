@@ -10,11 +10,12 @@
 
 #include <hikari/action.h>
 #include <hikari/action_config.h>
+#include <hikari/binding.h>
+#include <hikari/binding_config.h>
 #include <hikari/color.h>
 #include <hikari/command.h>
 #include <hikari/exec.h>
 #include <hikari/geometry.h>
-#include <hikari/keybinding.h>
 #include <hikari/keyboard.h>
 #include <hikari/layout.h>
 #include <hikari/layout_config.h>
@@ -33,46 +34,6 @@
 #include <hikari/workspace.h>
 
 struct hikari_configuration *hikari_configuration = NULL;
-
-static bool
-parse_modifier_mask(const char *str, uint8_t *result, const char **remaining)
-{
-  size_t len = strlen(str);
-  uint8_t mask = 0;
-  int pos;
-
-  for (pos = 0; pos < len; pos++) {
-    char c = str[pos];
-    if (c == '-' || c == '+') {
-      break;
-    } else if (c == 'L') {
-      mask |= WLR_MODIFIER_LOGO;
-    } else if (c == 'S') {
-      mask |= WLR_MODIFIER_SHIFT;
-    } else if (c == 'A') {
-      mask |= WLR_MODIFIER_ALT;
-    } else if (c == 'C') {
-      mask |= WLR_MODIFIER_CTRL;
-    } else if (c == '5') {
-      mask |= WLR_MODIFIER_MOD5;
-    } else if (c == '0') {
-      // do nothing
-    } else {
-      fprintf(stderr,
-          "configuration error: unknown modifier \"%c\" in \"%s\"\n",
-          c,
-          str);
-      return false;
-    }
-  }
-
-  *result = mask;
-  if (remaining != NULL) {
-    *remaining = str + pos;
-  }
-
-  return true;
-}
 
 static bool
 parse_layout_func(const char *layout_func_name,
@@ -929,62 +890,6 @@ done:
   return success;
 }
 
-struct keycode_matcher_state {
-  xkb_keysym_t keysym;
-  uint32_t *keycode;
-  struct xkb_state *state;
-};
-
-static void
-match_keycode(struct xkb_keymap *keymap, xkb_keycode_t key, void *data)
-{
-  struct keycode_matcher_state *matcher_state = data;
-  xkb_keysym_t keysym = xkb_state_key_get_one_sym(matcher_state->state, key);
-
-  if (keysym != XKB_KEY_NoSymbol && keysym == matcher_state->keysym &&
-      *(matcher_state->keycode) == 0) {
-    *(matcher_state->keycode) = key - 8;
-  }
-}
-
-static bool
-parse_key(struct xkb_state *state, const char *str, uint32_t *keycode)
-{
-  uint8_t mods = 0;
-  const char *remaining;
-  if (!parse_modifier_mask(str, &mods, &remaining)) {
-    return false;
-  }
-
-  if (*remaining == '-') {
-    errno = 0;
-    const long value = strtol(remaining + 1, NULL, 10);
-    if (errno != 0 || value < 0 || value > UINT32_MAX) {
-      fprintf(stderr,
-          "configuration error: failed to parse keycode \"%s\"\n",
-          remaining + 1);
-      return false;
-    }
-    *keycode = (uint32_t)value - 8;
-  } else {
-    const xkb_keysym_t keysym =
-        xkb_keysym_from_name(remaining + 1, XKB_KEYSYM_CASE_INSENSITIVE);
-    if (keysym == XKB_KEY_NoSymbol) {
-      fprintf(stderr,
-          "configuration error: unknown key symbol \"%s\"\n",
-          remaining + 1);
-      return false;
-    }
-
-    *keycode = 0;
-    struct keycode_matcher_state matcher_state = { keysym, keycode, state };
-    xkb_keymap_key_for_each(
-        xkb_state_get_keymap(state), match_keycode, &matcher_state);
-  }
-
-  return true;
-}
-
 static bool
 parse_mouse_button(const char *str, uint32_t *keycode)
 {
@@ -1007,35 +912,6 @@ parse_mouse_button(const char *str, uint32_t *keycode)
   } else {
     fprintf(stderr, "configuration error: unknown mouse button \"%s\"\n", str);
     return false;
-  }
-
-  return true;
-}
-
-static bool
-parse_pointer(struct xkb_state *ignored, const char *str, uint32_t *keycode)
-{
-  uint8_t mods = 0;
-  const char *remaining;
-  if (!parse_modifier_mask(str, &mods, &remaining)) {
-    return false;
-  }
-
-  if (*remaining == '-') {
-    errno = 0;
-    const long value = strtol(remaining + 1, NULL, 10);
-    if (errno != 0 || value < 0 || value > UINT32_MAX) {
-      fprintf(stderr,
-          "configuration error: failed to parse mouse binding \"%s\"\n",
-          remaining + 1);
-      return false;
-    }
-    *keycode = (uint32_t)value;
-  } else {
-    ++remaining;
-    if (!parse_mouse_button(remaining, keycode)) {
-      return false;
-    }
   }
 
   return true;
@@ -1139,19 +1015,6 @@ done:
   return success;
 }
 
-#ifndef NDEBUG
-static void
-toggle_damage_tracking(void *arg)
-{
-  hikari_server.track_damage = !hikari_server.track_damage;
-
-  struct hikari_output *output = NULL;
-  wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
-    hikari_output_damage_whole(output);
-  }
-}
-#endif
-
 struct hikari_split *
 hikari_configuration_lookup_layout(
     struct hikari_configuration *configuration, char layout_register)
@@ -1181,521 +1044,71 @@ lookup_action(
 }
 
 static bool
-parse_binding(struct hikari_configuration *configuration,
-    const ucl_object_t *obj,
-    void (**action)(void *),
-    void **arg)
+parse_keyboard_bindings(struct hikari_configuration *configuration,
+    const ucl_object_t *bindings_obj)
 {
-  const char *str;
   bool success = false;
-
-  if (!ucl_object_tostring_safe(obj, &str)) {
-    fprintf(
-        stderr, "configuration error: expected string for binding action\n");
-    goto done;
-  }
-
-  if (!strcmp(str, "quit")) {
-    *action = hikari_server_terminate;
-    *arg = NULL;
-  } else if (!strcmp(str, "lock")) {
-    *action = hikari_server_lock;
-    *arg = NULL;
-  } else if (!strcmp(str, "reload")) {
-    *action = hikari_server_reload;
-    *arg = NULL;
-#ifndef NDEBUG
-  } else if (!strcmp(str, "debug-damage")) {
-    *action = toggle_damage_tracking;
-    *arg = NULL;
-#endif
-
-#define PARSE_MOVE_BINDING(d)                                                  \
-  }                                                                            \
-  else if (!strcmp(str, "view-move-" #d))                                      \
-  {                                                                            \
-    *action = hikari_server_move_view_##d;                                     \
-    *arg = NULL;
-
-    PARSE_MOVE_BINDING(up)
-    PARSE_MOVE_BINDING(down)
-    PARSE_MOVE_BINDING(left)
-    PARSE_MOVE_BINDING(right)
-#undef PARSE_MOVE_BINDING
-
-#define PARSE_SNAP_BINDING(d)                                                  \
-  }                                                                            \
-  else if (!strcmp(str, "view-snap-" #d))                                      \
-  {                                                                            \
-    *action = hikari_server_snap_view_##d;                                     \
-    *arg = NULL;
-
-    PARSE_SNAP_BINDING(up)
-    PARSE_SNAP_BINDING(down)
-    PARSE_SNAP_BINDING(left)
-    PARSE_SNAP_BINDING(right)
-#undef PARSE_SNAP_BINDING
-
-  } else if (!strcmp(str, "view-toggle-maximize-vertical")) {
-    *action = hikari_server_toggle_view_vertical_maximize;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-toggle-maximize-horizontal")) {
-    *action = hikari_server_toggle_view_horizontal_maximize;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-toggle-maximize-full")) {
-    *action = hikari_server_toggle_view_full_maximize;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-toggle-floating")) {
-    *action = hikari_server_toggle_view_floating;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-toggle-invisible")) {
-    *action = hikari_server_toggle_view_invisible;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-toggle-public")) {
-    *action = hikari_server_toggle_view_public;
-    *arg = NULL;
-
-  } else if (!strcmp(str, "view-raise")) {
-    *action = hikari_server_raise_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-lower")) {
-    *action = hikari_server_lower_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-hide")) {
-    *action = hikari_server_hide_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-only")) {
-    *action = hikari_server_only_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-quit")) {
-    *action = hikari_server_quit_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-reset-geometry")) {
-    *action = hikari_server_reset_view_geometry;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-cycle-next")) {
-    *action = hikari_server_cycle_next_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-cycle-prev")) {
-    *action = hikari_server_cycle_prev_view;
-    *arg = NULL;
-
-#define PARSE_PIN_BINDING(n)                                                   \
-  }                                                                            \
-  else if (!strcmp(str, "view-pin-to-sheet-" #n))                              \
-  {                                                                            \
-    *action = hikari_server_pin_view_to_sheet_##n;                             \
-    *arg = NULL;
-
-    PARSE_PIN_BINDING(0)
-    PARSE_PIN_BINDING(1)
-    PARSE_PIN_BINDING(2)
-    PARSE_PIN_BINDING(3)
-    PARSE_PIN_BINDING(4)
-    PARSE_PIN_BINDING(5)
-    PARSE_PIN_BINDING(6)
-    PARSE_PIN_BINDING(7)
-    PARSE_PIN_BINDING(8)
-    PARSE_PIN_BINDING(9)
-    PARSE_PIN_BINDING(alternate)
-    PARSE_PIN_BINDING(current)
-    PARSE_PIN_BINDING(next)
-    PARSE_PIN_BINDING(prev)
-#undef PARSE_PIN_BINDING
-
-  } else if (!strcmp(str, "view-decrease-size-up")) {
-    *action = hikari_server_decrease_view_size_up;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-increase-size-up")) {
-    *action = hikari_server_increase_view_size_up;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-decrease-size-down")) {
-    *action = hikari_server_decrease_view_size_down;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-increase-size-down")) {
-    *action = hikari_server_increase_view_size_down;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-decrease-size-left")) {
-    *action = hikari_server_decrease_view_size_left;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-increase-size-left")) {
-    *action = hikari_server_increase_view_size_left;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-increase-size-right")) {
-    *action = hikari_server_increase_view_size_right;
-    *arg = NULL;
-  } else if (!strcmp(str, "view-decrease-size-right")) {
-    *action = hikari_server_decrease_view_size_right;
-    *arg = NULL;
-
-#define PARSE_WORKSPACE_BINDING(n)                                             \
-  }                                                                            \
-  else if (!strcmp(str, "workspace-switch-to-sheet-" #n))                      \
-  {                                                                            \
-    *action = hikari_server_display_sheet_##n;                                 \
-    *arg = NULL;
-
-    PARSE_WORKSPACE_BINDING(0)
-    PARSE_WORKSPACE_BINDING(1)
-    PARSE_WORKSPACE_BINDING(2)
-    PARSE_WORKSPACE_BINDING(3)
-    PARSE_WORKSPACE_BINDING(4)
-    PARSE_WORKSPACE_BINDING(5)
-    PARSE_WORKSPACE_BINDING(6)
-    PARSE_WORKSPACE_BINDING(7)
-    PARSE_WORKSPACE_BINDING(8)
-    PARSE_WORKSPACE_BINDING(9)
-    PARSE_WORKSPACE_BINDING(alternate)
-    PARSE_WORKSPACE_BINDING(current)
-    PARSE_WORKSPACE_BINDING(next)
-    PARSE_WORKSPACE_BINDING(prev)
-#undef PARSE_WORKSPACE_BINDING
-  } else if (!strcmp(str, "workspace-switch-to-sheet-next-inhabited")) {
-    *action = hikari_server_switch_to_next_inhabited_sheet;
-    *arg = NULL;
-  } else if (!strcmp(str, "workspace-switch-to-sheet-prev-inhabited")) {
-    *action = hikari_server_switch_to_prev_inhabited_sheet;
-    *arg = NULL;
-
-  } else if (!strcmp(str, "sheet-show-invisible")) {
-    *action = hikari_server_show_invisible_sheet_views;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-show-all")) {
-    *action = hikari_server_show_all_sheet_views;
-    *arg = NULL;
-  } else if (!strcmp(str, "sheet-show-group")) {
-    *action = hikari_server_sheet_show_group;
-    *arg = NULL;
-
-  } else if (!strcmp(str, "workspace-clear")) {
-    *action = hikari_server_clear;
-    *arg = NULL;
-  } else if (!strcmp(str, "workspace-show-all")) {
-    *action = hikari_server_show_all;
-    *arg = NULL;
-  } else if (!strcmp(str, "workspace-show-group")) {
-    *action = hikari_server_show_group;
-    *arg = NULL;
-  } else if (!strcmp(str, "workspace-show-invisible")) {
-    *action = hikari_server_show_invisible;
-    *arg = NULL;
-  } else if (!strcmp(str, "workspace-cycle-next")) {
-    *action = hikari_server_cycle_next_workspace;
-    *arg = NULL;
-  } else if (!strcmp(str, "workspace-cycle-prev")) {
-    *action = hikari_server_cycle_prev_workspace;
-    *arg = NULL;
-
-  } else if (!strcmp(str, "layout-cycle-view-next")) {
-    *action = hikari_server_cycle_next_layout_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "layout-cycle-view-prev")) {
-    *action = hikari_server_cycle_prev_layout_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "layout-cycle-view-first")) {
-    *action = hikari_server_cycle_first_layout_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "layout-cycle-view-last")) {
-    *action = hikari_server_cycle_last_layout_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "layout-exchange-view-next")) {
-    *action = hikari_server_exchange_next_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "layout-exchange-view-prev")) {
-    *action = hikari_server_exchange_prev_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "layout-exchange-view-main")) {
-    *action = hikari_server_exchange_main_layout_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "layout-reset")) {
-    *action = hikari_server_reset_sheet_layout;
-    *arg = NULL;
-  } else if (!strcmp(str, "layout-restack-append")) {
-    *action = hikari_server_layout_restack_append;
-    *arg = NULL;
-  } else if (!strcmp(str, "layout-restack-prepend")) {
-    *action = hikari_server_layout_restack_prepend;
-    *arg = NULL;
-
-  } else if (!strcmp(str, "mode-enter-group-assign")) {
-    *action = hikari_server_enter_group_assign_mode;
-    *arg = NULL;
-  } else if (!strcmp(str, "mode-enter-input-grab")) {
-    *action = hikari_server_enter_input_grab_mode;
-    *arg = NULL;
-  } else if (!strcmp(str, "mode-enter-mark-assign")) {
-    *action = hikari_server_enter_mark_assign_mode;
-    *arg = NULL;
-  } else if (!strcmp(str, "mode-enter-mark-select")) {
-    *action = hikari_server_enter_mark_select_mode;
-    *arg = NULL;
-  } else if (!strcmp(str, "mode-enter-mark-switch-select")) {
-    *action = hikari_server_enter_mark_select_switch_mode;
-    *arg = NULL;
-  } else if (!strcmp(str, "mode-enter-move")) {
-    *action = hikari_server_enter_move_mode;
-    *arg = NULL;
-  } else if (!strcmp(str, "mode-enter-resize")) {
-    *action = hikari_server_enter_resize_mode;
-    *arg = NULL;
-  } else if (!strcmp(str, "mode-enter-sheet-assign")) {
-    *action = hikari_server_enter_sheet_assign_mode;
-    *arg = NULL;
-  } else if (!strcmp(str, "mode-enter-layout")) {
-    *action = hikari_server_enter_layout_select_mode;
-    *arg = NULL;
-
-  } else if (!strcmp(str, "group-only")) {
-    *action = hikari_server_only_group;
-    *arg = NULL;
-  } else if (!strcmp(str, "group-hide")) {
-    *action = hikari_server_hide_group;
-    *arg = NULL;
-  } else if (!strcmp(str, "group-raise")) {
-    *action = hikari_server_raise_group;
-    *arg = NULL;
-  } else if (!strcmp(str, "group-lower")) {
-    *action = hikari_server_lower_group;
-    *arg = NULL;
-  } else if (!strcmp(str, "group-cycle-next")) {
-    *action = hikari_server_cycle_next_group;
-    *arg = NULL;
-  } else if (!strcmp(str, "group-cycle-prev")) {
-    *action = hikari_server_cycle_prev_group;
-    *arg = NULL;
-  } else if (!strcmp(str, "group-cycle-view-next")) {
-    *action = hikari_server_cycle_next_group_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "group-cycle-view-prev")) {
-    *action = hikari_server_cycle_prev_group_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "group-cycle-view-first")) {
-    *action = hikari_server_cycle_first_group_view;
-    *arg = NULL;
-  } else if (!strcmp(str, "group-cycle-view-last")) {
-    *action = hikari_server_cycle_last_group_view;
-    *arg = NULL;
-
-#define PARSE_LAYOUT_BINDING(reg)                                              \
-  }                                                                            \
-  else if (!strcmp(str, "layout-apply-" #reg))                                 \
-  {                                                                            \
-    *action = hikari_server_layout_sheet;                                      \
-    *arg = (void *)(intptr_t) #reg[0];
-
-    PARSE_LAYOUT_BINDING(a)
-    PARSE_LAYOUT_BINDING(b)
-    PARSE_LAYOUT_BINDING(c)
-    PARSE_LAYOUT_BINDING(d)
-    PARSE_LAYOUT_BINDING(e)
-    PARSE_LAYOUT_BINDING(f)
-    PARSE_LAYOUT_BINDING(g)
-    PARSE_LAYOUT_BINDING(h)
-    PARSE_LAYOUT_BINDING(i)
-    PARSE_LAYOUT_BINDING(j)
-    PARSE_LAYOUT_BINDING(k)
-    PARSE_LAYOUT_BINDING(l)
-    PARSE_LAYOUT_BINDING(m)
-    PARSE_LAYOUT_BINDING(n)
-    PARSE_LAYOUT_BINDING(o)
-    PARSE_LAYOUT_BINDING(p)
-    PARSE_LAYOUT_BINDING(q)
-    PARSE_LAYOUT_BINDING(r)
-    PARSE_LAYOUT_BINDING(s)
-    PARSE_LAYOUT_BINDING(t)
-    PARSE_LAYOUT_BINDING(u)
-    PARSE_LAYOUT_BINDING(v)
-    PARSE_LAYOUT_BINDING(w)
-    PARSE_LAYOUT_BINDING(x)
-    PARSE_LAYOUT_BINDING(y)
-    PARSE_LAYOUT_BINDING(z)
-#undef PARSE_LAYOUT_BINDING
-
-#define PARSE_MARK_BINDING(mark)                                               \
-  }                                                                            \
-  else if (!strcmp(str, "mark-show-" #mark))                                   \
-  {                                                                            \
-    *action = hikari_server_show_mark;                                         \
-    *arg = HIKARI_MARK_##mark;                                                 \
-  }                                                                            \
-  else if (!strcmp(str, "mark-switch-to-" #mark))                              \
-  {                                                                            \
-    *action = hikari_server_switch_to_mark;                                    \
-    *arg = HIKARI_MARK_##mark;
-
-    PARSE_MARK_BINDING(a)
-    PARSE_MARK_BINDING(b)
-    PARSE_MARK_BINDING(c)
-    PARSE_MARK_BINDING(d)
-    PARSE_MARK_BINDING(e)
-    PARSE_MARK_BINDING(f)
-    PARSE_MARK_BINDING(g)
-    PARSE_MARK_BINDING(h)
-    PARSE_MARK_BINDING(i)
-    PARSE_MARK_BINDING(j)
-    PARSE_MARK_BINDING(k)
-    PARSE_MARK_BINDING(l)
-    PARSE_MARK_BINDING(m)
-    PARSE_MARK_BINDING(n)
-    PARSE_MARK_BINDING(o)
-    PARSE_MARK_BINDING(p)
-    PARSE_MARK_BINDING(q)
-    PARSE_MARK_BINDING(r)
-    PARSE_MARK_BINDING(s)
-    PARSE_MARK_BINDING(t)
-    PARSE_MARK_BINDING(u)
-    PARSE_MARK_BINDING(v)
-    PARSE_MARK_BINDING(w)
-    PARSE_MARK_BINDING(x)
-    PARSE_MARK_BINDING(y)
-    PARSE_MARK_BINDING(z)
-#undef PARSE_MARK_BINDING
-
-#define PARSE_VT_BINDING(n)                                                    \
-  }                                                                            \
-  else if (!strcmp(str, "vt-switch-to-" #n))                                   \
-  {                                                                            \
-    *action = hikari_server_session_change_vt;                                 \
-    *arg = (void *)(intptr_t)n;
-
-    PARSE_VT_BINDING(1)
-    PARSE_VT_BINDING(2)
-    PARSE_VT_BINDING(3)
-    PARSE_VT_BINDING(4)
-    PARSE_VT_BINDING(5)
-    PARSE_VT_BINDING(6)
-    PARSE_VT_BINDING(7)
-    PARSE_VT_BINDING(8)
-    PARSE_VT_BINDING(9)
-#undef PARSE_VT_BINDING
-
-  } else {
-    if (!strncmp(str, "action-", 7)) {
-      char *command = NULL;
-      const char *action_name = &str[7];
-      if ((command = lookup_action(configuration, action_name)) == NULL) {
-        fprintf(stderr,
-            "configuration error: unknown action \"%s\"\n",
-            action_name);
-        goto done;
-      } else {
-        *action = hikari_server_execute_command;
-        *arg = command;
-      }
-    } else {
-      fprintf(stderr, "configuration error: unknown action \"%s\"\n", str);
-      goto done;
-    }
-  }
-
-  success = true;
-
-done:
-  return success;
-}
-
-typedef bool (*binding_parser_t)(
-    struct xkb_state *xkb_state, const char *str, uint32_t *keysym);
-
-static bool
-parse_input_bindings(binding_parser_t binding_parser,
-    struct xkb_state *xkb_state,
-    struct hikari_configuration *configuration,
-    struct hikari_modifier_bindings *modifier_bindings,
-    const ucl_object_t *bindings_keysym)
-{
-  int n[256] = { 0 };
-  uint8_t mask = 0;
   const ucl_object_t *cur;
-  bool success = false;
+  struct hikari_binding_config *binding_config;
 
-  ucl_object_iter_t it = ucl_object_iterate_new(bindings_keysym);
+  ucl_object_iter_t it = ucl_object_iterate_new(bindings_obj);
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
-    if (!parse_modifier_mask(key, &mask, NULL)) {
+    binding_config = hikari_malloc(sizeof(struct hikari_binding_config));
+    wl_list_insert(
+        &configuration->keyboard_binding_configs, &binding_config->link);
+
+    if (!hikari_binding_config_key_parse(&binding_config->key, key)) {
       goto done;
     }
 
-    n[mask]++;
-  }
-
-  ucl_object_iterate_free(it);
-
-  for (int i = 0; i < 256; i++) {
-    if (n[i] > 0) {
-      modifier_bindings[i].nbindings = n[i];
-      modifier_bindings[i].bindings =
-          hikari_calloc(n[i], sizeof(struct hikari_keybinding));
-    }
-
-    n[i] = 0;
-  }
-
-  it = ucl_object_iterate_new(bindings_keysym);
-  while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
-    const char *key = ucl_object_key(cur);
-    ucl_type_t type = ucl_object_type(cur);
-
-    if (!parse_modifier_mask(key, &mask, NULL)) {
-      goto done;
-    }
-
-    struct hikari_action *action = hikari_malloc(sizeof(struct hikari_action));
+    struct hikari_action *action = &binding_config->action;
     hikari_action_init(action);
 
-    struct hikari_keybinding *binding;
-    if (type == UCL_OBJECT) {
-      const ucl_object_t *begin_obj = ucl_object_lookup(cur, "begin");
-      const ucl_object_t *end_obj = ucl_object_lookup(cur, "end");
-
-      binding = &modifier_bindings[mask].bindings[n[mask]];
-      binding->action = action;
-
-      struct hikari_event_action *begin = &binding->action->begin;
-      struct hikari_event_action *end = &binding->action->end;
-
-      if (!binding_parser(xkb_state, key, &binding->keycode)) {
-        goto done;
-      }
-
-      if (begin_obj != NULL) {
-        if (!parse_binding(
-                configuration, begin_obj, &begin->action, &begin->arg)) {
-          goto done;
-        }
-      }
-
-      if (end_obj != NULL) {
-        if (!parse_binding(configuration, end_obj, &end->action, &end->arg)) {
-          goto done;
-        }
-      }
-
-      n[mask]++;
-    } else if (type == UCL_STRING) {
-      binding = &modifier_bindings[mask].bindings[n[mask]];
-      binding->action = action;
-
-      if (!binding_parser(xkb_state, key, &binding->keycode)) {
-        goto done;
-      }
-
-      struct hikari_event_action *event_action = &binding->action->begin;
-
-      if (!parse_binding(
-              configuration, cur, &event_action->action, &event_action->arg)) {
-        goto done;
-      }
-
-      n[mask]++;
+    if (!hikari_action_parse(action, &configuration->action_configs, cur)) {
+      goto done;
     }
   }
 
   success = true;
 
 done:
-  ucl_object_iterate_free(it);
+
+  return success;
+}
+
+static bool
+parse_mouse_bindings(struct hikari_configuration *configuration,
+    const ucl_object_t *bindings_obj)
+{
+  bool success = false;
+  const ucl_object_t *cur;
+  struct hikari_binding_config *binding_config;
+
+  ucl_object_iter_t it = ucl_object_iterate_new(bindings_obj);
+  while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
+    const char *key = ucl_object_key(cur);
+
+    binding_config = hikari_malloc(sizeof(struct hikari_binding_config));
+    wl_list_insert(
+        &configuration->mouse_binding_configs, &binding_config->link);
+
+    if (!hikari_binding_config_button_parse(&binding_config->key, key)) {
+      goto done;
+    }
+
+    struct hikari_action *action = &binding_config->action;
+    hikari_action_init(action);
+
+    if (!hikari_action_parse(action, &configuration->action_configs, cur)) {
+      goto done;
+    }
+  }
+
+  success = true;
+
+done:
 
   return success;
 }
@@ -1707,28 +1120,16 @@ parse_bindings(struct hikari_configuration *configuration,
   bool success = false;
   const ucl_object_t *cur;
 
-  struct xkb_keymap *keymap = hikari_load_keymap();
-  struct xkb_state *state = xkb_state_new(keymap);
-  xkb_keymap_unref(keymap);
-
   ucl_object_iter_t it = ucl_object_iterate_new(bindings_obj);
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
     if (!strcmp(key, "keyboard")) {
-      if (!parse_input_bindings(parse_key,
-              state,
-              configuration,
-              configuration->bindings.keyboard,
-              cur)) {
+      if (!parse_keyboard_bindings(configuration, cur)) {
         goto done;
       }
     } else if (!strcmp(key, "mouse")) {
-      if (!parse_input_bindings(parse_pointer,
-              state,
-              configuration,
-              configuration->bindings.mouse,
-              cur)) {
+      if (!parse_mouse_bindings(configuration, cur)) {
         goto done;
       }
     } else {
@@ -1744,7 +1145,6 @@ parse_bindings(struct hikari_configuration *configuration,
 done:
   ucl_object_iterate_free(it);
 
-  xkb_state_unref(state);
   return success;
 }
 
@@ -2372,6 +1772,9 @@ hikari_configuration_reload(char *config_path)
       }
     }
 
+    hikari_cursor_configure_bindings(
+        &hikari_server.cursor, &configuration->mouse_binding_configs);
+
     struct hikari_workspace *workspace;
     wl_list_for_each (workspace, &hikari_server.workspaces, server_workspaces) {
       struct hikari_sheet *sheet;
@@ -2382,6 +1785,12 @@ hikari_configuration_reload(char *config_path)
           hikari_view_refresh_geometry(view, view->current_geometry);
         }
       }
+    }
+
+    struct hikari_keyboard *keyboard;
+    wl_list_for_each (keyboard, &hikari_server.keyboards, server_keyboards) {
+      hikari_keyboard_configure_bindings(
+          keyboard, &configuration->keyboard_binding_configs);
     }
 
     struct hikari_output *output;
@@ -2430,6 +1839,8 @@ hikari_configuration_init(struct hikari_configuration *configuration)
   wl_list_init(&configuration->pointer_configs);
   wl_list_init(&configuration->layout_configs);
   wl_list_init(&configuration->action_configs);
+  wl_list_init(&configuration->keyboard_binding_configs);
+  wl_list_init(&configuration->mouse_binding_configs);
 
   hikari_color_convert(configuration->clear, 0x282C34);
   hikari_color_convert(configuration->foreground, 0x000000);
@@ -2443,8 +1854,6 @@ hikari_configuration_init(struct hikari_configuration *configuration)
 
   hikari_font_init(&configuration->font, "monospace 10");
 
-  hikari_bindings_init(&configuration->bindings);
-
   configuration->border = 1;
   configuration->gap = 5;
   configuration->step = 100;
@@ -2457,8 +1866,6 @@ hikari_configuration_init(struct hikari_configuration *configuration)
 void
 hikari_configuration_fini(struct hikari_configuration *configuration)
 {
-  hikari_bindings_fini(&configuration->bindings);
-
   struct hikari_view_config *view_config, *view_config_temp;
   wl_list_for_each_safe (
       view_config, view_config_temp, &configuration->view_configs, link) {
@@ -2486,6 +1893,22 @@ hikari_configuration_fini(struct hikari_configuration *configuration)
 
     hikari_pointer_config_fini(pointer_config);
     hikari_free(pointer_config);
+  }
+
+  struct hikari_binding_config *binding_config, *binding_config_temp;
+  wl_list_for_each_safe (binding_config,
+      binding_config_temp,
+      &configuration->keyboard_binding_configs,
+      link) {
+    wl_list_remove(&binding_config->link);
+    hikari_free(binding_config);
+  }
+  wl_list_for_each_safe (binding_config,
+      binding_config_temp,
+      &configuration->mouse_binding_configs,
+      link) {
+    wl_list_remove(&binding_config->link);
+    hikari_free(binding_config);
   }
 
   struct hikari_layout_config *layout_config, *layout_config_temp;

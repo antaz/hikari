@@ -5,13 +5,12 @@
 #include <stdint.h>
 #include <wayland-util.h>
 
-#include <hikari/bindings.h>
 #include <hikari/exec.h>
 #include <hikari/font.h>
 #include <hikari/mark.h>
 
 struct hikari_group;
-struct hikari_keybinding;
+struct hikari_binding;
 struct hikari_sheet;
 struct hikari_view;
 struct hikari_pointer_config;
@@ -33,8 +32,6 @@ struct hikari_configuration {
   int gap;
   int step;
 
-  struct hikari_bindings bindings;
-
   struct hikari_exec execs[HIKARI_NR_OF_EXECS];
 
   struct wl_list view_configs;
@@ -42,6 +39,8 @@ struct hikari_configuration {
   struct wl_list pointer_configs;
   struct wl_list layout_configs;
   struct wl_list action_configs;
+  struct wl_list keyboard_binding_configs;
+  struct wl_list mouse_binding_configs;
 };
 
 extern struct hikari_configuration *hikari_configuration;

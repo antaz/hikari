@@ -3,18 +3,23 @@
 
 #include <wayland-server-core.h>
 #include <wayland-util.h>
+#include <xkbcommon/xkbcommon.h>
 
 #include <wlr/types/wlr_input_device.h>
 
-struct hikari_mark;
+#include <hikari/binding_group.h>
 
 struct hikari_keyboard {
-  struct wl_list link;
+  struct wl_list server_keyboards;
   struct wlr_input_device *device;
 
   struct wl_listener modifiers;
   struct wl_listener key;
   struct wl_listener destroy;
+
+  struct xkb_keymap *keymap;
+
+  struct hikari_binding_group bindings[HIKARI_BINDING_GROUP_MASK];
 };
 
 void
@@ -23,6 +28,10 @@ hikari_keyboard_init(
 
 void
 hikari_keyboard_fini(struct hikari_keyboard *keyboard);
+
+void
+hikari_keyboard_configure_bindings(
+    struct hikari_keyboard *keyboard, struct wl_list *bindings);
 
 struct xkb_keymap *
 hikari_load_keymap();

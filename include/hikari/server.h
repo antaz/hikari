@@ -386,4 +386,9 @@ hikari_server_show_mark(void *arg);
 void
 hikari_server_switch_to_mark(void *arg);
 
+#ifndef NDEBUG
+void
+hikari_server_toggle_damage_tracking(void *arg);
+#endif
+
 #endif

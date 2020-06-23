@@ -5,6 +5,9 @@
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_xcursor_manager.h>
 
+#include <hikari/binding.h>
+#include <hikari/binding_config.h>
+#include <hikari/memory.h>
 #include <hikari/output.h>
 #include <hikari/server.h>
 
@@ -29,17 +32,69 @@ request_set_cursor_handler(struct wl_listener *listener, void *data);
 static void
 surface_destroy_handler(struct wl_listener *listener, void *data);
 
+static void
+configure_bindings(struct hikari_cursor *cursor, struct wl_list *bindings)
+{
+  int nr[256] = { 0 };
+  struct hikari_binding_config *binding_config;
+  wl_list_for_each (binding_config, bindings, link) {
+    nr[binding_config->key.modifiers]++;
+  }
+
+  for (int mask = 0; mask < 256; mask++) {
+    cursor->bindings[mask].nbindings = nr[mask];
+    if (nr[mask] != 0) {
+      cursor->bindings[mask].bindings =
+          hikari_calloc(nr[mask], sizeof(struct hikari_binding));
+    } else {
+      cursor->bindings[mask].bindings = NULL;
+    }
+
+    nr[mask] = 0;
+  }
+
+  wl_list_for_each (binding_config, bindings, link) {
+    uint8_t mask = binding_config->key.modifiers;
+    struct hikari_binding *binding = &cursor->bindings[mask].bindings[nr[mask]];
+
+    binding->action = &binding_config->action;
+
+    switch (binding_config->key.type) {
+      case HIKARI_ACTION_BINDING_KEY_KEYCODE:
+        binding->keycode = binding_config->key.value.keycode;
+        break;
+
+      case HIKARI_ACTION_BINDING_KEY_KEYSYM:
+        assert(false);
+        break;
+    }
+
+    nr[mask]++;
+  }
+}
+
 void
 hikari_cursor_init(struct hikari_cursor *cursor, struct wlr_cursor *wlr_cursor)
 {
   cursor->wlr_cursor = wlr_cursor;
 
   wl_list_init(&cursor->surface_destroy.link);
+  hikari_binding_group_init(cursor->bindings);
+}
+
+void
+hikari_cursor_configure_bindings(
+    struct hikari_cursor *cursor, struct wl_list *bindings)
+{
+  hikari_binding_group_fini(cursor->bindings);
+  hikari_binding_group_init(cursor->bindings);
+  configure_bindings(cursor, bindings);
 }
 
 void
 hikari_cursor_fini(struct hikari_cursor *cursor)
 {
+  hikari_binding_group_fini(cursor->bindings);
   hikari_cursor_deactivate(cursor);
 }
 

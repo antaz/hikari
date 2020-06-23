@@ -84,6 +84,9 @@ add_keyboard(struct hikari_server *server, struct wlr_input_device *device)
       hikari_malloc(sizeof(struct hikari_keyboard));
 
   hikari_keyboard_init(keyboard, device);
+
+  hikari_keyboard_configure_bindings(
+      keyboard, &hikari_configuration->keyboard_binding_configs);
 }
 
 static void
@@ -451,6 +454,9 @@ setup_cursor(struct hikari_server *server)
   wlr_xcursor_manager_load(server->cursor_mgr, 1);
 
   hikari_cursor_init(&hikari_server.cursor, wlr_cursor);
+
+  hikari_cursor_configure_bindings(
+      &hikari_server.cursor, &hikari_configuration->mouse_binding_configs);
 }
 
 static void
@@ -1432,3 +1438,16 @@ hikari_server_increase_view_size_left(void *arg)
   const int step = hikari_configuration->step;
   move_resize_view(-step, 0, step, 0);
 }
+
+#ifndef NDEBUG
+void
+hikari_server_toggle_damage_tracking(void *arg)
+{
+  hikari_server.track_damage = !hikari_server.track_damage;
+
+  struct hikari_output *output = NULL;
+  wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
+    hikari_output_damage_whole(output);
+  }
+}
+#endif
