@@ -85,6 +85,7 @@ repository, breaking changes might be encountered. These are documented in the
 * glib
 * evdev-proto
 * epoll-shim (FreeBSD)
+* XWayland (optional, runtime dependency)
 
 ### Compiling and Installing
 
