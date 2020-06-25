@@ -12,6 +12,13 @@
 
 #define HIKARI_OPTION_FUNS(name, option, type)                                 \
                                                                                \
+  static inline void hikari_##name##_config_init_##option(                     \
+      struct hikari_##name##_config *name##_config, type value)                \
+  {                                                                            \
+    name##_config->option.configured = false;                                  \
+    name##_config->option.value = value;                                       \
+  }                                                                            \
+                                                                               \
   static inline void hikari_##name##_config_set_##option(                      \
       struct hikari_##name##_config *name##_config, type value)                \
   {                                                                            \
