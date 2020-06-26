@@ -8,6 +8,7 @@
 #include <wlr/types/wlr_input_device.h>
 
 #include <hikari/binding_group.h>
+#include <hikari/keyboard_config.h>
 
 struct hikari_keyboard {
   struct wl_list server_keyboards;
@@ -30,11 +31,12 @@ void
 hikari_keyboard_fini(struct hikari_keyboard *keyboard);
 
 void
+hikari_keyboard_configure(struct hikari_keyboard *keyboard,
+    struct hikari_keyboard_config *keyboard_config);
+
+void
 hikari_keyboard_configure_bindings(
     struct hikari_keyboard *keyboard, struct wl_list *bindings);
-
-struct xkb_keymap *
-hikari_load_keymap();
 
 typedef void (*hikari_keysym_iterator)(
     struct hikari_keyboard *keyboard, uint32_t keycode, xkb_keysym_t sym);

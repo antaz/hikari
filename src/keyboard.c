@@ -6,6 +6,7 @@
 
 #include <hikari/binding.h>
 #include <hikari/binding_config.h>
+#include <hikari/keyboard_config.h>
 #include <hikari/memory.h>
 #include <hikari/mode.h>
 #include <hikari/server.h>
@@ -55,31 +56,6 @@ destroy_handler(struct wl_listener *listener, void *data)
 
   /* uint32_t caps = WL_SEAT_CAPABILITY_POINTER; */
   /* wlr_seat_set_capabilities(hikari_server.seat, caps); */
-}
-
-static const char *hikari_evdev_xkb_default_rules = "evdev";
-
-struct xkb_keymap *
-hikari_load_keymap()
-{
-  struct xkb_rule_names rules = { 0 };
-
-  rules.rules = getenv("XKB_DEFAULT_RULES");
-  rules.model = getenv("XKB_DEFAULT_MODEL");
-  rules.layout = getenv("XKB_DEFAULT_LAYOUT");
-  rules.variant = getenv("XKB_DEFAULT_VARIANT");
-  rules.options = getenv("XKB_DEFAULT_OPTIONS");
-
-  if (rules.rules == NULL) {
-    rules.rules = hikari_evdev_xkb_default_rules;
-  }
-
-  struct xkb_context *context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
-  struct xkb_keymap *keymap =
-      xkb_map_new_from_names(context, &rules, XKB_KEYMAP_COMPILE_NO_FLAGS);
-  xkb_context_unref(context);
-
-  return keymap;
 }
 
 struct keycode_matcher_state {
@@ -161,10 +137,7 @@ hikari_keyboard_init(
     struct hikari_keyboard *keyboard, struct wlr_input_device *device)
 {
   keyboard->device = device;
-
-  keyboard->keymap = hikari_load_keymap();
-  wlr_keyboard_set_keymap(device->keyboard, keyboard->keymap);
-  wlr_keyboard_set_repeat_info(device->keyboard, 25, 600);
+  keyboard->keymap = NULL;
 
   keyboard->modifiers.notify = modifiers_handler;
   wl_signal_add(&device->keyboard->events.modifiers, &keyboard->modifiers);
@@ -195,12 +168,41 @@ hikari_keyboard_fini(struct hikari_keyboard *keyboard)
   hikari_binding_group_fini(keyboard->bindings);
 }
 
+static struct xkb_keymap *
+load_keymap(struct hikari_keyboard_config *keyboard_config)
+{
+  struct xkb_keymap *keymap = NULL;
+
+  switch (keyboard_config->xkb.type) {
+    case HIKARI_XKB_TYPE_RULES:
+      assert(false);
+    case HIKARI_XKB_TYPE_KEYMAP:
+      keymap = xkb_keymap_ref(keyboard_config->xkb.value.keymap);
+      break;
+  }
+
+  return keymap;
+}
+
+void
+hikari_keyboard_configure(struct hikari_keyboard *keyboard,
+    struct hikari_keyboard_config *keyboard_config)
+{
+  keyboard->keymap = load_keymap(keyboard_config);
+
+  assert(keyboard->keymap != NULL);
+
+  wlr_keyboard_set_keymap(keyboard->device->keyboard, keyboard->keymap);
+  wlr_keyboard_set_repeat_info(keyboard->device->keyboard, 25, 600);
+}
+
 void
 hikari_keyboard_configure_bindings(
     struct hikari_keyboard *keyboard, struct wl_list *bindings)
 {
   hikari_binding_group_fini(keyboard->bindings);
   hikari_binding_group_init(keyboard->bindings);
+
   configure_bindings(keyboard, bindings);
 }
 

@@ -17,6 +17,7 @@
 #include <hikari/exec.h>
 #include <hikari/geometry.h>
 #include <hikari/keyboard.h>
+#include <hikari/keyboard_config.h>
 #include <hikari/layout.h>
 #include <hikari/layout_config.h>
 #include <hikari/mark.h>
@@ -1079,6 +1080,27 @@ done:
 }
 
 static bool
+finalize_keyboard_configs(struct hikari_configuration *configuration)
+{
+  struct hikari_keyboard_config *keyboard_config;
+
+  if (wl_list_empty(&configuration->keyboard_configs)) {
+    keyboard_config = hikari_malloc(sizeof(struct hikari_keyboard_config));
+    hikari_keyboard_config_default(keyboard_config);
+
+    wl_list_insert(&configuration->keyboard_configs, &keyboard_config->link);
+  }
+
+  wl_list_for_each (keyboard_config, &configuration->keyboard_configs, link) {
+    if (!hikari_keyboard_config_compile_keymap(keyboard_config)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+static bool
 parse_mouse_bindings(struct hikari_configuration *configuration,
     const ucl_object_t *bindings_obj)
 {
@@ -1354,6 +1376,51 @@ done:
 }
 
 static bool
+parse_keyboards(struct hikari_configuration *configuration,
+    const ucl_object_t *keyboards_obj)
+{
+  bool success = false;
+  const ucl_object_t *cur;
+  struct hikari_keyboard_config *keyboard_config;
+
+  ucl_object_iter_t it = ucl_object_iterate_new(keyboards_obj);
+  while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
+    const char *keyboard_name = ucl_object_key(cur);
+
+    keyboard_config = hikari_malloc(sizeof(struct hikari_keyboard_config));
+    hikari_keyboard_config_init(keyboard_config, keyboard_name);
+
+    wl_list_insert(&configuration->keyboard_configs, &keyboard_config->link);
+
+    if (!hikari_keyboard_config_parse(keyboard_config, cur)) {
+      goto done;
+    }
+  }
+
+  struct hikari_keyboard_config *default_config =
+      hikari_configuration_resolve_keyboard_config(configuration, "*");
+  if (default_config == NULL) {
+    default_config = hikari_malloc(sizeof(struct hikari_keyboard_config));
+    hikari_keyboard_config_default(default_config);
+
+    wl_list_insert(&configuration->keyboard_configs, &default_config->link);
+  }
+
+  wl_list_for_each (keyboard_config, &configuration->keyboard_configs, link) {
+    if (!!strcmp(keyboard_config->keyboard_name, "*")) {
+      hikari_keyboard_config_merge(keyboard_config, default_config);
+    }
+  }
+
+  success = true;
+
+done:
+  ucl_object_iterate_free(it);
+
+  return success;
+}
+
+static bool
 parse_inputs(
     struct hikari_configuration *configuration, const ucl_object_t *inputs_obj)
 {
@@ -1366,6 +1433,10 @@ parse_inputs(
 
     if (!strcmp(key, "pointers")) {
       if (!parse_pointers(configuration, cur)) {
+        goto done;
+      }
+    } else if (!strcmp(key, "keyboards")) {
+      if (!parse_keyboards(configuration, cur)) {
         goto done;
       }
     } else {
@@ -1731,6 +1802,10 @@ hikari_configuration_load(
     }
   }
 
+  if (!finalize_keyboard_configs(configuration)) {
+    goto done;
+  }
+
   success = true;
 
 done:
@@ -1789,6 +1864,13 @@ hikari_configuration_reload(char *config_path)
 
     struct hikari_keyboard *keyboard;
     wl_list_for_each (keyboard, &hikari_server.keyboards, server_keyboards) {
+      struct hikari_keyboard_config *keyboard_config =
+          hikari_configuration_resolve_keyboard_config(
+              hikari_configuration, keyboard->device->name);
+
+      assert(keyboard_config != NULL);
+      hikari_keyboard_configure(keyboard, keyboard_config);
+
       hikari_keyboard_configure_bindings(
           keyboard, &configuration->keyboard_binding_configs);
     }
@@ -1837,6 +1919,7 @@ hikari_configuration_init(struct hikari_configuration *configuration)
   wl_list_init(&configuration->view_configs);
   wl_list_init(&configuration->output_configs);
   wl_list_init(&configuration->pointer_configs);
+  wl_list_init(&configuration->keyboard_configs);
   wl_list_init(&configuration->layout_configs);
   wl_list_init(&configuration->action_configs);
   wl_list_init(&configuration->keyboard_binding_configs);
@@ -1893,6 +1976,17 @@ hikari_configuration_fini(struct hikari_configuration *configuration)
 
     hikari_pointer_config_fini(pointer_config);
     hikari_free(pointer_config);
+  }
+
+  struct hikari_keyboard_config *keyboard_config, *keyboard_config_temp;
+  wl_list_for_each_safe (keyboard_config,
+      keyboard_config_temp,
+      &configuration->keyboard_configs,
+      link) {
+    wl_list_remove(&keyboard_config->link);
+
+    hikari_keyboard_config_fini(keyboard_config);
+    hikari_free(keyboard_config);
   }
 
   struct hikari_binding_config *binding_config, *binding_config_temp;
@@ -1968,6 +2062,26 @@ hikari_configuration_resolve_pointer_config(
   wl_list_for_each (pointer_config, &configuration->pointer_configs, link) {
     if (!strcmp(pointer_config->name, "*")) {
       return pointer_config;
+    }
+  }
+
+  return NULL;
+}
+
+struct hikari_keyboard_config *
+hikari_configuration_resolve_keyboard_config(
+    struct hikari_configuration *configuration, const char *keyboard_name)
+{
+  struct hikari_keyboard_config *keyboard_config;
+  wl_list_for_each (keyboard_config, &configuration->keyboard_configs, link) {
+    if (!strcmp(keyboard_config->keyboard_name, keyboard_name)) {
+      return keyboard_config;
+    }
+  }
+
+  wl_list_for_each (keyboard_config, &configuration->keyboard_configs, link) {
+    if (!strcmp(keyboard_config->keyboard_name, "*")) {
+      return keyboard_config;
     }
   }
 

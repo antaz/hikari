@@ -37,6 +37,7 @@ struct hikari_configuration {
   struct wl_list view_configs;
   struct wl_list output_configs;
   struct wl_list pointer_configs;
+  struct wl_list keyboard_configs;
   struct wl_list layout_configs;
   struct wl_list action_configs;
   struct wl_list keyboard_binding_configs;
@@ -69,6 +70,10 @@ hikari_configuration_resolve_output_config(
 struct hikari_pointer_config *
 hikari_configuration_resolve_pointer_config(
     struct hikari_configuration *configuration, const char *pointer_name);
+
+struct hikari_keyboard_config *
+hikari_configuration_resolve_keyboard_config(
+    struct hikari_configuration *configuration, const char *keyboard_name);
 
 struct hikari_split *
 hikari_configuration_lookup_layout(

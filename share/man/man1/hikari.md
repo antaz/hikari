@@ -967,8 +967,54 @@ pseudo pointer override unconfigured values for any other pointer.
 
 Keyboards
 ---------
-Keyboards are configured using *XKB* environment variables. Refer to
+
+`hikari` is using `xkb` to configure its keyboards via the *keyboards* section.
+`xkb` rules can be set independently or via a file using the *xkb* attribute.
+
+To specify rules individually one can use the following options. Refer to
 xkeyboard-config(7) for possible settings.
+
+* **rules**
+
+  Specifies the `xkb` rules. The default value is `evdev`.
+
+* **model**
+
+  Sets the keyboard model.
+
+* **layout**
+
+  Sets the keyboard layout.
+
+* **variant**
+
+  Sets the keyboard variant.
+
+* **options**
+
+  Sets keyboard options.
+
+Configuring the *AT keyboard* input device could look like this.
+
+```
+inputs {
+  keyboards {
+    "*" = {
+      xkb = {
+        layout = "de(nodeadkeys)"
+        options = "caps:escape"
+      }
+    }
+  }
+}
+```
+
+A special name "\*" is used to address all keyboards. Values defined for this
+pseudo keyboard override unconfigured values for any other pointer.
+
+Keyboards can also be configured using *XKB* environment variables. `hikari`
+will automatically fall back to these settings if a keyboard is not explicitly
+configured.
 
 * **XKB\_DEFAULT\_LAYOUT**
 * **XKB\_DEFAULT\_MODEL**

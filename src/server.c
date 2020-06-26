@@ -85,6 +85,13 @@ add_keyboard(struct hikari_server *server, struct wlr_input_device *device)
 
   hikari_keyboard_init(keyboard, device);
 
+  struct hikari_keyboard_config *keyboard_config =
+      hikari_configuration_resolve_keyboard_config(
+          hikari_configuration, device->name);
+
+  assert(keyboard_config != NULL);
+  hikari_keyboard_configure(keyboard, keyboard_config);
+
   hikari_keyboard_configure_bindings(
       keyboard, &hikari_configuration->keyboard_binding_configs);
 }
