@@ -44,14 +44,16 @@ several states.
 
 * **floating**
 
-  *Floating* _views_ can never become part of a layout.
+  *Floating* _views_ can never become part of a layout. The floating state is
+  indicated using a tilde in the sheet indicator.
 
 * **invisible**
 
   When a _view_ is set into *invisible* state it will not be displayed when
   switching to the containing sheet and stay hidden until it is explicitly
   requested to be shown. This can be used to keep long running _views_ from
-  cluttering the workspace. An *invisible* _view_ can never be *tiled*.
+  cluttering the workspace. An *invisible* _view_ can never be *tiled* and are
+  indicated using square brackets in the sheet indicator.
 
 * **maximized** (horizontal, vertical and full)
 
@@ -70,7 +72,9 @@ several states.
 
   *Public* views are also displayed on the lock screen, in this case they will
   never accept input. Views that display sensible information should never be
-  marked as *public*.
+  marked as *public*. The public state is indicated using an exclamation mark in
+  the sheet indicator.
+
 
 Workspace
 ---------
