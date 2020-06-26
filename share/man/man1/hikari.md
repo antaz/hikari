@@ -955,10 +955,14 @@ are available.
 Configuring the *System mouse* input device could look like this.
 
 ```
-"System mouse" = {
-  accel = 1.0
-  scroll-method = on-button-down
-  scroll-button = middle
+inputs {
+  pointers {
+    "System mouse" = {
+      accel = 1.0
+      scroll-method = on-button-down
+      scroll-button = middle
+    }
+  }
 }
 ```
 
