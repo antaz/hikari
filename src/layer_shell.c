@@ -150,6 +150,27 @@ apply_layer_state(struct wlr_box *usable_area,
 }
 
 static void
+apply_state_for_layer(struct hikari_output *output,
+    enum zwlr_layer_shell_v1_layer wlr_layer,
+    struct wlr_box *usable_area)
+{
+  struct hikari_layer *layer;
+
+  wl_list_for_each (layer, &output->layers[wlr_layer], layer_surfaces) {
+    struct wlr_layer_surface_v1 *wlr_layer = layer->surface;
+    struct wlr_layer_surface_v1_state *state = &wlr_layer->current;
+
+    apply_layer_state(usable_area,
+        state->anchor,
+        state->exclusive_zone,
+        state->margin.top,
+        state->margin.right,
+        state->margin.bottom,
+        state->margin.left);
+  }
+}
+
+static void
 calculate_exclusive(struct hikari_output *output)
 {
   assert(output != NULL);
@@ -158,20 +179,9 @@ calculate_exclusive(struct hikari_output *output)
 
   wlr_output_effective_resolution(
       output->wlr_output, &usable_area.width, &usable_area.height);
-  struct hikari_layer *layer;
-  wl_list_for_each (
-      layer, &output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP], layer_surfaces) {
-    struct wlr_layer_surface_v1 *wlr_layer = layer->surface;
-    struct wlr_layer_surface_v1_state *state = &wlr_layer->current;
 
-    apply_layer_state(&usable_area,
-        state->anchor,
-        state->exclusive_zone,
-        state->margin.top,
-        state->margin.right,
-        state->margin.bottom,
-        state->margin.left);
-  }
+  apply_state_for_layer(output, ZWLR_LAYER_SHELL_V1_LAYER_TOP, &usable_area);
+  apply_state_for_layer(output, ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM, &usable_area);
 
   output->usable_area = usable_area;
 }
