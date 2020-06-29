@@ -216,6 +216,7 @@ modifier_handler(struct wl_listener *listener, void *data)
     if (hikari_server_is_cycling() && focus_view != NULL) {
       hikari_view_raise(focus_view);
       hikari_view_center_cursor(focus_view);
+      hikari_server_cursor_focus();
     }
 
     hikari_server_unset_cycling();

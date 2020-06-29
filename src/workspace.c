@@ -392,6 +392,8 @@ hikari_workspace_focus_view(
   }
 
   wlr_seat_keyboard_end_grab(seat);
+  wlr_seat_keyboard_clear_focus(seat);
+  wlr_seat_pointer_clear_focus(seat);
 
   if (view != NULL) {
     assert(!hikari_view_is_hidden(view));
@@ -420,9 +422,6 @@ hikari_workspace_focus_view(
         view,
         hikari_configuration->indicator_selected);
   } else {
-    wlr_seat_keyboard_clear_focus(seat);
-    wlr_seat_pointer_clear_focus(seat);
-
     hikari_cursor_reset_image(&hikari_server.cursor);
   }
 
