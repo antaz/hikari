@@ -273,7 +273,7 @@ Mode actions
 
   Redirect all input events directly to the focused view without the compositor
   interfering. Focus will not leave this view anymore until the mode exits or
-  the view closes. To exit this mode reissue the some key binding that started
+  the view closes. To exit this mode, reissue the same key binding that started
   this mode.
 
 * **mode-enter-layout**
