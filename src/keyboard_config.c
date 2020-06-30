@@ -139,6 +139,27 @@ hikari_keyboard_config_parse(struct hikari_keyboard_config *keyboard_config,
             "configuration error: expected string or object for \"xkb\"\n");
         goto done;
       }
+    } else if (!strcmp("repeat-rate", key)) {
+      int64_t repeat_rate;
+
+      if (!ucl_object_toint_safe(cur, &repeat_rate) || repeat_rate < 0) {
+        fprintf(stderr,
+            "configuration error: expected positive integer \"repeat-rate\"\n");
+        goto done;
+      }
+
+      hikari_keyboard_config_set_repeat_rate(keyboard_config, repeat_rate);
+    } else if (!strcmp("repeat-delay", key)) {
+      int64_t repeat_delay;
+
+      if (!ucl_object_toint_safe(cur, &repeat_delay) || repeat_delay < 0) {
+        fprintf(stderr,
+            "configuration error: expected positive integer "
+            "\"repeat-delay\"\n");
+        goto done;
+      }
+
+      hikari_keyboard_config_set_repeat_delay(keyboard_config, repeat_delay);
     } else {
       fprintf(stderr,
           "configuration error: invalid \"keyboard\" key \"%s\"\n",
@@ -265,6 +286,9 @@ void
 hikari_keyboard_config_merge(struct hikari_keyboard_config *keyboard_config,
     struct hikari_keyboard_config *default_config)
 {
+  hikari_keyboard_config_merge_repeat_rate(keyboard_config, default_config);
+  hikari_keyboard_config_merge_repeat_delay(keyboard_config, default_config);
+
   if (default_config->xkb.type == HIKARI_XKB_TYPE_KEYMAP) {
     if (keyboard_config->xkb.type == HIKARI_XKB_TYPE_RULES) {
       if (!has_set_options(&keyboard_config->xkb.value.rules)) {

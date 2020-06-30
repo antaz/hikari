@@ -1002,6 +1002,19 @@ xkeyboard-config(7) for possible settings.
 
   Sets keyboard options.
 
+Additionally **hikari** can also configure key repeat using the following
+attributes.
+
+* **repeat-delay**
+
+  Takes a positive integer to specify the key repeat delay in milliseconds. The
+  default value is 600.
+
+* **repeat-rate**
+
+  Takes a positive integer to specify the key repeat rate in Hz. The default
+  value is 25.
+
 Configuring the *AT keyboard* input device could look like this.
 
 ```
@@ -1012,6 +1025,8 @@ inputs {
         layout = "de(nodeadkeys)"
         options = "caps:escape"
       }
+      repeat-rate = 25
+      repeat-delay = 600
     }
   }
 }

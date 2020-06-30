@@ -39,7 +39,13 @@ struct hikari_keyboard_config {
   char *keyboard_name;
 
   struct hikari_xkb xkb;
+
+  HIKARI_OPTION(repeat_delay, int);
+  HIKARI_OPTION(repeat_rate, int);
 };
+
+HIKARI_OPTION_FUNS(keyboard, repeat_delay, int);
+HIKARI_OPTION_FUNS(keyboard, repeat_rate, int);
 
 void
 hikari_keyboard_config_init(
