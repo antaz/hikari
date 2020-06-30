@@ -51,6 +51,7 @@
 #include <hikari/pointer.h>
 #include <hikari/pointer_config.h>
 #include <hikari/sheet.h>
+#include <hikari/switch.h>
 #include <hikari/workspace.h>
 #include <hikari/xdg_view.h>
 
@@ -97,6 +98,22 @@ add_keyboard(struct hikari_server *server, struct wlr_input_device *device)
 }
 
 static void
+add_switch(struct hikari_server *server, struct wlr_input_device *device)
+{
+  struct hikari_switch *swtch = hikari_malloc(sizeof(struct hikari_switch));
+
+  hikari_switch_init(swtch, device);
+
+  struct hikari_switch_config *switch_config =
+      hikari_configuration_resolve_switch_config(
+          hikari_configuration, device->name);
+
+  if (switch_config != NULL) {
+    hikari_switch_configure(swtch, switch_config);
+  }
+}
+
+static void
 new_input_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_server *server = wl_container_of(listener, server, new_input);
@@ -110,6 +127,10 @@ new_input_handler(struct wl_listener *listener, void *data)
 
     case WLR_INPUT_DEVICE_POINTER:
       add_pointer(server, device);
+      break;
+
+    case WLR_INPUT_DEVICE_SWITCH:
+      add_switch(server, device);
       break;
 
     default:
@@ -823,6 +844,7 @@ server_init(struct hikari_server *server, char *config_path)
 
   wl_list_init(&server->pointers);
   wl_list_init(&server->keyboards);
+  wl_list_init(&server->switches);
 
   wl_list_init(&server->groups);
   wl_list_init(&server->workspaces);

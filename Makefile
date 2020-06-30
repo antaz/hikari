@@ -52,6 +52,8 @@ OBJS = \
 	sheet.o \
 	sheet_assign_mode.o \
 	split.o \
+	switch.o \
+	switch_config.o \
 	tile.o \
 	view.o \
 	view_config.o \

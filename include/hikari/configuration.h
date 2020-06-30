@@ -42,6 +42,7 @@ struct hikari_configuration {
   struct wl_list action_configs;
   struct wl_list keyboard_binding_configs;
   struct wl_list mouse_binding_configs;
+  struct wl_list switch_configs;
 };
 
 extern struct hikari_configuration *hikari_configuration;
@@ -74,6 +75,10 @@ hikari_configuration_resolve_pointer_config(
 struct hikari_keyboard_config *
 hikari_configuration_resolve_keyboard_config(
     struct hikari_configuration *configuration, const char *keyboard_name);
+
+struct hikari_switch_config *
+hikari_configuration_resolve_switch_config(
+    struct hikari_configuration *configuration, const char *switch_name);
 
 struct hikari_split *
 hikari_configuration_lookup_layout(

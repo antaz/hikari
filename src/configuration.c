@@ -29,6 +29,8 @@
 #include <hikari/server.h>
 #include <hikari/sheet.h>
 #include <hikari/split.h>
+#include <hikari/switch.h>
+#include <hikari/switch_config.h>
 #include <hikari/tile.h>
 #include <hikari/view.h>
 #include <hikari/view_config.h>
@@ -1421,6 +1423,36 @@ done:
 }
 
 static bool
+parse_switches(struct hikari_configuration *configuration,
+    const ucl_object_t *switches_obj)
+{
+  bool success = false;
+  const ucl_object_t *cur;
+  struct hikari_switch_config *switch_config;
+
+  ucl_object_iter_t it = ucl_object_iterate_new(switches_obj);
+  while ((cur = ucl_object_iterate_safe(it, true)) != NULL) {
+    const char *key = ucl_object_key(cur);
+
+    switch_config = hikari_malloc(sizeof(struct hikari_switch_config));
+    wl_list_insert(&configuration->switch_configs, &switch_config->link);
+
+    switch_config->switch_name = strdup(key);
+
+    if (!hikari_action_parse(
+            &switch_config->action, &configuration->action_configs, cur)) {
+      goto done;
+    }
+  }
+
+  success = true;
+
+done:
+
+  return success;
+}
+
+static bool
 parse_inputs(
     struct hikari_configuration *configuration, const ucl_object_t *inputs_obj)
 {
@@ -1437,6 +1469,10 @@ parse_inputs(
       }
     } else if (!strcmp(key, "keyboards")) {
       if (!parse_keyboards(configuration, cur)) {
+        goto done;
+      }
+    } else if (!strcmp(key, "switches")) {
+      if (!parse_switches(configuration, cur)) {
         goto done;
       }
     } else {
@@ -1900,6 +1936,19 @@ hikari_configuration_reload(char *config_path)
       }
     }
 
+    struct hikari_switch *swtch;
+    wl_list_for_each (swtch, &hikari_server.switches, server_switches) {
+      struct hikari_switch_config *switch_config =
+          hikari_configuration_resolve_switch_config(
+              hikari_configuration, swtch->device->name);
+
+      if (switch_config != NULL) {
+        hikari_switch_configure(swtch, switch_config);
+      } else {
+        hikari_switch_reset(swtch);
+      }
+    }
+
     if (hikari_server.workspace->focus_view != NULL) {
       hikari_indicator_update(&hikari_server.indicator,
           hikari_server.workspace->focus_view,
@@ -1924,6 +1973,7 @@ hikari_configuration_init(struct hikari_configuration *configuration)
   wl_list_init(&configuration->action_configs);
   wl_list_init(&configuration->keyboard_binding_configs);
   wl_list_init(&configuration->mouse_binding_configs);
+  wl_list_init(&configuration->switch_configs);
 
   hikari_color_convert(configuration->clear, 0x282C34);
   hikari_color_convert(configuration->foreground, 0x000000);
@@ -1987,6 +2037,15 @@ hikari_configuration_fini(struct hikari_configuration *configuration)
 
     hikari_keyboard_config_fini(keyboard_config);
     hikari_free(keyboard_config);
+  }
+
+  struct hikari_switch_config *switch_config, *switch_config_temp;
+  wl_list_for_each_safe (
+      switch_config, switch_config_temp, &configuration->switch_configs, link) {
+    wl_list_remove(&switch_config->link);
+
+    hikari_switch_config_fini(switch_config);
+    hikari_free(switch_config);
   }
 
   struct hikari_binding_config *binding_config, *binding_config_temp;
@@ -2062,6 +2121,20 @@ hikari_configuration_resolve_pointer_config(
   wl_list_for_each (pointer_config, &configuration->pointer_configs, link) {
     if (!strcmp(pointer_config->name, "*")) {
       return pointer_config;
+    }
+  }
+
+  return NULL;
+}
+
+struct hikari_switch_config *
+hikari_configuration_resolve_switch_config(
+    struct hikari_configuration *configuration, const char *switch_name)
+{
+  struct hikari_switch_config *switch_config;
+  wl_list_for_each (switch_config, &configuration->switch_configs, link) {
+    if (!strcmp(switch_config->switch_name, switch_name)) {
+      return switch_config;
     }
   }
 

@@ -83,6 +83,7 @@ struct hikari_server {
 
   struct wl_list pointers;
   struct wl_list keyboards;
+  struct wl_list switches;
   struct wl_list outputs;
 
   struct wl_list groups;

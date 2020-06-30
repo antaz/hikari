@@ -1051,6 +1051,21 @@ needs to happen before starting **hikari**.
 XKB_DEFAULT_LAYOUT "de(nodeadkeys),de"
 ```
 
+Switches
+--------
+Switches can be configured in the *switches* subsection. A switch just takes an
+action and functions like a regular key binding using the name of the switch as
+an identifier. The *begin* action is triggered when turning the switch on and
+*end* is triggered when turning it off.
+
+```
+input {
+  switches {
+    "Control Method Lid Switch" = lock
+  }
+}
+```
+
 OUTPUTS
 =======
 
