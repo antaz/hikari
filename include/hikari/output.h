@@ -70,6 +70,12 @@ hikari_output_load_background(struct hikari_output *output,
 void
 hikari_output_move(struct hikari_output *output, double lx, double ly);
 
+struct hikari_output *
+hikari_output_next(struct hikari_output *output);
+
+struct hikari_output *
+hikari_output_prev(struct hikari_output *output);
+
 static inline void
 hikari_output_add_damage(struct hikari_output *output, struct wlr_box *region)
 {

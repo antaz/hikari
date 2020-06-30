@@ -163,8 +163,9 @@ dump_debug(struct hikari_server *server)
   }
   printf("---------------------------------------------------------------------"
          "\n");
-  struct hikari_workspace *workspace;
-  wl_list_for_each (workspace, &hikari_server.workspaces, server_workspaces) {
+  struct hikari_output *output;
+  wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
+    struct hikari_workspace *workspace = output->workspace;
     const char *output_name = workspace->output->wlr_output->name;
     printf("SHEETS %s (%p)\n", output_name, workspace->focus_view);
     printf(

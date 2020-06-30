@@ -303,25 +303,16 @@ hikari_output_fini(struct hikari_output *output)
   wl_list_remove(&output->destroy.link);
   /* wl_list_remove(&output->mode.link); */
 
-  wl_list_remove(&output->server_outputs);
+  struct hikari_workspace *new_workspace =
+      hikari_workspace_next(output->workspace);
 
-  struct hikari_workspace *new_workspace = hikari_server.workspace;
-  if (output->workspace == hikari_server.workspace) {
-    struct hikari_workspace *workspace;
-    wl_list_for_each (workspace, &hikari_server.workspaces, server_workspaces) {
-      if (workspace != output->workspace) {
-        new_workspace = workspace;
-        break;
-      }
-    }
-  }
-
-  if (new_workspace != NULL) {
+  if (new_workspace != NULL && new_workspace != output->workspace) {
     hikari_workspace_focus_view(new_workspace, NULL);
   } else {
-    assert(false);
     hikari_server.workspace = NULL;
   }
+
+  wl_list_remove(&output->server_outputs);
 
   hikari_workspace_fini(output->workspace);
   hikari_free(output->workspace);
@@ -333,3 +324,26 @@ hikari_output_move(struct hikari_output *output, double lx, double ly)
   wlr_output_layout_move(
       hikari_server.output_layout, output->wlr_output, lx, ly);
 }
+
+#define CYCLE_OUTPUT(name)                                                     \
+  struct hikari_output *hikari_output_##name(struct hikari_output *output)     \
+  {                                                                            \
+    if (wl_list_empty(&hikari_server.outputs)) {                               \
+      return NULL;                                                             \
+    }                                                                          \
+                                                                               \
+    struct wl_list *name = output->server_outputs.name;                        \
+                                                                               \
+    if (name == &hikari_server.outputs) {                                      \
+      name = hikari_server.outputs.name;                                       \
+    }                                                                          \
+                                                                               \
+    struct hikari_output *name##_output =                                      \
+        wl_container_of(name, name##_output, server_outputs);                  \
+                                                                               \
+    return name##_output;                                                      \
+  }
+
+CYCLE_OUTPUT(next)
+CYCLE_OUTPUT(prev)
+#undef CYCLE_OUTPUT

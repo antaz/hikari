@@ -56,32 +56,21 @@ hikari_workspace_init(
 #ifdef HAVE_LAYERSHELL
   workspace->focus_layer = NULL;
 #endif
-
-  wl_list_insert(hikari_server.workspaces.prev, &workspace->server_workspaces);
 }
 
 void
 hikari_workspace_fini(struct hikari_workspace *workspace)
 {
   hikari_free(workspace->sheets);
-
-  wl_list_remove(&workspace->server_workspaces);
 }
 
 #define CYCLE_WORKSPACE(name)                                                  \
   struct hikari_workspace *hikari_workspace_##name(                            \
       struct hikari_workspace *workspace)                                      \
   {                                                                            \
-    struct wl_list *name = workspace->server_workspaces.name;                  \
+    struct hikari_output *output = hikari_output_##name(workspace->output);    \
                                                                                \
-    if (name == &hikari_server.workspaces) {                                   \
-      name = hikari_server.workspaces.name;                                    \
-    }                                                                          \
-                                                                               \
-    struct hikari_workspace *name##_workspace =                                \
-        wl_container_of(name, name##_workspace, server_workspaces);            \
-                                                                               \
-    return name##_workspace;                                                   \
+    return output->workspace;                                                  \
   }
 
 CYCLE_WORKSPACE(next)

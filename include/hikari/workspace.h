@@ -27,8 +27,6 @@ struct hikari_workspace {
 #endif
 
   struct wl_list views;
-
-  struct wl_list server_workspaces;
 };
 
 void

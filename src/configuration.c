@@ -1886,18 +1886,6 @@ hikari_configuration_reload(char *config_path)
     hikari_cursor_configure_bindings(
         &hikari_server.cursor, &configuration->mouse_binding_configs);
 
-    struct hikari_workspace *workspace;
-    wl_list_for_each (workspace, &hikari_server.workspaces, server_workspaces) {
-      struct hikari_sheet *sheet;
-      for (int i = 0; i < HIKARI_NR_OF_SHEETS; i++) {
-        sheet = workspace->sheets + i;
-        struct hikari_view *view;
-        wl_list_for_each (view, &sheet->views, sheet_views) {
-          hikari_view_refresh_geometry(view, view->current_geometry);
-        }
-      }
-    }
-
     struct hikari_keyboard *keyboard;
     wl_list_for_each (keyboard, &hikari_server.keyboards, server_keyboards) {
       struct hikari_keyboard_config *keyboard_config =
@@ -1913,6 +1901,11 @@ hikari_configuration_reload(char *config_path)
 
     struct hikari_output *output;
     wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
+      struct hikari_view *view;
+      wl_list_for_each (view, &output->views, output_views) {
+        hikari_view_refresh_geometry(view, view->current_geometry);
+      }
+
       struct hikari_output_config *output_config =
           hikari_configuration_resolve_output_config(
               hikari_configuration, output->wlr_output->name);

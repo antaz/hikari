@@ -848,7 +848,6 @@ server_init(struct hikari_server *server, char *config_path)
   wl_list_init(&server->switches);
 
   wl_list_init(&server->groups);
-  wl_list_init(&server->workspaces);
   wl_list_init(&server->visible_groups);
   wl_list_init(&server->visible_views);
 

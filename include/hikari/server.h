@@ -87,7 +87,6 @@ struct hikari_server {
   struct wl_list outputs;
 
   struct wl_list groups;
-  struct wl_list workspaces;
   struct wl_list visible_groups;
   struct wl_list visible_views;
 
