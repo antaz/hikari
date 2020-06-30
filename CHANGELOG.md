@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.4
+
+* fix focus issue on cycling
+* factor in bottom layer for usable area calculations
+* fix minor typo in manpage
+
 ## 2.0.3
 
 * disallow running `hikari` as root
