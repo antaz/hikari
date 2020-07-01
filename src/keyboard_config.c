@@ -4,6 +4,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define HIKARI_KEYBOARD_CONFIG_DEFAULT_REPEAT_RATE 25
+#define HIKARI_KEYBOARD_CONFIG_DEFAULT_REPEAT_DELAY 600
+
+static void
+init_default_repeat(struct hikari_keyboard_config *keyboard_config)
+{
+  hikari_keyboard_config_set_repeat_rate(
+      keyboard_config, HIKARI_KEYBOARD_CONFIG_DEFAULT_REPEAT_RATE);
+  hikari_keyboard_config_set_repeat_delay(
+      keyboard_config, HIKARI_KEYBOARD_CONFIG_DEFAULT_REPEAT_DELAY);
+}
+
 static bool
 parse_xkb_rules(
     struct hikari_xkb_config *xkb_config, const ucl_object_t *xkb_obj)
@@ -195,6 +207,13 @@ hikari_keyboard_config_init(
   xkb_init(&keyboard_config->xkb.value.rules);
 
   keyboard_config->keyboard_name = strdup(keyboard_name);
+
+  if (!strcmp(keyboard_name, "*")) {
+    init_default_repeat(keyboard_config);
+  } else {
+    keyboard_config->repeat_rate.configured = false;
+    keyboard_config->repeat_delay.configured = false;
+  }
 }
 
 static void
@@ -265,6 +284,8 @@ hikari_keyboard_config_default(struct hikari_keyboard_config *keyboard_config)
 
   keyboard_config->keyboard_name = malloc(2 * sizeof(char));
   strcpy(keyboard_config->keyboard_name, "*");
+
+  init_default_repeat(keyboard_config);
 }
 
 static bool

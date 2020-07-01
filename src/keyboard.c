@@ -189,24 +189,11 @@ hikari_keyboard_configure(struct hikari_keyboard *keyboard,
     struct hikari_keyboard_config *keyboard_config)
 {
   keyboard->keymap = load_keymap(keyboard_config);
-
   assert(keyboard->keymap != NULL);
-
   wlr_keyboard_set_keymap(keyboard->device->keyboard, keyboard->keymap);
 
-  int repeat_rate;
-  if (hikari_keyboard_config_has_repeat_rate(keyboard_config)) {
-    repeat_rate = hikari_keyboard_config_get_repeat_rate(keyboard_config);
-  } else {
-    repeat_rate = 25;
-  }
-
-  int repeat_delay;
-  if (hikari_keyboard_config_has_repeat_delay(keyboard_config)) {
-    repeat_delay = hikari_keyboard_config_get_repeat_delay(keyboard_config);
-  } else {
-    repeat_delay = 600;
-  }
+  int repeat_rate = hikari_keyboard_config_get_repeat_rate(keyboard_config);
+  int repeat_delay = hikari_keyboard_config_get_repeat_delay(keyboard_config);
 
   wlr_keyboard_set_repeat_info(
       keyboard->device->keyboard, repeat_rate, repeat_delay);
