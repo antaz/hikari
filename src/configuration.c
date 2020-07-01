@@ -1788,6 +1788,21 @@ hikari_configuration_load(
   }
 
   ucl_object_iter_t it = ucl_object_iterate_new(configuration_obj);
+
+  const ucl_object_t *actions_obj =
+      ucl_object_lookup(configuration_obj, "actions");
+  if (actions_obj != NULL && !parse_actions(configuration, actions_obj)) {
+    fprintf(stderr, "configuration error: failed to parse \"actions\"\n");
+    goto done;
+  }
+
+  const ucl_object_t *layouts_obj =
+      ucl_object_lookup(configuration_obj, "layouts");
+  if (layouts_obj != NULL && !parse_layouts(configuration, layouts_obj)) {
+    fprintf(stderr, "configuration error: failed to parse \"layouts\"\n");
+    goto done;
+  }
+
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
@@ -1804,21 +1819,6 @@ hikari_configuration_load(
         goto done;
       }
     } else if (!strcmp(key, "bindings")) {
-      const ucl_object_t *actions_obj =
-          ucl_object_lookup(configuration_obj, "actions");
-      const ucl_object_t *layouts_obj =
-          ucl_object_lookup(configuration_obj, "layouts");
-
-      if (layouts_obj != NULL && !parse_layouts(configuration, layouts_obj)) {
-        fprintf(stderr, "configuration error: failed to parse \"layouts\"\n");
-        goto done;
-      }
-
-      if (actions_obj != NULL && !parse_actions(configuration, actions_obj)) {
-        fprintf(stderr, "configuration error: failed to parse \"actions\"\n");
-        goto done;
-      }
-
       if (!parse_bindings(configuration, cur)) {
         goto done;
       }
