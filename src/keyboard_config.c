@@ -211,8 +211,10 @@ hikari_keyboard_config_init(
   if (!strcmp(keyboard_name, "*")) {
     init_default_repeat(keyboard_config);
   } else {
-    keyboard_config->repeat_rate.configured = false;
-    keyboard_config->repeat_delay.configured = false;
+    hikari_keyboard_config_init_repeat_rate(
+        keyboard_config, HIKARI_KEYBOARD_CONFIG_DEFAULT_REPEAT_RATE);
+    hikari_keyboard_config_init_repeat_delay(
+        keyboard_config, HIKARI_KEYBOARD_CONFIG_DEFAULT_REPEAT_DELAY);
   }
 }
 

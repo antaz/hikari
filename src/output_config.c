@@ -16,14 +16,13 @@ hikari_output_config_init(
 
   strcpy(output_config->output_name, output_name);
 
-  output_config->background.configured = false;
-  output_config->background.value = NULL;
+  struct hikari_position_config default_position;
+  hikari_position_config_init(&default_position);
 
-  output_config->background_fit.configured = false;
-  output_config->background_fit.value = HIKARI_BACKGROUND_STRETCH;
-
-  output_config->position.configured = false;
-  hikari_position_config_init(&output_config->position.value);
+  hikari_output_config_init_background(output_config, NULL);
+  hikari_output_config_init_background_fit(
+      output_config, HIKARI_BACKGROUND_STRETCH);
+  hikari_output_config_init_position(output_config, default_position);
 }
 
 void
@@ -32,7 +31,6 @@ hikari_output_config_fini(struct hikari_output_config *output_config)
   assert(output_config != NULL);
 
   hikari_free(output_config->output_name);
-
   hikari_free(output_config->background.value);
 }
 

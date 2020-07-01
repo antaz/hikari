@@ -15,14 +15,14 @@ hikari_pointer_config_init(
   pointer_config->name = hikari_malloc(keylen + 1);
   strcpy(pointer_config->name, name);
 
-  pointer_config->accel.configured = false;
-  pointer_config->disable_while_typing.configured = false;
-  pointer_config->natural_scrolling.configured = false;
-  pointer_config->scroll_button.configured = false;
-  pointer_config->scroll_method.configured = false;
-  pointer_config->tap.configured = false;
-  pointer_config->tap_drag.configured = false;
-  pointer_config->tap_drag_lock.configured = false;
+  hikari_pointer_config_init_accel(pointer_config, 0);
+  hikari_pointer_config_init_disable_while_typing(pointer_config, false);
+  hikari_pointer_config_init_natural_scrolling(pointer_config, false);
+  hikari_pointer_config_init_scroll_button(pointer_config, 0);
+  hikari_pointer_config_init_scroll_method(pointer_config, 0);
+  hikari_pointer_config_init_tap(pointer_config, false);
+  hikari_pointer_config_init_tap_drag(pointer_config, false);
+  hikari_pointer_config_init_tap_drag_lock(pointer_config, false);
 }
 
 void
