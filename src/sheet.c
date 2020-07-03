@@ -362,41 +362,22 @@ hikari_sheet_prev(struct hikari_sheet *sheet)
   return &sheets[sheet->nr - 1];
 }
 
-struct hikari_sheet *
-hikari_sheet_next_inhabited(struct hikari_sheet *sheet)
-{
-  struct hikari_sheet *sheets = sheet->workspace->sheets;
-
-  if (sheet->nr == 0 || sheet->nr == 9) {
-    return sheet;
+#define CYCLE_INHABITED(name)                                                  \
+  struct hikari_sheet *hikari_sheet_##name##_inhabited(                        \
+      struct hikari_sheet *sheet)                                              \
+  {                                                                            \
+    struct hikari_sheet *name = sheet;                                         \
+                                                                               \
+    do {                                                                       \
+      name = hikari_sheet_##name(name);                                        \
+    } while (name != sheet && wl_list_empty(&name->views));                    \
+                                                                               \
+    return name;                                                               \
   }
 
-  for (uint8_t i = sheet->nr + 1; i < HIKARI_NR_OF_SHEETS; i++) {
-    if (!wl_list_empty(&sheets[i].views)) {
-      return &sheets[i];
-    }
-  }
-
-  return sheet;
-}
-
-struct hikari_sheet *
-hikari_sheet_prev_inhabited(struct hikari_sheet *sheet)
-{
-  struct hikari_sheet *sheets = sheet->workspace->sheets;
-
-  if (sheet->nr <= 1) {
-    return sheet;
-  }
-
-  for (uint8_t i = sheet->nr - 1; i > 0; i--) {
-    if (!wl_list_empty(&sheets[i].views)) {
-      return &sheets[i];
-    }
-  }
-
-  return sheet;
-}
+CYCLE_INHABITED(next)
+CYCLE_INHABITED(prev)
+#undef CYCLE_INHABITED
 
 static void
 raise_floating(struct hikari_sheet *sheet)
