@@ -214,9 +214,6 @@ hikari_layer_init(
   layer->map.notify = map_handler;
   wl_signal_add(&wlr_layer_surface->events.map, &layer->map);
 
-  layer->unmap.notify = unmap_handler;
-  wl_signal_add(&wlr_layer_surface->events.unmap, &layer->unmap);
-
   wl_list_insert(&output->layers[layer->layer], &layer->layer_surfaces);
 
   calculate_geometry(layer);
@@ -225,11 +222,12 @@ hikari_layer_init(
 void
 hikari_layer_fini(struct hikari_layer *layer)
 {
+  assert(!layer->mapped);
+
   wl_list_remove(&layer->layer_surfaces);
 
   wl_list_remove(&layer->destroy.link);
   wl_list_remove(&layer->map.link);
-  wl_list_remove(&layer->unmap.link);
 }
 
 static void
@@ -429,6 +427,11 @@ map(struct hikari_layer *layer)
   layer->new_popup.notify = new_popup_handler;
   wl_signal_add(&wlr_layer_surface->events.new_popup, &layer->new_popup);
 
+  layer->unmap.notify = unmap_handler;
+  wl_signal_add(&wlr_layer_surface->events.unmap, &layer->unmap);
+
+  wl_list_remove(&layer->map.link);
+
   layer->mapped = true;
 
   damage(layer, true);
@@ -460,6 +463,10 @@ unmap(struct hikari_layer *layer)
 
   wl_list_remove(&layer->commit.link);
   wl_list_remove(&layer->new_popup.link);
+  wl_list_remove(&layer->unmap.link);
+
+  layer->map.notify = map_handler;
+  wl_signal_add(&layer->surface->events.map, &layer->map);
 
   layer->mapped = false;
 
