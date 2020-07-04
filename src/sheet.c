@@ -370,7 +370,7 @@ hikari_sheet_prev(struct hikari_sheet *sheet)
                                                                                \
     do {                                                                       \
       name = hikari_sheet_##name(name);                                        \
-    } while (name != sheet && wl_list_empty(&name->views));                    \
+    } while (wl_list_empty(&name->views) && name != sheet);                    \
                                                                                \
     return name;                                                               \
   }
