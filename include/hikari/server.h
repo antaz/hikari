@@ -45,6 +45,9 @@ struct hikari_server {
   struct wlr_xdg_output_manager_v1 *output_manager;
   struct wlr_data_device_manager *data_device_manager;
 
+  struct wlr_backend *noop_backend;
+  struct hikari_output *noop_output;
+
   struct wl_listener new_output;
   struct wl_listener new_input;
   struct wl_listener new_xdg_surface;

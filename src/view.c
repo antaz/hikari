@@ -1111,6 +1111,10 @@ pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
 void
 hikari_view_evacuate(struct hikari_view *view, struct hikari_sheet *sheet)
 {
+#ifndef NDEBUG
+  printf("EVACUATE VIEW %p\n", view);
+#endif
+
   pin_to_sheet(view, sheet, false);
 }
 

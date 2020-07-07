@@ -6,6 +6,7 @@
 
 #include <wlr/backend.h>
 #include <wlr/backend/libinput.h>
+#include <wlr/backend/noop.h>
 #include <wlr/backend/session.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_control_v1.h>
@@ -755,6 +756,17 @@ done:
 }
 
 static void
+init_noop_output(struct hikari_server *server)
+{
+  server->noop_backend = wlr_noop_backend_create(server->display);
+
+  struct wlr_output *wlr_output = wlr_noop_add_output(server->noop_backend);
+
+  server->noop_output = hikari_malloc(sizeof(struct hikari_output));
+  hikari_output_init(server->noop_output, wlr_output);
+}
+
+static void
 server_init(struct hikari_server *server, char *config_path)
 {
 #ifndef NDEBUG
@@ -864,6 +876,8 @@ server_init(struct hikari_server *server, char *config_path)
   hikari_sheet_assign_mode_init(&server->sheet_assign_mode);
 
   hikari_marks_init();
+
+  init_noop_output(server);
 }
 
 static void
@@ -925,6 +939,7 @@ hikari_server_stop(void)
   wlr_output_layout_destroy(hikari_server.output_layout);
 
   wl_display_destroy(hikari_server.display);
+  wlr_output_destroy(hikari_server.noop_output->wlr_output);
 
   hikari_configuration_fini(hikari_configuration);
   hikari_free(hikari_configuration);

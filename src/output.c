@@ -197,28 +197,14 @@ close_layers(struct wl_list *layers)
 }
 #endif
 
-void
+static void
 destroy_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_output *output = wl_container_of(listener, output, destroy);
 
-  struct hikari_workspace *workspace = output->workspace;
-  struct hikari_workspace *next = hikari_workspace_next(workspace);
-
 #ifndef NDEBUG
   printf("DESTORY OUTPUT %p\n", output);
 #endif
-
-#ifdef HAVE_LAYERSHELL
-  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY]);
-  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP]);
-  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM]);
-  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND]);
-#endif
-
-  if (workspace != next) {
-    hikari_workspace_merge(workspace, next);
-  }
 
   hikari_output_fini(output);
   hikari_free(output);
@@ -227,6 +213,10 @@ destroy_handler(struct wl_listener *listener, void *data)
 void
 hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 {
+  assert(!output->enabled);
+
+  bool noop = wlr_output->backend == hikari_server.noop_backend;
+
   output->wlr_output = wlr_output;
   output->damage = wlr_output_damage_create(wlr_output);
   output->background = NULL;
@@ -249,73 +239,98 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 
   wlr_output->data = output;
 
-  wl_list_insert(&hikari_server.outputs, &output->server_outputs);
-
-  /* output->mode.notify = mode_handler; */
-  /* wl_signal_add(&wlr_output->events.mode, &output->mode); */
-
   output->destroy.notify = destroy_handler;
   wl_signal_add(&wlr_output->events.destroy, &output->destroy);
 
-  output->damage_destroy.notify = damage_destroy_handler;
-  wl_signal_add(&output->damage->events.destroy, &output->damage_destroy);
+  if (!noop) {
+    bool first = wl_list_empty(&hikari_server.outputs);
 
-  if (!wl_list_empty(&wlr_output->modes)) {
-    struct wlr_output_mode *mode =
-        wl_container_of(wlr_output->modes.prev, mode, link);
-    wlr_output_set_mode(wlr_output, mode);
+    wl_list_insert(&hikari_server.outputs, &output->server_outputs);
+
+    output->damage_destroy.notify = damage_destroy_handler;
+    wl_signal_add(&output->damage->events.destroy, &output->damage_destroy);
+
+    if (!wl_list_empty(&wlr_output->modes)) {
+      struct wlr_output_mode *mode =
+          wl_container_of(wlr_output->modes.prev, mode, link);
+      wlr_output_set_mode(wlr_output, mode);
+    }
+
+    wl_list_init(&output->damage_frame.link);
+
+    if (!hikari_server_in_lock_mode()) {
+      hikari_output_enable(output);
+    } else if (hikari_lock_mode_are_outputs_disabled(
+                   &hikari_server.lock_mode)) {
+      hikari_output_disable(output);
+    }
+
+    struct hikari_output_config *output_config =
+        hikari_configuration_resolve_output_config(
+            hikari_configuration, wlr_output->name);
+
+    if (output_config != NULL && output_config->position.value.type ==
+                                     HIKARI_POSITION_CONFIG_TYPE_ABSOLUTE) {
+      int x = output_config->position.value.config.absolute.x;
+      int y = output_config->position.value.config.absolute.y;
+
+      wlr_output_layout_add(hikari_server.output_layout, wlr_output, x, y);
+    } else {
+      wlr_output_layout_add_auto(hikari_server.output_layout, wlr_output);
+    }
+
+    output_geometry(output);
+
+    if (first) {
+      hikari_workspace_merge(
+          hikari_server.noop_output->workspace, output->workspace);
+    }
   }
-
-  wl_list_init(&output->damage_frame.link);
-
-  if (!hikari_server_in_lock_mode()) {
-    hikari_output_enable(output);
-  } else if (hikari_lock_mode_are_outputs_disabled(&hikari_server.lock_mode)) {
-    hikari_output_disable(output);
-  }
-
-  struct hikari_output_config *output_config =
-      hikari_configuration_resolve_output_config(
-          hikari_configuration, wlr_output->name);
-
-  if (output_config != NULL && output_config->position.value.type ==
-                                   HIKARI_POSITION_CONFIG_TYPE_ABSOLUTE) {
-    int x = output_config->position.value.config.absolute.x;
-    int y = output_config->position.value.config.absolute.y;
-
-    wlr_output_layout_add(hikari_server.output_layout, wlr_output, x, y);
-  } else {
-    wlr_output_layout_add_auto(hikari_server.output_layout, wlr_output);
-  }
-
-  output_geometry(output);
 }
 
 void
 hikari_output_fini(struct hikari_output *output)
 {
+  bool noop = output->wlr_output->backend == hikari_server.noop_backend;
+
+#ifdef HAVE_LAYERSHELL
+  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY]);
+  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP]);
+  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM]);
+  close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND]);
+#endif
+
   if (output->enabled) {
     hikari_output_disable(output);
   }
 
-  wlr_texture_destroy(output->background);
-
   wl_list_remove(&output->destroy.link);
-  /* wl_list_remove(&output->mode.link); */
 
-  struct hikari_workspace *new_workspace =
-      hikari_workspace_next(output->workspace);
+  struct hikari_workspace *workspace = output->workspace;
 
-  if (new_workspace != NULL && new_workspace != output->workspace) {
-    hikari_workspace_focus_view(new_workspace, NULL);
+  if (!noop) {
+    struct hikari_workspace *merge_workspace;
+    struct hikari_workspace *next_workspace = hikari_workspace_next(workspace);
+
+    wlr_texture_destroy(output->background);
+
+    if (workspace != next_workspace) {
+      merge_workspace = next_workspace;
+    } else {
+      merge_workspace = hikari_server.noop_output->workspace;
+    }
+
+    hikari_workspace_merge(workspace, merge_workspace);
+    hikari_workspace_focus_view(merge_workspace, NULL);
+
+    wl_list_remove(&output->server_outputs);
+    wl_list_remove(&output->damage_destroy.link);
   } else {
     hikari_server.workspace = NULL;
   }
 
-  wl_list_remove(&output->server_outputs);
-
-  hikari_workspace_fini(output->workspace);
-  hikari_free(output->workspace);
+  hikari_workspace_fini(workspace);
+  hikari_free(workspace);
 }
 
 void

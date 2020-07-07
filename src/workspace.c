@@ -84,6 +84,10 @@ hikari_workspace_merge(
   assert(workspace != NULL);
   assert(into != NULL);
 
+#ifndef NDEBUG
+  printf("WORKSPACE MERGE %p INTO %p\n", workspace, into);
+#endif
+
   for (int i = 0; i < HIKARI_NR_OF_SHEETS; i++) {
     struct hikari_sheet *from = &workspace->sheets[i];
     struct hikari_sheet *to = &into->sheets[i];
@@ -357,10 +361,6 @@ void
 hikari_workspace_focus_view(
     struct hikari_workspace *workspace, struct hikari_view *view)
 {
-#ifdef HAVE_LAYERSHELL
-  assert(workspace->focus_layer == NULL);
-#endif
-
   struct wlr_seat *seat = hikari_server.seat;
 
   if (!hikari_server_in_normal_mode()) {
@@ -383,6 +383,10 @@ hikari_workspace_focus_view(
   wlr_seat_keyboard_end_grab(seat);
   wlr_seat_keyboard_clear_focus(seat);
   wlr_seat_pointer_clear_focus(seat);
+
+#ifdef HAVE_LAYERSHELL
+  workspace->focus_layer = NULL;
+#endif
 
   if (view != NULL) {
     assert(!hikari_view_is_hidden(view));
