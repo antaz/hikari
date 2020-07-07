@@ -20,6 +20,15 @@
 #include <hikari/workspace.h>
 #endif
 
+struct cursor_down_state {
+  double lx;
+  double ly;
+  double sx;
+  double sy;
+};
+
+static struct cursor_down_state cursor_down_state;
+
 static bool
 handle_input(struct hikari_binding_group *map, uint32_t code)
 {
@@ -60,70 +69,6 @@ handle_pending_action(void)
   }
 
   return false;
-}
-
-static void
-normal_mode_keyboard_handler(struct hikari_workspace *workspace,
-    struct wlr_event_keyboard_key *event,
-    struct hikari_keyboard *keyboard)
-{
-  if (handle_pending_action()) {
-    return;
-  }
-
-  if (event->state == WLR_KEY_PRESSED) {
-    uint32_t modifiers = hikari_server.keyboard_state.modifiers;
-    struct hikari_binding_group *bindings = &keyboard->bindings[modifiers];
-
-    if (handle_input(bindings, event->keycode)) {
-      return;
-    }
-  }
-
-  wlr_seat_set_keyboard(hikari_server.seat, keyboard->device);
-  wlr_seat_keyboard_notify_key(
-      hikari_server.seat, event->time_msec, event->keycode, event->state);
-}
-
-static void
-normal_mode_button_handler(
-    struct hikari_cursor *cursor, struct wlr_event_pointer_button *event)
-{
-  if (handle_pending_action()) {
-    return;
-  }
-
-  if (event->state == WLR_BUTTON_PRESSED) {
-    uint32_t modifiers = hikari_server.keyboard_state.modifiers;
-    struct hikari_binding_group *map = &cursor->bindings[modifiers];
-
-    if (handle_input(map, event->button)) {
-      return;
-    }
-  }
-
-  wlr_seat_pointer_notify_button(
-      hikari_server.seat, event->time_msec, event->button, event->state);
-}
-
-static void
-button_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_cursor *cursor = wl_container_of(listener, cursor, button);
-  struct wlr_event_pointer_button *event = data;
-
-  normal_mode_button_handler(cursor, event);
-}
-
-static void
-key_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
-  struct wlr_event_keyboard_key *event = data;
-
-  struct hikari_workspace *workspace = hikari_server.workspace;
-
-  normal_mode_keyboard_handler(workspace, event, keyboard);
 }
 
 #ifndef NDEBUG
@@ -242,6 +187,23 @@ cancel(void)
 {}
 
 static void
+cursor_down_move(uint32_t time)
+{
+  struct wlr_seat *seat = hikari_server.seat;
+
+  double x = hikari_server.cursor.wlr_cursor->x;
+  double y = hikari_server.cursor.wlr_cursor->y;
+
+  double moved_x = x - cursor_down_state.lx;
+  double moved_y = y - cursor_down_state.ly;
+
+  double sx = cursor_down_state.sx + moved_x;
+  double sy = cursor_down_state.sy + moved_y;
+
+  wlr_seat_pointer_notify_motion(seat, time, sx, sy);
+}
+
+static void
 cursor_move(uint32_t time)
 {
   assert(hikari_server_in_normal_mode());
@@ -281,6 +243,103 @@ cursor_move(uint32_t time)
   }
 }
 
+static inline void
+start_cursor_down_handling(struct wlr_event_pointer_button *event)
+{
+  double lx = hikari_server.cursor.wlr_cursor->x;
+  double ly = hikari_server.cursor.wlr_cursor->y;
+
+  double sx;
+  double sy;
+  struct hikari_workspace *workspace;
+  struct wlr_surface *surface;
+
+  struct hikari_view_interface *view_interface =
+      hikari_server_view_interface_at(lx, ly, &surface, &workspace, &sx, &sy);
+
+  if (view_interface != NULL) {
+    hikari_server.normal_mode.mode.cursor_move = cursor_down_move;
+    cursor_down_state.lx = lx;
+    cursor_down_state.ly = ly;
+    cursor_down_state.sx = sx;
+    cursor_down_state.sy = sy;
+  }
+
+  wlr_seat_pointer_notify_button(
+      hikari_server.seat, event->time_msec, event->button, event->state);
+}
+
+static inline void
+stop_cursor_down_handling(struct wlr_event_pointer_button *event)
+{
+  hikari_server.normal_mode.mode.cursor_move = cursor_move;
+
+  wlr_seat_pointer_notify_button(
+      hikari_server.seat, event->time_msec, event->button, event->state);
+
+  hikari_server_cursor_focus();
+}
+
+static inline bool
+is_cursor_down(void)
+{
+  return hikari_server.normal_mode.mode.cursor_move == cursor_down_move;
+}
+
+static void
+button_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_cursor *cursor = wl_container_of(listener, cursor, button);
+  struct wlr_event_pointer_button *event = data;
+
+  if (handle_pending_action()) {
+    if (event->state == WLR_BUTTON_RELEASED && is_cursor_down()) {
+      stop_cursor_down_handling(event);
+    }
+    return;
+  }
+
+  if (event->state == WLR_BUTTON_PRESSED) {
+    uint32_t modifiers = hikari_server.keyboard_state.modifiers;
+    struct hikari_binding_group *map = &cursor->bindings[modifiers];
+
+    if (!handle_input(map, event->button)) {
+      start_cursor_down_handling(event);
+    }
+  } else {
+    if (is_cursor_down()) {
+      stop_cursor_down_handling(event);
+    } else {
+      wlr_seat_pointer_notify_button(
+          hikari_server.seat, event->time_msec, event->button, event->state);
+    }
+  }
+}
+
+static void
+key_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
+  struct wlr_event_keyboard_key *event = data;
+
+  if (handle_pending_action()) {
+    return;
+  }
+
+  if (event->state == WLR_KEY_PRESSED) {
+    uint32_t modifiers = hikari_server.keyboard_state.modifiers;
+    struct hikari_binding_group *bindings = &keyboard->bindings[modifiers];
+
+    if (handle_input(bindings, event->keycode)) {
+      return;
+    }
+  }
+
+  wlr_seat_set_keyboard(hikari_server.seat, keyboard->device);
+  wlr_seat_keyboard_notify_key(
+      hikari_server.seat, event->time_msec, event->keycode, event->state);
+}
+
 void
 hikari_normal_mode_init(struct hikari_normal_mode *normal_mode)
 {
@@ -299,6 +358,8 @@ hikari_normal_mode_enter(void)
   struct hikari_server *server = &hikari_server;
 
   assert(server->workspace != NULL);
+
+  hikari_server.normal_mode.mode.cursor_move = cursor_move;
 
   server->mode->cancel();
   server->mode = (struct hikari_mode *)&server->normal_mode;
