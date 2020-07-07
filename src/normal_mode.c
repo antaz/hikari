@@ -267,12 +267,8 @@ cursor_move(uint32_t time)
       hikari_view_interface_focus(view_interface);
     }
 
-    bool mouse_focus_changed = seat->pointer_state.focused_surface != surface;
-
     wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
-    if (!mouse_focus_changed) {
-      wlr_seat_pointer_notify_motion(seat, time, sx, sy);
-    }
+    wlr_seat_pointer_notify_motion(seat, time, sx, sy);
   } else {
     if (hikari_server.workspace != workspace) {
       struct hikari_view *view = hikari_workspace_first_view(workspace);
