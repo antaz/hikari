@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.0.5
+
+* fix unmap/map handling for layers
+* resolve workspace on NULL output
+
 ## 2.0.4
 
 * fix focus issue on cycling
