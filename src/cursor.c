@@ -207,7 +207,10 @@ button_handler(struct wl_listener *listener, void *data)
 {
   assert(!hikari_server_in_lock_mode());
 
-  hikari_server.mode->button_handler(listener, data);
+  struct hikari_cursor *cursor = wl_container_of(listener, cursor, button);
+  struct wlr_event_pointer_button *event = data;
+
+  hikari_server.mode->button_handler(cursor, event);
 }
 
 static void

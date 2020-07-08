@@ -18,10 +18,17 @@
 #include <hikari/workspace.h>
 
 static void
-input_grab_key_handler(struct hikari_workspace *workspace,
-    struct wlr_event_keyboard_key *event,
-    struct hikari_keyboard *keyboard)
+modifiers_handler(struct hikari_keyboard *keyboard)
 {
+  wlr_seat_keyboard_notify_modifiers(
+      hikari_server.seat, &keyboard->device->keyboard->modifiers);
+}
+
+static void
+key_handler(
+    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
+{
+  struct hikari_workspace *workspace = hikari_server.workspace;
   uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->device->keyboard);
 
   if ((modifiers & WLR_MODIFIER_LOGO) && event->state == WLR_KEY_PRESSED) {
@@ -50,35 +57,13 @@ input_grab_key_handler(struct hikari_workspace *workspace,
 }
 
 static void
-modifier_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_keyboard *keyboard =
-      wl_container_of(listener, keyboard, modifiers);
-
-  wlr_seat_keyboard_notify_modifiers(
-      hikari_server.seat, &keyboard->device->keyboard->modifiers);
-}
-
-static void
-key_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
-
-  struct wlr_event_keyboard_key *event = data;
-  struct hikari_workspace *workspace = hikari_server.workspace;
-
-  input_grab_key_handler(workspace, event, keyboard);
-}
-
-static void
 cancel(void)
 {}
 
 static void
-button_handler(struct wl_listener *listener, void *data)
+button_handler(
+    struct hikari_cursor *cursor, struct wlr_event_pointer_button *event)
 {
-  struct wlr_event_pointer_button *event = data;
-
   wlr_seat_pointer_notify_button(
       hikari_server.seat, event->time_msec, event->button, event->state);
 }
@@ -112,7 +97,7 @@ hikari_input_grab_mode_init(struct hikari_input_grab_mode *input_grab_mode)
 {
   input_grab_mode->mode.key_handler = key_handler;
   input_grab_mode->mode.button_handler = button_handler;
-  input_grab_mode->mode.modifier_handler = modifier_handler;
+  input_grab_mode->mode.modifiers_handler = modifiers_handler;
   input_grab_mode->mode.render = hikari_renderer_input_grab_mode;
   input_grab_mode->mode.cancel = cancel;
   input_grab_mode->mode.cursor_move = cursor_move;

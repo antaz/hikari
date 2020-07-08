@@ -54,22 +54,21 @@ apply_layout(struct hikari_configuration *configuration,
 }
 
 static void
-key_handler(struct wl_listener *listener, void *data)
+key_handler(
+    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
 {
-  struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
-  struct wlr_event_keyboard_key *event = data;
-
   if (event->state == WLR_KEY_PRESSED) {
     apply_layout(hikari_configuration, event, keyboard);
   }
 }
 
 static void
-modifier_handler(struct wl_listener *listener, void *data)
+modifiers_handler(struct hikari_keyboard *keyboard)
 {}
 
 static void
-button_handler(struct wl_listener *listener, void *data)
+button_handler(
+    struct hikari_cursor *cursor, struct wlr_event_pointer_button *event)
 {}
 
 static void
@@ -86,7 +85,7 @@ hikari_layout_select_mode_init(
 {
   layout_select_mode->mode.key_handler = key_handler;
   layout_select_mode->mode.button_handler = button_handler;
-  layout_select_mode->mode.modifier_handler = modifier_handler;
+  layout_select_mode->mode.modifiers_handler = modifiers_handler;
   layout_select_mode->mode.render = hikari_renderer_layout_select_mode;
   layout_select_mode->mode.cancel = cancel;
   layout_select_mode->mode.cursor_move = cursor_move;

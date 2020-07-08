@@ -30,8 +30,9 @@ static void
 key_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
+  struct wlr_event_keyboard_key *event = data;
 
-  hikari_server.mode->key_handler(listener, data);
+  hikari_server.mode->key_handler(keyboard, event);
 }
 
 static void
@@ -42,7 +43,7 @@ modifiers_handler(struct wl_listener *listener, void *data)
 
   update_mod_state(keyboard);
 
-  hikari_server.mode->modifier_handler(listener, data);
+  hikari_server.mode->modifiers_handler(keyboard);
 }
 
 static void

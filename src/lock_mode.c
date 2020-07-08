@@ -176,11 +176,9 @@ enable_outputs(void)
 }
 
 static void
-key_handler(struct wl_listener *listener, void *data)
+key_handler(
+    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
 {
-  struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
-  struct wlr_event_keyboard_key *event = data;
-
   struct hikari_lock_mode *mode = get_mode();
 
   if (event->state == WLR_KEY_PRESSED) {
@@ -242,11 +240,12 @@ key_handler(struct wl_listener *listener, void *data)
 }
 
 static void
-modifier_handler(struct wl_listener *listener, void *data)
+modifiers_handler(struct hikari_keyboard *keyboard)
 {}
 
 static void
-button_handler(struct wl_listener *listener, void *data)
+button_handler(
+    struct hikari_cursor *cursor, struct wlr_event_pointer_button *event)
 {}
 
 static void
@@ -314,7 +313,7 @@ hikari_lock_mode_init(struct hikari_lock_mode *lock_mode)
 {
   lock_mode->mode.key_handler = key_handler;
   lock_mode->mode.button_handler = button_handler;
-  lock_mode->mode.modifier_handler = modifier_handler;
+  lock_mode->mode.modifiers_handler = modifiers_handler;
   lock_mode->mode.render = hikari_renderer_lock_mode;
   lock_mode->mode.cancel = cancel;
   lock_mode->mode.cursor_move = cursor_move;

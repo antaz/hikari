@@ -149,11 +149,8 @@ dump_debug(struct hikari_server *server)
 #endif
 
 static void
-modifier_handler(struct wl_listener *listener, void *data)
+modifiers_handler(struct hikari_keyboard *keyboard)
 {
-  struct hikari_keyboard *keyboard =
-      wl_container_of(listener, keyboard, modifiers);
-
   wlr_seat_set_keyboard(hikari_server.seat, keyboard->device);
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
@@ -287,11 +284,9 @@ is_cursor_down(void)
 }
 
 static void
-button_handler(struct wl_listener *listener, void *data)
+button_handler(
+    struct hikari_cursor *cursor, struct wlr_event_pointer_button *event)
 {
-  struct hikari_cursor *cursor = wl_container_of(listener, cursor, button);
-  struct wlr_event_pointer_button *event = data;
-
   if (handle_pending_action()) {
     if (event->state == WLR_BUTTON_RELEASED && is_cursor_down()) {
       stop_cursor_down_handling(event);
@@ -317,11 +312,9 @@ button_handler(struct wl_listener *listener, void *data)
 }
 
 static void
-key_handler(struct wl_listener *listener, void *data)
+key_handler(
+    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
 {
-  struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
-  struct wlr_event_keyboard_key *event = data;
-
   if (handle_pending_action()) {
     return;
   }
@@ -345,7 +338,7 @@ hikari_normal_mode_init(struct hikari_normal_mode *normal_mode)
 {
   normal_mode->mode.key_handler = key_handler;
   normal_mode->mode.button_handler = button_handler;
-  normal_mode->mode.modifier_handler = modifier_handler;
+  normal_mode->mode.modifiers_handler = modifiers_handler;
   normal_mode->mode.render = hikari_renderer_normal_mode;
   normal_mode->mode.cancel = cancel;
   normal_mode->mode.cursor_move = cursor_move;

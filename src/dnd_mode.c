@@ -19,19 +19,16 @@ cancel(void)
 }
 
 static void
-key_handler(struct wl_listener *listener, void *data)
+key_handler(
+    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
 {
-  struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
-
-  struct wlr_event_keyboard_key *event = data;
-
   if (event->state == WLR_KEY_RELEASED) {
     hikari_server_enter_normal_mode(NULL);
   }
 }
 
 static void
-modifier_handler(struct wl_listener *listener, void *data)
+modifiers_handler(struct hikari_keyboard *keyboard)
 {}
 
 static void
@@ -57,10 +54,9 @@ cursor_move(uint32_t time_msec)
 }
 
 static void
-button_handler(struct wl_listener *listener, void *data)
+button_handler(
+    struct hikari_cursor *cursor, struct wlr_event_pointer_button *event)
 {
-  struct wlr_event_pointer_button *event = data;
-
   wlr_seat_pointer_notify_button(
       hikari_server.seat, event->time_msec, event->button, event->state);
 
@@ -74,7 +70,7 @@ hikari_dnd_mode_init(struct hikari_dnd_mode *dnd_mode)
 {
   dnd_mode->mode.key_handler = key_handler;
   dnd_mode->mode.button_handler = button_handler;
-  dnd_mode->mode.modifier_handler = modifier_handler;
+  dnd_mode->mode.modifiers_handler = modifiers_handler;
   dnd_mode->mode.render = hikari_renderer_dnd_mode;
   dnd_mode->mode.cancel = cancel;
   dnd_mode->mode.cursor_move = cursor_move;
