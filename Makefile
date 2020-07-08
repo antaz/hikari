@@ -116,9 +116,6 @@ PANGO_LIBS != pkg-config --libs pangocairo
 CAIRO_CFLAGS != pkg-config --cflags cairo
 CAIRO_LIBS != pkg-config --libs cairo
 
-GLIB_CFLAGS != pkg-config --cflags glib-2.0
-GLIB_LIBS != pkg-config --libs glib-2.0
-
 PIXMAN_CFLAGS != pkg-config --cflags pixman-1
 PIXMAN_LIBS != pkg-config --libs pixman-1
 
@@ -138,7 +135,6 @@ CFLAGS += \
 	${WLROOTS_CFLAGS} \
 	${PANGO_CFLAGS} \
 	${CAIRO_CFLAGS} \
-	${GLIB_CFLAGS} \
 	${PIXMAN_CFLAGS} \
 	${XKBCOMMON_CFLAGS} \
 	${WAYLAND_CFLAGS} \
@@ -149,7 +145,6 @@ LIBS = \
 	${WLROOTS_LIBS} \
 	${PANGO_LIBS} \
 	${CAIRO_LIBS} \
-	${GLIB_LIBS} \
 	${PIXMAN_LIBS} \
 	${XKBCOMMON_LIBS} \
 	${WAYLAND_LIBS} \

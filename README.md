@@ -82,7 +82,6 @@ repository, breaking changes might be encountered. These are documented in the
 * xkbcommon
 * pixman
 * libucl
-* glib
 * evdev-proto
 * epoll-shim (FreeBSD)
 * XWayland (optional, runtime dependency)
