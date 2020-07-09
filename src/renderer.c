@@ -557,13 +557,13 @@ hikari_renderer_damage_frame_handler(struct wl_listener *listener, void *data)
 }
 
 static inline void
-render_visible_views(struct hikari_renderer *renderer)
+render_public_views(struct hikari_renderer *renderer)
 {
   struct hikari_output *output = renderer->wlr_output->data;
 
   struct hikari_view *view;
   wl_list_for_each_reverse (view, &output->views, output_views) {
-    if (!hikari_view_is_hidden(view)) {
+    if (hikari_view_is_public(view) && !hikari_view_is_hidden(view)) {
       renderer->geometry = hikari_view_border_geometry(view);
 
       if (hikari_view_wants_border(view)) {
@@ -800,7 +800,7 @@ hikari_renderer_lock_mode(struct hikari_renderer *renderer)
   assert(mode == (struct hikari_lock_mode *)hikari_server.mode);
 
   render_background(renderer, 0.1);
-  render_visible_views(renderer);
+  render_public_views(renderer);
   render_lock_indicator(renderer, mode->lock_indicator);
 }
 
