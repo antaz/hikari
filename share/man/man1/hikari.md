@@ -427,6 +427,15 @@ View actions
   complement each other so maximizing a view horizontally and then vertically
   adds up to a full maximization state and so on.
 
+* **view-toggle-public**
+
+  Toggles the public state of the focused view. Public views are also displayed
+  on the lock screen (note: they do not accept any input when the screen is
+  locked though). These views should only contain information that should be
+  displayed when the screen is locked, such as clocks or the progress of a long
+  running process, they should never contain sensitive information. The public
+  state is indicated in the sheet indicator bar via **!**.
+
 VT actions
 ----------
 * **vt-switch-to-[1-9]**
