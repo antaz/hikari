@@ -917,7 +917,6 @@ hikari_server_terminate(void *arg)
 void
 hikari_server_stop(void)
 {
-  wl_display_destroy_clients(hikari_server.display);
 
   wl_list_remove(&hikari_server.new_output.link);
   wl_list_remove(&hikari_server.new_input.link);
@@ -932,14 +931,21 @@ hikari_server_stop(void)
 
   hikari_cursor_fini(&hikari_server.cursor);
   hikari_indicator_fini(&hikari_server.indicator);
+
   hikari_lock_mode_fini(&hikari_server.lock_mode);
   hikari_mark_assign_mode_fini(&hikari_server.mark_assign_mode);
 
+#if HAVE_XWAYLAND
+  wlr_xwayland_destroy(hikari_server.xwayland);
+#endif
+  wl_display_destroy_clients(hikari_server.display);
   wlr_seat_destroy(hikari_server.seat);
-  wlr_output_layout_destroy(hikari_server.output_layout);
-
   wl_display_destroy(hikari_server.display);
-  wlr_output_destroy(hikari_server.noop_output->wlr_output);
+
+  hikari_output_fini(hikari_server.noop_output);
+  hikari_free(hikari_server.noop_output);
+
+  wlr_output_layout_destroy(hikari_server.output_layout);
 
   hikari_configuration_fini(hikari_configuration);
   hikari_free(hikari_configuration);
