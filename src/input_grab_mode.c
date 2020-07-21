@@ -88,8 +88,10 @@ cursor_move(uint32_t time_msec)
   struct wlr_surface *surface =
       hikari_view_interface_surface_at(view_interface, ox, oy, &sx, &sy);
 
-  wlr_seat_pointer_notify_enter(hikari_server.seat, surface, sx, sy);
-  wlr_seat_pointer_notify_motion(hikari_server.seat, time_msec, sx, sy);
+  if (surface != NULL) {
+    wlr_seat_pointer_notify_enter(hikari_server.seat, surface, sx, sy);
+    wlr_seat_pointer_notify_motion(hikari_server.seat, time_msec, sx, sy);
+  }
 }
 
 void
