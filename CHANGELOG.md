@@ -1,5 +1,19 @@
 # Changelog
 
+## 2.1.0
+
+* update to `wlroots` 0.11.0
+* new lockscreen
+* add public view flag to include views on the lockscreen
+* add noop output to handle deallocation of all outputs
+* inhabited sheet cycling is now wrapping
+* add configuration for switches (e.g. lid switch)
+* add keyboard configuration
+* keyboard repeat rate/delay configuration
+* add view preview on cycling
+* improved renderer performance
+* fix mouse dragging bug
+
 ## 2.0.5
 
 * fix unmap/map handling for layers
