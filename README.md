@@ -174,6 +174,14 @@ Some applications that are used to build desktop components require
 make WITH_LAYERSHELL=YES
 ```
 
+#### Building with virtual input support
+
+Virtual input support is needed for applications like `wayvnc`.
+
+```
+make WITH_VIRTUAL_INPUT=YES
+```
+
 #### Building the manpage
 
 Building the `hikari` manpage requires [`pandoc`](http://pandoc.org/). To build

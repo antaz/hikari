@@ -115,11 +115,8 @@ add_switch(struct hikari_server *server, struct wlr_input_device *device)
 }
 
 static void
-new_input_handler(struct wl_listener *listener, void *data)
+add_input(struct hikari_server *server, struct wlr_input_device *device)
 {
-  struct hikari_server *server = wl_container_of(listener, server, new_input);
-
-  struct wlr_input_device *device = data;
 
   switch (device->type) {
     case WLR_INPUT_DEVICE_KEYBOARD:
@@ -148,6 +145,38 @@ new_input_handler(struct wl_listener *listener, void *data)
     hikari_cursor_reset_image(&server->cursor);
   }
 }
+
+static void
+new_input_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_server *server = wl_container_of(listener, server, new_input);
+  struct wlr_input_device *device = data;
+
+  add_input(server, device);
+}
+
+#ifdef HAVE_VIRTUAL_INPUT
+static void
+new_virtual_keyboard_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_server *server =
+      wl_container_of(listener, server, new_virtual_keyboard);
+  struct wlr_virtual_keyboard_v1 *keyboard = data;
+  struct wlr_input_device *device = &keyboard->input_device;
+
+  add_input(server, device);
+}
+
+static void
+setup_virtual_keyboard(struct hikari_server *server)
+{
+  server->virtual_keyboard =
+      wlr_virtual_keyboard_manager_v1_create(server->display);
+  wl_signal_add(&server->virtual_keyboard->events.new_virtual_keyboard,
+      &server->new_virtual_keyboard);
+  server->new_virtual_keyboard.notify = new_virtual_keyboard_handler;
+}
+#endif
 
 static void
 new_output_handler(struct wl_listener *listener, void *data)
@@ -847,6 +876,9 @@ server_init(struct hikari_server *server, char *config_path)
   setup_xwayland(server);
 #endif
   setup_cursor(server);
+#ifdef HAVE_VIRTUAL_INPUT
+  setup_virtual_keyboard(server);
+#endif
   setup_decorations(server);
   setup_selection(server);
   setup_xdg_shell(server);

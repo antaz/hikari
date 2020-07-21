@@ -103,6 +103,10 @@ PERMS = 555
 PERMS = 4555
 .endif
 
+.ifdef WITH_VIRTUAL_INPUT
+CFLAGS += -DHAVE_VIRTUAL_INPUT=1
+.endif
+
 CFLAGS += -Wall -I. -Iinclude -DHIKARI_ETC_PREFIX=${ETC_PREFIX}
 
 WLROOTS_CFLAGS != pkg-config --cflags wlroots

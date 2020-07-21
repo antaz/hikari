@@ -4,6 +4,10 @@
 #include <wayland-server-core.h>
 #include <wayland-util.h>
 
+#ifdef HAVE_VIRTUAL_INPUT
+#include <wlr/types/wlr_virtual_keyboard_v1.h>
+#endif
+
 #include <hikari/configuration.h>
 #include <hikari/cursor.h>
 #include <hikari/dnd_mode.h>
@@ -67,6 +71,11 @@ struct hikari_server {
   struct wl_listener new_xwayland_surface;
 
   struct wlr_xwayland *xwayland;
+#endif
+
+#ifdef HAVE_VIRTUAL_INPUT
+  struct wlr_virtual_keyboard_manager_v1 *virtual_keyboard;
+  struct wl_listener new_virtual_keyboard;
 #endif
 
   struct wlr_compositor *compositor;
