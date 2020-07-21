@@ -276,7 +276,6 @@ get_layer(struct hikari_layer_popup *layer_popup)
     switch (current->parent.type) {
       case HIKARI_LAYER_NODE_TYPE_LAYER:
         return current->parent.node.layer;
-        break;
 
       case HIKARI_LAYER_NODE_TYPE_POPUP:
         current = current->parent.node.popup;
