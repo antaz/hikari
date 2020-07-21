@@ -176,6 +176,33 @@ setup_virtual_keyboard(struct hikari_server *server)
       &server->new_virtual_keyboard);
   server->new_virtual_keyboard.notify = new_virtual_keyboard_handler;
 }
+
+static void
+new_virtual_pointer_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_server *server =
+      wl_container_of(listener, server, new_virtual_pointer);
+  struct wlr_virtual_pointer_v1_new_pointer_event *event = data;
+  struct wlr_virtual_pointer_v1 *pointer = event->new_pointer;
+  struct wlr_input_device *device = &pointer->input_device;
+
+  add_input(server, device);
+
+  if (event->suggested_output) {
+    wlr_cursor_map_to_output(
+        server->cursor.wlr_cursor, event->suggested_output);
+  }
+}
+
+static void
+setup_virtual_pointer(struct hikari_server *server)
+{
+  server->virtual_pointer =
+      wlr_virtual_pointer_manager_v1_create(server->display);
+  wl_signal_add(&server->virtual_pointer->events.new_virtual_pointer,
+      &server->new_virtual_pointer);
+  server->new_virtual_pointer.notify = new_virtual_pointer_handler;
+}
 #endif
 
 static void
@@ -878,6 +905,7 @@ server_init(struct hikari_server *server, char *config_path)
   setup_cursor(server);
 #ifdef HAVE_VIRTUAL_INPUT
   setup_virtual_keyboard(server);
+  setup_virtual_pointer(server);
 #endif
   setup_decorations(server);
   setup_selection(server);

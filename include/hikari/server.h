@@ -6,6 +6,7 @@
 
 #ifdef HAVE_VIRTUAL_INPUT
 #include <wlr/types/wlr_virtual_keyboard_v1.h>
+#include <wlr/types/wlr_virtual_pointer_v1.h>
 #endif
 
 #include <hikari/configuration.h>
@@ -76,6 +77,9 @@ struct hikari_server {
 #ifdef HAVE_VIRTUAL_INPUT
   struct wlr_virtual_keyboard_manager_v1 *virtual_keyboard;
   struct wl_listener new_virtual_keyboard;
+
+  struct wlr_virtual_pointer_manager_v1 *virtual_pointer;
+  struct wl_listener new_virtual_pointer;
 #endif
 
   struct wlr_compositor *compositor;
