@@ -587,10 +587,9 @@ request_start_drag_handler(struct wl_listener *listener, void *data)
   if (wlr_seat_validate_pointer_grab_serial(
           server->seat, event->origin, event->serial)) {
     wlr_seat_start_pointer_drag(server->seat, event->drag, event->serial);
-    return;
+  } else {
+    wlr_data_source_destroy(event->drag->source);
   }
-
-  wlr_data_source_destroy(event->drag->source);
 }
 
 static void
