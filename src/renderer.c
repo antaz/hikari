@@ -137,6 +137,30 @@ buffer_damage_finish:
   pixman_region32_fini(&damage);
 }
 
+static void
+render_indicator_bar(struct hikari_indicator_bar *indicator_bar,
+    struct hikari_renderer *renderer)
+{
+  if (indicator_bar->texture == NULL) {
+    return;
+  }
+
+  struct wlr_box *geometry = renderer->geometry;
+  struct wlr_renderer *wlr_renderer = renderer->wlr_renderer;
+  struct wlr_output *wlr_output = renderer->wlr_output;
+
+  float matrix[9];
+
+  geometry->width = indicator_bar->width;
+  geometry->height = hikari_configuration->font.height;
+
+  wlr_renderer_scissor(wlr_renderer, geometry);
+  wlr_matrix_project_box(matrix, geometry, 0, 0, wlr_output->transform_matrix);
+
+  wlr_render_texture_with_matrix(
+      wlr_renderer, indicator_bar->texture, matrix, 1);
+}
+
 static inline void
 render_indicator(
     struct hikari_indicator *indicator, struct hikari_renderer *renderer)
@@ -150,21 +174,21 @@ render_indicator(
 
   struct hikari_indicator_bar *title_bar = &indicator->title;
   geometry.y += 5;
-  hikari_indicator_bar_render(title_bar, renderer);
+  render_indicator_bar(title_bar, renderer);
 
   int bar_height = hikari_configuration->font.height;
 
   struct hikari_indicator_bar *sheet_bar = &indicator->sheet;
   geometry.y += bar_height + 5;
-  hikari_indicator_bar_render(sheet_bar, renderer);
+  render_indicator_bar(sheet_bar, renderer);
 
   struct hikari_indicator_bar *group_bar = &indicator->group;
   geometry.y += bar_height + 5;
-  hikari_indicator_bar_render(group_bar, renderer);
+  render_indicator_bar(group_bar, renderer);
 
   struct hikari_indicator_bar *mark_bar = &indicator->mark;
   geometry.y += bar_height + 5;
-  hikari_indicator_bar_render(mark_bar, renderer);
+  render_indicator_bar(mark_bar, renderer);
 
   renderer->geometry = border_geometry;
 }

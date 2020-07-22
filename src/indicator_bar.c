@@ -112,27 +112,3 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
   g_object_unref(layout);
   cairo_destroy(cairo);
 }
-
-void
-hikari_indicator_bar_render(struct hikari_indicator_bar *indicator_bar,
-    struct hikari_renderer *renderer)
-{
-  if (indicator_bar->texture == NULL) {
-    return;
-  }
-
-  struct wlr_box *geometry = renderer->geometry;
-  struct wlr_renderer *wlr_renderer = renderer->wlr_renderer;
-  struct wlr_output *wlr_output = renderer->wlr_output;
-
-  float matrix[9];
-
-  geometry->width = indicator_bar->width;
-  geometry->height = hikari_configuration->font.height;
-
-  wlr_renderer_scissor(wlr_renderer, geometry);
-  wlr_matrix_project_box(matrix, geometry, 0, 0, wlr_output->transform_matrix);
-
-  wlr_render_texture_with_matrix(
-      wlr_renderer, indicator_bar->texture, matrix, 1);
-}

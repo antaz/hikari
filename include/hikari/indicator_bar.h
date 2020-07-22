@@ -30,10 +30,6 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
     float background[static 4]);
 
 void
-hikari_indicator_bar_render(struct hikari_indicator_bar *indicator_bar,
-    struct hikari_renderer *renderer);
-
-void
 hikari_indicator_bar_damage(struct hikari_indicator_bar *indicator_bar,
     struct hikari_output *output,
     struct wlr_box *view_geometry);
