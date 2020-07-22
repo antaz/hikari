@@ -24,16 +24,18 @@ void
 hikari_indicator_fini(struct hikari_indicator *indicator);
 
 void
-hikari_indicator_update(struct hikari_indicator *indicator,
-    struct hikari_view *view,
-    float background[static 4]);
+hikari_indicator_update(
+    struct hikari_indicator *indicator, struct hikari_view *view);
+
+void
+hikari_indicator_set_color(
+    struct hikari_indicator *indicator, float color[static 4]);
 
 void
 hikari_indicator_update_sheet(struct hikari_indicator *indicator,
     struct hikari_output *output,
     struct hikari_sheet *sheet,
-    unsigned long flags,
-    float background[static 4]);
+    unsigned long flags);
 
 void
 hikari_indicator_damage(
@@ -43,10 +45,9 @@ hikari_indicator_damage(
   static inline void hikari_indicator_update_##name(                           \
       struct hikari_indicator *indicator,                                      \
       struct hikari_output *output,                                            \
-      const char *text,                                                        \
-      float background[static 4])                                              \
+      const char *text)                                                        \
   {                                                                            \
-    hikari_indicator_bar_update(&indicator->name, output, text, background);   \
+    hikari_indicator_bar_update(&indicator->name, output, text);               \
   }
 
 UPDATE(title)
@@ -68,5 +69,18 @@ DAMAGE(sheet)
 DAMAGE(group)
 DAMAGE(mark)
 #undef DAMAGE
+
+#define COLOR(name)                                                            \
+  static inline void hikari_indicator_set_color_##name(                        \
+      struct hikari_indicator *indicator, float color[static 4])               \
+  {                                                                            \
+    hikari_indicator_bar_set_color(&indicator->name, color);                   \
+  }
+
+COLOR(title)
+COLOR(sheet)
+COLOR(group)
+COLOR(mark)
+#undef COLOR
 
 #endif

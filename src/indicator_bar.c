@@ -21,11 +21,24 @@
 void
 hikari_indicator_bar_init(struct hikari_indicator_bar *indicator_bar,
     struct hikari_indicator *indicator,
-    int offset)
+    int offset,
+    float color[static 4])
 {
   indicator_bar->texture = NULL;
   indicator_bar->indicator = indicator;
   indicator_bar->offset = offset;
+
+  hikari_indicator_bar_set_color(indicator_bar, color);
+}
+
+void
+hikari_indicator_bar_set_color(
+    struct hikari_indicator_bar *indicator_bar, float color[static 4])
+{
+  indicator_bar->color[0] = color[0];
+  indicator_bar->color[1] = color[1];
+  indicator_bar->color[2] = color[2];
+  indicator_bar->color[3] = color[3];
 }
 
 void
@@ -51,8 +64,7 @@ hikari_indicator_bar_damage(struct hikari_indicator_bar *indicator_bar,
 void
 hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
     struct hikari_output *output,
-    const char *text,
-    float background[static 4])
+    const char *text)
 {
   if (indicator_bar->texture != NULL) {
     hikari_indicator_bar_fini(indicator_bar);
@@ -77,6 +89,8 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
 
   cairo_t *cairo = cairo_create(surface);
   PangoLayout *layout = pango_cairo_create_layout(cairo);
+
+  float *background = indicator_bar->color;
 
   cairo_set_source_rgba(
       cairo, background[0], background[1], background[2], background[3]);

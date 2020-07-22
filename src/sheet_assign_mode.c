@@ -65,11 +65,7 @@ update_state(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
 
   hikari_indicator_damage_sheet(indicator, output, geometry);
 
-  hikari_indicator_update_sheet(indicator,
-      output,
-      sheet,
-      view->flags,
-      hikari_configuration->indicator_insert);
+  hikari_indicator_update_sheet(indicator, output, sheet, view->flags);
 
   hikari_indicator_damage_sheet(indicator, output, geometry);
 
@@ -184,13 +180,9 @@ cancel(void)
     struct hikari_indicator *indicator = &hikari_server.indicator;
 
     hikari_indicator_damage(indicator, view);
-
-    hikari_indicator_update_sheet(indicator,
-        output,
-        view->sheet,
-        view->flags,
-        hikari_configuration->indicator_selected);
-
+    hikari_indicator_set_color_sheet(
+        indicator, hikari_configuration->indicator_selected);
+    hikari_indicator_update_sheet(indicator, output, view->sheet, view->flags);
     hikari_view_damage_border(view);
   }
 
@@ -229,11 +221,9 @@ hikari_sheet_assign_mode_enter(struct hikari_view *view)
   hikari_server.sheet_assign_mode.sheet = view->sheet;
   hikari_server.mode = (struct hikari_mode *)&hikari_server.sheet_assign_mode;
 
-  hikari_indicator_update_sheet(indicator,
-      view->output,
-      view->sheet,
-      view->flags,
-      hikari_configuration->indicator_insert);
-
+  hikari_indicator_set_color_sheet(
+      indicator, hikari_configuration->indicator_insert);
+  hikari_indicator_update_sheet(
+      indicator, view->output, view->sheet, view->flags);
   hikari_indicator_damage_sheet(indicator, output, geometry);
 }

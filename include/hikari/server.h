@@ -156,7 +156,7 @@ hikari_server_unset_cycling(void)
 
 void
 hikari_server_migrate_focus_view(
-    struct hikari_output *output, double lx, double ly, float color[static 4]);
+    struct hikari_output *output, double lx, double ly);
 
 void
 hikari_server_prepare_privileged(void);

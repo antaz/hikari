@@ -411,9 +411,7 @@ hikari_workspace_focus_view(
       hikari_view_damage_border(view);
     }
 
-    hikari_indicator_update(&hikari_server.indicator,
-        view,
-        hikari_configuration->indicator_selected);
+    hikari_indicator_update(&hikari_server.indicator, view);
   } else {
     hikari_cursor_reset_image(&hikari_server.cursor);
   }
@@ -698,11 +696,8 @@ pin_to_sheet(struct hikari_workspace *workspace, struct hikari_sheet *sheet)
   if (!hikari_view_is_hidden(focus_view)) {
     struct hikari_output *output = workspace->output;
 
-    hikari_indicator_update_sheet(&hikari_server.indicator,
-        output,
-        focus_view->sheet,
-        focus_view->flags,
-        hikari_configuration->indicator_selected);
+    hikari_indicator_update_sheet(
+        &hikari_server.indicator, output, focus_view->sheet, focus_view->flags);
   }
 }
 
@@ -758,11 +753,8 @@ hikari_workspace_toggle_view_invisible(struct hikari_workspace *workspace)
     hikari_indicator_damage_sheet(indicator, output, geometry);
   }
 
-  hikari_indicator_update_sheet(indicator,
-      output,
-      focus_view->sheet,
-      focus_view->flags,
-      hikari_configuration->indicator_selected);
+  hikari_indicator_update_sheet(
+      indicator, output, focus_view->sheet, focus_view->flags);
 
   if (hikari_server_is_indicating()) {
     hikari_indicator_damage_sheet(indicator, output, geometry);
@@ -784,11 +776,8 @@ hikari_workspace_toggle_view_public(struct hikari_workspace *workspace)
     hikari_indicator_damage_sheet(indicator, output, geometry);
   }
 
-  hikari_indicator_update_sheet(indicator,
-      output,
-      focus_view->sheet,
-      focus_view->flags,
-      hikari_configuration->indicator_selected);
+  hikari_indicator_update_sheet(
+      indicator, output, focus_view->sheet, focus_view->flags);
 
   if (hikari_server_is_indicating()) {
     hikari_indicator_damage_sheet(indicator, output, geometry);
@@ -810,11 +799,8 @@ hikari_workspace_toggle_view_floating(struct hikari_workspace *workspace)
     hikari_indicator_damage_sheet(indicator, output, geometry);
   }
 
-  hikari_indicator_update_sheet(indicator,
-      output,
-      focus_view->sheet,
-      focus_view->flags,
-      hikari_configuration->indicator_selected);
+  hikari_indicator_update_sheet(
+      indicator, output, focus_view->sheet, focus_view->flags);
 
   if (hikari_server_is_indicating()) {
     hikari_indicator_damage_sheet(indicator, output, geometry);

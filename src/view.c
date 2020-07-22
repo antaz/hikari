@@ -333,10 +333,7 @@ hikari_view_set_title(struct hikari_view *view, const char *title)
     if (hikari_server.workspace->focus_view == view) {
       assert(!hikari_view_is_hidden(view));
       struct hikari_output *output = view->output;
-      hikari_indicator_update_title(&hikari_server.indicator,
-          output,
-          title,
-          hikari_configuration->indicator_selected);
+      hikari_indicator_update_title(&hikari_server.indicator, output, title);
     }
   } else {
     view->title = NULL;

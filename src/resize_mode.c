@@ -18,10 +18,9 @@ cancel(void)
   if (view != NULL) {
     struct hikari_indicator *indicator = &hikari_server.indicator;
 
-    hikari_indicator_update(&hikari_server.indicator,
-        view,
-        hikari_configuration->indicator_selected);
-
+    hikari_indicator_set_color(
+        indicator, hikari_configuration->indicator_selected);
+    hikari_indicator_update(indicator, view);
     hikari_indicator_damage(indicator, view);
     hikari_group_damage(view->group);
 
@@ -87,8 +86,10 @@ hikari_resize_mode_init(struct hikari_resize_mode *resize_mode)
 void
 hikari_resize_mode_enter(struct hikari_view *view)
 {
-  hikari_indicator_update(
-      &hikari_server.indicator, view, hikari_configuration->indicator_insert);
+  struct hikari_indicator *indicator = &hikari_server.indicator;
+
+  hikari_indicator_set_color(indicator, hikari_configuration->indicator_insert);
+  hikari_indicator_update(indicator, view);
 
   hikari_view_raise(view);
   hikari_view_bottom_right_cursor(view);

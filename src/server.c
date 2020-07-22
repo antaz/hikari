@@ -1416,7 +1416,7 @@ hikari_server_switch_to_mark(void *arg)
 
 void
 hikari_server_migrate_focus_view(
-    struct hikari_output *output, double lx, double ly, float color[static 4])
+    struct hikari_output *output, double lx, double ly)
 {
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
@@ -1428,7 +1428,7 @@ hikari_server_migrate_focus_view(
       focus_view, sheet, lx - output->geometry.x, ly - output->geometry.y);
 
   hikari_indicator_update_sheet(
-      &hikari_server.indicator, output, sheet, focus_view->flags, color);
+      &hikari_server.indicator, output, sheet, focus_view->flags);
 
   hikari_server.workspace->focus_view = NULL;
   hikari_server.workspace = output->workspace;
@@ -1458,8 +1458,7 @@ move_view(int dx, int dy)
   if (wlr_output == NULL || wlr_output->data == view_output) {
     hikari_view_move(focus_view, dx, dy);
   } else {
-    hikari_server_migrate_focus_view(
-        wlr_output->data, lx, ly, hikari_configuration->indicator_selected);
+    hikari_server_migrate_focus_view(wlr_output->data, lx, ly);
   }
 }
 
@@ -1514,8 +1513,7 @@ move_resize_view(int dx, int dy, int dwidth, int dheight)
   if (wlr_output == NULL || wlr_output->data == view_output) {
     hikari_view_move_resize(focus_view, dx, dy, dwidth, dheight);
   } else {
-    hikari_server_migrate_focus_view(
-        wlr_output->data, lx, ly, hikari_configuration->indicator_selected);
+    hikari_server_migrate_focus_view(wlr_output->data, lx, ly);
     hikari_view_resize(focus_view, dheight, dwidth);
   }
 }

@@ -17,9 +17,10 @@ cancel(void)
 
   if (view != NULL) {
     struct hikari_indicator *indicator = &hikari_server.indicator;
-    hikari_indicator_update(
-        indicator, view, hikari_configuration->indicator_selected);
 
+    hikari_indicator_set_color(
+        indicator, hikari_configuration->indicator_selected);
+    hikari_indicator_update(indicator, view);
     hikari_indicator_damage(indicator, view);
     hikari_group_damage(view->group);
 
@@ -64,8 +65,7 @@ cursor_move(uint32_t time_msec)
     hikari_view_move_absolute(
         focus_view, lx - view_output->geometry.x, ly - view_output->geometry.y);
   } else {
-    hikari_server_migrate_focus_view(
-        output, lx, ly, hikari_configuration->indicator_insert);
+    hikari_server_migrate_focus_view(output, lx, ly);
   }
 }
 
@@ -92,8 +92,10 @@ hikari_move_mode_init(struct hikari_move_mode *move_mode)
 void
 hikari_move_mode_enter(struct hikari_view *view)
 {
-  hikari_indicator_update(
-      &hikari_server.indicator, view, hikari_configuration->indicator_insert);
+  struct hikari_indicator *indicator = &hikari_server.indicator;
+
+  hikari_indicator_set_color(indicator, hikari_configuration->indicator_insert);
+  hikari_indicator_update(indicator, view);
 
   hikari_view_raise(view);
   hikari_view_top_left_cursor(view);

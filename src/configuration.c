@@ -1959,9 +1959,8 @@ hikari_configuration_reload(char *config_path)
     }
 
     if (hikari_server.workspace->focus_view != NULL) {
-      hikari_indicator_update(&hikari_server.indicator,
-          hikari_server.workspace->focus_view,
-          hikari_configuration->indicator_selected);
+      hikari_indicator_update(
+          &hikari_server.indicator, hikari_server.workspace->focus_view);
     }
   } else {
     hikari_configuration_fini(configuration);

@@ -13,21 +13,27 @@ struct hikari_indicator_bar {
 
   int width;
   int offset;
+
+  float color[4];
 };
 
 void
 hikari_indicator_bar_init(struct hikari_indicator_bar *indicator_bar,
     struct hikari_indicator *indicator,
-    int offset);
+    int offset,
+    float color[static 4]);
 
 void
 hikari_indicator_bar_fini(struct hikari_indicator_bar *indicator_bar);
 
 void
+hikari_indicator_bar_set_color(
+    struct hikari_indicator_bar *indicator_bar, float color[static 4]);
+
+void
 hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
     struct hikari_output *output,
-    const char *text,
-    float background[static 4]);
+    const char *text);
 
 void
 hikari_indicator_bar_damage(struct hikari_indicator_bar *indicator_bar,

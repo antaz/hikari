@@ -15,13 +15,13 @@ hikari_indicator_init(struct hikari_indicator *indicator, float color[static 4])
   int bar_height = hikari_configuration->font.height;
 
   int offset = 5;
-  hikari_indicator_bar_init(&indicator->title, indicator, offset);
+  hikari_indicator_bar_init(&indicator->title, indicator, offset, color);
   offset += bar_height + 5;
-  hikari_indicator_bar_init(&indicator->sheet, indicator, offset);
+  hikari_indicator_bar_init(&indicator->sheet, indicator, offset, color);
   offset += bar_height + 5;
-  hikari_indicator_bar_init(&indicator->group, indicator, offset);
+  hikari_indicator_bar_init(&indicator->group, indicator, offset, color);
   offset += bar_height + 5;
-  hikari_indicator_bar_init(&indicator->mark, indicator, offset);
+  hikari_indicator_bar_init(&indicator->mark, indicator, offset, color);
 }
 
 void
@@ -34,28 +34,32 @@ hikari_indicator_fini(struct hikari_indicator *indicator)
 }
 
 void
-hikari_indicator_update(struct hikari_indicator *indicator,
-    struct hikari_view *view,
-    float background[static 4])
+hikari_indicator_update(
+    struct hikari_indicator *indicator, struct hikari_view *view)
 {
   assert(view != NULL);
 
   struct hikari_output *output = view->output;
 
-  hikari_indicator_update_title(indicator, output, view->title, background);
-
-  hikari_indicator_update_sheet(
-      indicator, output, view->sheet, view->flags, background);
-
-  hikari_indicator_update_group(
-      indicator, output, view->group->name, background);
+  hikari_indicator_update_title(indicator, output, view->title);
+  hikari_indicator_update_sheet(indicator, output, view->sheet, view->flags);
+  hikari_indicator_update_group(indicator, output, view->group->name);
 
   if (view->mark != NULL) {
-    hikari_indicator_update_mark(
-        indicator, output, view->mark->name, background);
+    hikari_indicator_update_mark(indicator, output, view->mark->name);
   } else {
-    hikari_indicator_update_mark(indicator, output, "", background);
+    hikari_indicator_update_mark(indicator, output, "");
   }
+}
+
+void
+hikari_indicator_set_color(
+    struct hikari_indicator *indicator, float color[static 4])
+{
+  hikari_indicator_set_color_title(indicator, color);
+  hikari_indicator_set_color_sheet(indicator, color);
+  hikari_indicator_set_color_group(indicator, color);
+  hikari_indicator_set_color_mark(indicator, color);
 }
 
 static char
@@ -68,8 +72,7 @@ void
 hikari_indicator_update_sheet(struct hikari_indicator *indicator,
     struct hikari_output *output,
     struct hikari_sheet *sheet,
-    unsigned long flags,
-    float background[static 4])
+    unsigned long flags)
 {
   bool invisible = flags & hikari_view_invisible_flag;
   bool floating = flags & hikari_view_floating_flag;
@@ -108,7 +111,7 @@ hikari_indicator_update_sheet(struct hikari_indicator *indicator,
 
   strcpy(&text[i], output_name);
 
-  hikari_indicator_bar_update(&indicator->sheet, output, text, background);
+  hikari_indicator_bar_update(&indicator->sheet, output, text);
 
   hikari_free(text);
 }

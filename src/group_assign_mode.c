@@ -125,11 +125,9 @@ update_state(void)
   hikari_indicator_damage_group(indicator, output, geometry);
 
   if (!strcmp(input, "")) {
-    hikari_indicator_update_group(
-        indicator, output, " ", hikari_configuration->indicator_insert);
+    hikari_indicator_update_group(indicator, output, " ");
   } else {
-    hikari_indicator_update_group(
-        indicator, output, input, hikari_configuration->indicator_insert);
+    hikari_indicator_update_group(indicator, output, input);
   }
 
   if (mode->group != group) {
@@ -271,6 +269,10 @@ cancel(void)
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_view *view = workspace->focus_view;
   struct hikari_group_assign_mode *mode = get_mode();
+  struct hikari_indicator *indicator = &hikari_server.indicator;
+
+  hikari_indicator_set_color_group(
+      indicator, hikari_configuration->indicator_selected);
 
   if (view != NULL) {
     struct hikari_output *output = view->output;
@@ -278,10 +280,7 @@ cancel(void)
 
     hikari_indicator_damage(indicator, view);
 
-    hikari_indicator_update_group(indicator,
-        output,
-        view->group->name,
-        hikari_configuration->indicator_selected);
+    hikari_indicator_update_group(indicator, output, view->group->name);
 
     hikari_view_damage_border(view);
   }
@@ -332,10 +331,9 @@ hikari_group_assign_mode_enter(struct hikari_view *view)
 
   hikari_input_buffer_replace(&mode->input_buffer, view->group->name);
 
-  hikari_indicator_update_group(indicator,
-      output,
-      view->group->name,
-      hikari_configuration->indicator_insert);
+  hikari_indicator_set_color_group(
+      indicator, hikari_configuration->indicator_insert);
 
+  hikari_indicator_update_group(indicator, output, view->group->name);
   hikari_indicator_damage_group(indicator, output, geometry);
 }

@@ -48,16 +48,15 @@ update_state(struct hikari_mark *mark)
   }
 
   if (mark == NULL) {
-    hikari_indicator_update_mark(
-        indicator, output, " ", hikari_configuration->indicator_insert);
+    hikari_indicator_set_color_mark(
+        indicator, hikari_configuration->indicator_insert);
+    hikari_indicator_update_mark(indicator, output, " ");
   } else {
     float *indicator_color;
     struct hikari_view *mark_view = mark->view;
 
     if (mark_view != NULL) {
-      hikari_indicator_update(&mode->indicator,
-          mark_view,
-          hikari_configuration->indicator_conflict);
+      hikari_indicator_update(&mode->indicator, mark_view);
 
       hikari_view_damage_border(mark_view);
       hikari_indicator_damage(&mode->indicator, mark_view);
@@ -67,8 +66,8 @@ update_state(struct hikari_mark *mark)
       indicator_color = hikari_configuration->indicator_insert;
     }
 
-    hikari_indicator_update_mark(
-        indicator, output, mark->name, indicator_color);
+    hikari_indicator_set_color_mark(indicator, indicator_color);
+    hikari_indicator_update_mark(indicator, output, mark->name);
   }
 
   hikari_indicator_damage_mark(indicator, output, geometry);
@@ -86,14 +85,14 @@ confirm_mark_assign(void)
   struct hikari_mark *pending_mark = mode->pending_mark;
   struct hikari_indicator *indicator = &hikari_server.indicator;
 
+  hikari_indicator_set_color_mark(
+      indicator, hikari_configuration->indicator_selected);
+
   if (pending_mark != NULL) {
     clear_conflict(mode, pending_mark);
 
     hikari_mark_set(pending_mark, view);
-    hikari_indicator_update_mark(indicator,
-        output,
-        mode->pending_mark->name,
-        hikari_configuration->indicator_selected);
+    hikari_indicator_update_mark(indicator, output, mode->pending_mark->name);
 
     mode->pending_mark = NULL;
   } else {
@@ -101,8 +100,7 @@ confirm_mark_assign(void)
       hikari_mark_clear(view->mark);
     }
 
-    hikari_indicator_update_mark(
-        indicator, output, "", hikari_configuration->indicator_selected);
+    hikari_indicator_update_mark(indicator, output, "");
   }
 
   hikari_server_enter_normal_mode(NULL);
@@ -178,21 +176,20 @@ cancel(void)
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_view *view = workspace->focus_view;
   struct hikari_mark_assign_mode *mode = get_mode();
+  struct hikari_indicator *indicator = &hikari_server.indicator;
 
   clear_conflict(mode, mode->pending_mark);
 
+  hikari_indicator_set_color_mark(
+      indicator, hikari_configuration->indicator_selected);
+
   if (view != NULL) {
-    struct hikari_indicator *indicator = &hikari_server.indicator;
     struct hikari_output *output = view->output;
 
     if (view->mark != NULL) {
-      hikari_indicator_update_mark(indicator,
-          output,
-          view->mark->name,
-          hikari_configuration->indicator_selected);
+      hikari_indicator_update_mark(indicator, output, view->mark->name);
     } else {
-      hikari_indicator_update_mark(
-          indicator, output, "", hikari_configuration->indicator_selected);
+      hikari_indicator_update_mark(indicator, output, "");
     }
 
     hikari_indicator_damage(indicator, view);
@@ -244,12 +241,13 @@ hikari_mark_assign_mode_enter(struct hikari_view *view)
   hikari_server.mark_assign_mode.pending_mark = NULL;
   hikari_server.mode = (struct hikari_mode *)&hikari_server.mark_assign_mode;
 
+  hikari_indicator_set_color_mark(
+      indicator, hikari_configuration->indicator_insert);
+
   if (mark == NULL) {
-    hikari_indicator_update_mark(
-        indicator, output, " ", hikari_configuration->indicator_insert);
+    hikari_indicator_update_mark(indicator, output, " ");
   } else {
-    hikari_indicator_update_mark(
-        indicator, output, mark->name, hikari_configuration->indicator_insert);
+    hikari_indicator_update_mark(indicator, output, mark->name);
   }
 
   hikari_indicator_damage_mark(indicator, output, geometry);
