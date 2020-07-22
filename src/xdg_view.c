@@ -115,6 +115,14 @@ commit_handler(struct wl_listener *listener, void *data)
   }
 }
 
+static inline const char *
+get_app_id(struct hikari_xdg_view *xdg_view)
+{
+  const char *app_id = xdg_view->surface->toplevel->app_id;
+
+  return app_id == NULL ? "" : app_id;
+}
+
 static void
 first_map(struct hikari_xdg_view *xdg_view, bool *focus)
 {
@@ -126,8 +134,7 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   wlr_xdg_surface_get_geometry(xdg_view->surface, geometry);
   hikari_view_refresh_geometry(view, geometry);
 
-  const char *app_id = xdg_view->surface->toplevel->app_id;
-
+  const char *app_id = get_app_id(xdg_view);
 #if !defined(NDEBUG)
   printf("APP ID %s\n", app_id);
 #endif
