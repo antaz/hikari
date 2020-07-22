@@ -8,9 +8,9 @@
 
 #include <hikari/color.h>
 #include <hikari/configuration.h>
+#include <hikari/node.h>
 #include <hikari/output.h>
 #include <hikari/renderer.h>
-#include <hikari/view_interface.h>
 
 void
 hikari_border_refresh_geometry(

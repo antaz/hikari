@@ -402,8 +402,8 @@ hikari_view_damage_whole(struct hikari_view *view)
   damage_data.output = output;
   damage_data.view = view;
 
-  hikari_view_interface_for_each_surface(
-      (struct hikari_view_interface *)view, damage_whole_surface, &damage_data);
+  hikari_node_for_each_surface(
+      (struct hikari_node *)view, damage_whole_surface, &damage_data);
 }
 
 static struct wlr_box *
@@ -1365,9 +1365,8 @@ hikari_view_damage_surface(
   damage_data.whole = whole;
   damage_data.view = view;
 
-  hikari_view_interface_for_each_surface((struct hikari_view_interface *)view,
-      damage_single_surface,
-      &damage_data);
+  hikari_node_for_each_surface(
+      (struct hikari_node *)view, damage_single_surface, &damage_data);
 }
 
 void

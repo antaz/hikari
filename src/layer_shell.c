@@ -34,19 +34,16 @@ static void
 new_popup_handler(struct wl_listener *listener, void *data);
 
 static void
-for_each_surface(struct hikari_view_interface *view_interface,
+for_each_surface(struct hikari_node *node,
     void (*func)(struct wlr_surface *, int, int, void *),
     void *data);
 
 static struct wlr_surface *
-surface_at(struct hikari_view_interface *view_interface,
-    double ox,
-    double oy,
-    double *sx,
-    double *sy);
+surface_at(
+    struct hikari_node *node, double ox, double oy, double *sx, double *sy);
 
 static void
-focus(struct hikari_view_interface *view_interface);
+focus(struct hikari_node *node);
 
 static void
 calculate_geometry(struct hikari_layer *layer);
@@ -198,9 +195,9 @@ hikari_layer_init(
                                      ? wlr_layer_surface->output->data
                                      : hikari_server.workspace->output;
 
-  layer->view_interface.surface_at = surface_at;
-  layer->view_interface.focus = focus;
-  layer->view_interface.for_each_surface = for_each_surface;
+  layer->node.surface_at = surface_at;
+  layer->node.focus = focus;
+  layer->node.for_each_surface = for_each_surface;
   layer->output = output;
   layer->layer = wlr_layer_surface->client_pending.layer;
   layer->surface = wlr_layer_surface;
@@ -647,11 +644,11 @@ new_popup_handler(struct wl_listener *listener, void *data)
 }
 
 static void
-focus(struct hikari_view_interface *view_interface)
+focus(struct hikari_node *node)
 {
-  assert(view_interface != NULL);
+  assert(node != NULL);
 
-  struct hikari_layer *layer = (struct hikari_layer *)view_interface;
+  struct hikari_layer *layer = (struct hikari_layer *)node;
   struct wlr_layer_surface_v1_state *state = &layer->surface->current;
 
   if (state->keyboard_interactive) {
@@ -682,23 +679,20 @@ focus(struct hikari_view_interface *view_interface)
 }
 
 static void
-for_each_surface(struct hikari_view_interface *view_interface,
+for_each_surface(struct hikari_node *node,
     void (*func)(struct wlr_surface *, int, int, void *),
     void *data)
 {
-  struct hikari_layer *layer = (struct hikari_layer *)view_interface;
+  struct hikari_layer *layer = (struct hikari_layer *)node;
 
   wlr_layer_surface_v1_for_each_surface(layer->surface, func, data);
 }
 
 static struct wlr_surface *
-surface_at(struct hikari_view_interface *view_interface,
-    double ox,
-    double oy,
-    double *sx,
-    double *sy)
+surface_at(
+    struct hikari_node *node, double ox, double oy, double *sx, double *sy)
 {
-  struct hikari_layer *layer = (struct hikari_layer *)view_interface;
+  struct hikari_layer *layer = (struct hikari_layer *)node;
 
   double x = ox - layer->geometry.x;
   double y = oy - layer->geometry.y;

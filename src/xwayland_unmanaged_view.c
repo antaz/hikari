@@ -145,14 +145,11 @@ request_configure_handler(struct wl_listener *listener, void *data)
 }
 
 static struct wlr_surface *
-surface_at(struct hikari_view_interface *view_interface,
-    double lx,
-    double ly,
-    double *sx,
-    double *sy)
+surface_at(
+    struct hikari_node *node, double lx, double ly, double *sx, double *sy)
 {
   struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view =
-      (struct hikari_xwayland_unmanaged_view *)view_interface;
+      (struct hikari_xwayland_unmanaged_view *)node;
 
   struct wlr_box *geometry = &xwayland_unmanaged_view->geometry;
 
@@ -164,7 +161,7 @@ surface_at(struct hikari_view_interface *view_interface,
 }
 
 static void
-focus(struct hikari_view_interface *view_interface)
+focus(struct hikari_node *node)
 {}
 
 void
@@ -174,8 +171,8 @@ hikari_xwayland_unmanaged_view_init(
     struct hikari_workspace *workspace)
 {
   xwayland_unmanaged_view->workspace = workspace;
-  xwayland_unmanaged_view->view_interface.surface_at = surface_at;
-  xwayland_unmanaged_view->view_interface.focus = focus;
+  xwayland_unmanaged_view->node.surface_at = surface_at;
+  xwayland_unmanaged_view->node.focus = focus;
 
 #if !defined(NDEBUG)
   printf("UNMANAGED XWAYLAND NEW %p\n", xwayland_unmanaged_view);
@@ -185,7 +182,7 @@ hikari_xwayland_unmanaged_view_init(
 
   xwayland_unmanaged_view->surface = xwayland_surface;
   xwayland_unmanaged_view->surface->data =
-      (struct hikari_view_interface *)xwayland_unmanaged_view;
+      (struct hikari_node *)xwayland_unmanaged_view;
   xwayland_unmanaged_view->hidden = true;
 
   xwayland_unmanaged_view->map.notify = map_handler;

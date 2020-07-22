@@ -7,12 +7,12 @@
 #include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_surface.h>
 
-#include <hikari/view_interface.h>
+#include <hikari/node.h>
 
 struct hikari_workspace;
 
 struct hikari_xwayland_unmanaged_view {
-  struct hikari_view_interface view_interface;
+  struct hikari_node node;
 
   struct wlr_xwayland_surface *surface;
 

@@ -147,15 +147,12 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
 }
 
 static struct wlr_surface *
-surface_at(struct hikari_view_interface *view_interface,
-    double ox,
-    double oy,
-    double *sx,
-    double *sy)
+surface_at(
+    struct hikari_node *node, double ox, double oy, double *sx, double *sy)
 {
-  struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view_interface;
+  struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)node;
 
-  struct hikari_view *view = (struct hikari_view *)view_interface;
+  struct hikari_view *view = (struct hikari_view *)node;
 
   struct wlr_box *geometry = hikari_view_geometry(view);
 
@@ -297,19 +294,19 @@ destroy_handler(struct wl_listener *listener, void *data)
 }
 
 static void
-focus(struct hikari_view_interface *view_interface)
+focus(struct hikari_node *node)
 {
-  struct hikari_view *view = (struct hikari_view *)view_interface;
+  struct hikari_view *view = (struct hikari_view *)node;
 
   hikari_workspace_focus_view(view->sheet->workspace, view);
 }
 
 static void
-for_each_surface(struct hikari_view_interface *view_interface,
+for_each_surface(struct hikari_node *node,
     void (*func)(struct wlr_surface *, int, int, void *),
     void *data)
 {
-  struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view_interface;
+  struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)node;
 
   wlr_xdg_surface_for_each_surface(xdg_view->surface, func, data);
 }
@@ -498,7 +495,7 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
   printf("NEW XDG %p\n", xdg_view);
 #endif
 
-  xdg_view->view.view_interface.surface_at = surface_at;
+  xdg_view->view.node.surface_at = surface_at;
 
   wlr_xdg_surface_ping(xdg_surface);
 
@@ -516,8 +513,8 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
 
   assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
-  xdg_view->view.view_interface.focus = focus;
-  xdg_view->view.view_interface.for_each_surface = for_each_surface;
+  xdg_view->view.node.focus = focus;
+  xdg_view->view.node.for_each_surface = for_each_surface;
   xdg_view->view.activate = activate;
   xdg_view->view.resize = resize;
   xdg_view->view.move_resize = NULL;

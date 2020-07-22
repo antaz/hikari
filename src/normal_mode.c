@@ -210,20 +210,20 @@ cursor_move(uint32_t time)
   struct wlr_surface *surface;
   struct hikari_workspace *workspace;
 
-  struct hikari_view_interface *view_interface =
-      hikari_server_view_interface_at(hikari_server.cursor.wlr_cursor->x,
+  struct hikari_node *node =
+      hikari_server_node_at(hikari_server.cursor.wlr_cursor->x,
           hikari_server.cursor.wlr_cursor->y,
           &surface,
           &workspace,
           &sx,
           &sy);
 
-  if (view_interface != NULL) {
-    struct hikari_view_interface *focus_view_interface =
-        (struct hikari_view_interface *)hikari_server.workspace->focus_view;
+  if (node != NULL) {
+    struct hikari_node *focus_node =
+        (struct hikari_node *)hikari_server.workspace->focus_view;
 
-    if (view_interface != focus_view_interface) {
-      hikari_view_interface_focus(view_interface);
+    if (node != focus_node) {
+      hikari_node_focus(node);
     }
 
     wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
@@ -251,10 +251,10 @@ start_cursor_down_handling(struct wlr_event_pointer_button *event)
   struct hikari_workspace *workspace;
   struct wlr_surface *surface;
 
-  struct hikari_view_interface *view_interface =
-      hikari_server_view_interface_at(lx, ly, &surface, &workspace, &sx, &sy);
+  struct hikari_node *node =
+      hikari_server_node_at(lx, ly, &surface, &workspace, &sx, &sy);
 
-  if (view_interface != NULL) {
+  if (node != NULL) {
     hikari_server.normal_mode.mode.cursor_move = cursor_down_move;
     cursor_down_state.lx = lx;
     cursor_down_state.ly = ly;

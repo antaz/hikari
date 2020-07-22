@@ -40,12 +40,12 @@ cursor_move(uint32_t time_msec)
   struct wlr_surface *surface;
   struct hikari_workspace *workspace;
   double sx, sy;
-  struct hikari_view_interface *view_interface =
-      hikari_server_view_interface_at(x, y, &surface, &workspace, &sx, &sy);
+  struct hikari_node *node =
+      hikari_server_node_at(x, y, &surface, &workspace, &sx, &sy);
 
   struct wlr_seat *seat = hikari_server.seat;
 
-  if (view_interface != NULL) {
+  if (node != NULL) {
     wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
     wlr_seat_pointer_notify_motion(seat, time_msec, sx, sy);
   } else {

@@ -325,13 +325,10 @@ quit(struct hikari_view *view)
 }
 
 static struct wlr_surface *
-surface_at(struct hikari_view_interface *view_interface,
-    double ox,
-    double oy,
-    double *sx,
-    double *sy)
+surface_at(
+    struct hikari_node *node, double ox, double oy, double *sx, double *sy)
 {
-  struct hikari_view *view = (struct hikari_view *)view_interface;
+  struct hikari_view *view = (struct hikari_view *)node;
 
   struct wlr_box *geometry = hikari_view_geometry(view);
 
@@ -342,19 +339,19 @@ surface_at(struct hikari_view_interface *view_interface,
 }
 
 static void
-focus(struct hikari_view_interface *view_interface)
+focus(struct hikari_node *node)
 {
-  struct hikari_view *view = (struct hikari_view *)view_interface;
+  struct hikari_view *view = (struct hikari_view *)node;
 
   hikari_workspace_focus_view(view->sheet->workspace, view);
 }
 
 static void
-for_each_surface(struct hikari_view_interface *view_interface,
+for_each_surface(struct hikari_node *node,
     void (*func)(struct wlr_surface *, int, int, void *),
     void *data)
 {
-  struct hikari_view *view = (struct hikari_view *)view_interface;
+  struct hikari_view *view = (struct hikari_view *)node;
   struct wlr_surface *surface = view->surface;
 
   if (surface != NULL) {
@@ -401,9 +398,9 @@ hikari_xwayland_view_init(struct hikari_xwayland_view *xwayland_view,
 
   hikari_view_init(view, HIKARI_XWAYLAND_VIEW, workspace);
 
-  view->view_interface.surface_at = surface_at;
-  view->view_interface.focus = focus;
-  view->view_interface.for_each_surface = for_each_surface;
+  view->node.surface_at = surface_at;
+  view->node.focus = focus;
+  view->node.for_each_surface = for_each_surface;
 
   wlr_xwayland_surface_ping(xwayland_surface);
 

@@ -3,7 +3,7 @@
 
 #include <wlr/types/wlr_layer_shell_v1.h>
 
-#include <hikari/view_interface.h>
+#include <hikari/node.h>
 
 struct hikari_output;
 struct hikari_layer;
@@ -24,7 +24,7 @@ struct hikari_layer_node {
 };
 
 struct hikari_layer {
-  struct hikari_view_interface view_interface;
+  struct hikari_node node;
 
   struct wl_list layer_surfaces;
 

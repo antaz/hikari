@@ -226,7 +226,7 @@ new_output_handler(struct wl_listener *listener, void *data)
 }
 
 static bool
-surface_at(struct hikari_view_interface *view_interface,
+surface_at(struct hikari_node *node,
     double ox,
     double oy,
     struct wlr_surface **surface,
@@ -235,8 +235,8 @@ surface_at(struct hikari_view_interface *view_interface,
 {
   double out_sx, out_sy;
 
-  struct wlr_surface *out_surface = hikari_view_interface_surface_at(
-      view_interface, ox, oy, &out_sx, &out_sy);
+  struct wlr_surface *out_surface =
+      hikari_node_surface_at(node, ox, oy, &out_sx, &out_sy);
 
   if (out_surface != NULL) {
     *sx = out_sx;
@@ -256,23 +256,22 @@ layer_at(struct wl_list *layers,
     struct wlr_surface **surface,
     double *sx,
     double *sy,
-    struct hikari_view_interface **view_interface)
+    struct hikari_node **node)
 {
   double out_sx, out_sy;
 
   struct hikari_layer *layer;
   wl_list_for_each (layer, layers, layer_surfaces) {
-    struct hikari_view_interface *out_view_interface =
-        (struct hikari_view_interface *)layer;
+    struct hikari_node *out_node = (struct hikari_node *)layer;
 
-    struct wlr_surface *out_surface = hikari_view_interface_surface_at(
-        out_view_interface, ox, oy, &out_sx, &out_sy);
+    struct wlr_surface *out_surface =
+        hikari_node_surface_at(out_node, ox, oy, &out_sx, &out_sy);
 
     if (out_surface != NULL) {
       *sx = out_sx;
       *sy = out_sy;
       *surface = out_surface;
-      *view_interface = out_view_interface;
+      *node = out_node;
       return true;
     }
   }
@@ -287,19 +286,18 @@ topmost_of(struct wl_list *layers,
     struct wlr_surface **surface,
     double *sx,
     double *sy,
-    struct hikari_view_interface **view_interface)
+    struct hikari_node **node)
 {
   double out_sx, out_sy;
 
   struct hikari_layer *layer;
   wl_list_for_each (layer, layers, layer_surfaces) {
-    struct hikari_view_interface *out_view_interface =
-        (struct hikari_view_interface *)layer;
+    struct hikari_node *out_node = (struct hikari_node *)layer;
 
     struct wlr_layer_surface_v1_state *state = &layer->surface->current;
 
-    struct wlr_surface *out_surface = hikari_view_interface_surface_at(
-        out_view_interface, ox, oy, &out_sx, &out_sy);
+    struct wlr_surface *out_surface =
+        hikari_node_surface_at(out_node, ox, oy, &out_sx, &out_sy);
 
     if (state->keyboard_interactive) {
       if (out_surface != NULL) {
@@ -310,7 +308,7 @@ topmost_of(struct wl_list *layers,
 
       *sx = out_sx;
       *sy = out_sy;
-      *view_interface = out_view_interface;
+      *node = out_node;
 
       return true;
     } else if (out_surface != NULL) {
@@ -318,7 +316,7 @@ topmost_of(struct wl_list *layers,
 
       *sx = out_sx;
       *sy = out_sy;
-      *view_interface = out_view_interface;
+      *node = out_node;
 
       return true;
     }
@@ -328,8 +326,8 @@ topmost_of(struct wl_list *layers,
 }
 #endif
 
-static struct hikari_view_interface *
-view_interface_at(double lx,
+static struct hikari_node *
+node_at(double lx,
     double ly,
     struct wlr_surface **surface,
     struct hikari_workspace **workspace,
@@ -351,7 +349,7 @@ view_interface_at(double lx,
 
   *workspace = output_workspace;
 
-  struct hikari_view_interface *view_interface;
+  struct hikari_node *node;
   double ox = lx - output->geometry.x;
   double oy = ly - output->geometry.y;
 
@@ -362,8 +360,8 @@ view_interface_at(double lx,
           surface,
           sx,
           sy,
-          &view_interface)) {
-    return view_interface;
+          &node)) {
+    return node;
   }
 #endif
 
@@ -372,10 +370,10 @@ view_interface_at(double lx,
   wl_list_for_each (xwayland_unmanaged_view,
       &output->unmanaged_xwayland_views,
       unmanaged_server_views) {
-    view_interface = (struct hikari_view_interface *)xwayland_unmanaged_view;
+    node = (struct hikari_node *)xwayland_unmanaged_view;
 
-    if (surface_at(view_interface, ox, oy, surface, sx, sy)) {
-      return view_interface;
+    if (surface_at(node, ox, oy, surface, sx, sy)) {
+      return node;
     }
   }
 #endif
@@ -387,17 +385,17 @@ view_interface_at(double lx,
           surface,
           sx,
           sy,
-          &view_interface)) {
-    return view_interface;
+          &node)) {
+    return node;
   }
 #endif
 
   struct hikari_view *view = NULL;
   wl_list_for_each (view, &output_workspace->views, workspace_views) {
-    view_interface = (struct hikari_view_interface *)view;
+    node = (struct hikari_node *)view;
 
-    if (surface_at(view_interface, ox, oy, surface, sx, sy)) {
-      return view_interface;
+    if (surface_at(node, ox, oy, surface, sx, sy)) {
+      return node;
     }
   }
 
@@ -408,23 +406,23 @@ view_interface_at(double lx,
           surface,
           sx,
           sy,
-          &view_interface)) {
-    return view_interface;
+          &node)) {
+    return node;
   }
 #endif
 
   return NULL;
 }
 
-struct hikari_view_interface *
-hikari_server_view_interface_at(double x,
+struct hikari_node *
+hikari_server_node_at(double x,
     double y,
     struct wlr_surface **surface,
     struct hikari_workspace **workspace,
     double *sx,
     double *sy)
 {
-  return view_interface_at(x, y, surface, workspace, sx, sy);
+  return node_at(x, y, surface, workspace, sx, sy);
 }
 
 void
@@ -620,15 +618,14 @@ start_drag_handler(struct wl_listener *listener, void *data)
   struct hikari_workspace *workspace;
   double sx, sy;
 
-  struct hikari_view_interface *view_interface =
-      view_interface_at(hikari_server.cursor.wlr_cursor->x,
-          hikari_server.cursor.wlr_cursor->y,
-          &surface,
-          &workspace,
-          &sx,
-          &sy);
+  struct hikari_node *node = node_at(hikari_server.cursor.wlr_cursor->x,
+      hikari_server.cursor.wlr_cursor->y,
+      &surface,
+      &workspace,
+      &sx,
+      &sy);
 
-  if (view_interface != NULL) {
+  if (node != NULL) {
     hikari_dnd_mode_enter();
   }
 }

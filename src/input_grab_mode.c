@@ -73,8 +73,7 @@ cursor_move(uint32_t time_msec)
 {
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
   assert(focus_view != NULL);
-  struct hikari_view_interface *view_interface =
-      (struct hikari_view_interface *)focus_view;
+  struct hikari_node *node = (struct hikari_node *)focus_view;
   struct hikari_output *output = focus_view->output;
   assert(output != NULL);
 
@@ -85,8 +84,7 @@ cursor_move(uint32_t time_msec)
 
   double sx, sy;
 
-  struct wlr_surface *surface =
-      hikari_view_interface_surface_at(view_interface, ox, oy, &sx, &sy);
+  struct wlr_surface *surface = hikari_node_surface_at(node, ox, oy, &sx, &sy);
 
   if (surface != NULL) {
     wlr_seat_pointer_notify_enter(hikari_server.seat, surface, sx, sy);

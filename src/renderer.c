@@ -427,8 +427,8 @@ render_view(struct hikari_renderer *renderer, struct hikari_view *view)
 
   renderer->geometry = hikari_view_geometry(view);
 
-  hikari_view_interface_for_each_surface(
-      (struct hikari_view_interface *)view, render_surface, renderer);
+  hikari_node_for_each_surface(
+      (struct hikari_node *)view, render_surface, renderer);
 }
 
 #ifdef HAVE_XWAYLAND
@@ -535,8 +535,8 @@ frame_done(struct hikari_output *output, struct timespec *now)
 {
   struct hikari_view *view;
   wl_list_for_each_reverse (view, &output->views, output_views) {
-    hikari_view_interface_for_each_surface(
-        (struct hikari_view_interface *)view, send_frame_done, now);
+    hikari_node_for_each_surface(
+        (struct hikari_node *)view, send_frame_done, now);
   }
 
 #ifdef HAVE_XWAYLAND
@@ -596,8 +596,8 @@ render_public_views(struct hikari_renderer *renderer)
 
       renderer->geometry = hikari_view_geometry(view);
 
-      hikari_view_interface_for_each_surface(
-          (struct hikari_view_interface *)view, render_surface, renderer);
+      hikari_node_for_each_surface(
+          (struct hikari_node *)view, render_surface, renderer);
     }
   }
 }

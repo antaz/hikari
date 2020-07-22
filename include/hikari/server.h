@@ -164,8 +164,8 @@ hikari_server_prepare_privileged(void);
 void
 hikari_server_start(char *config_path, char *autostart);
 
-struct hikari_view_interface *
-hikari_server_view_interface_at(double x,
+struct hikari_node *
+hikari_server_node_at(double x,
     double y,
     struct wlr_surface **surface,
     struct hikari_workspace **workspace,

@@ -12,12 +12,12 @@
 #include <hikari/group.h>
 #include <hikari/indicator_frame.h>
 #include <hikari/maximized_state.h>
+#include <hikari/node.h>
 #include <hikari/operation.h>
 #include <hikari/output.h>
 #include <hikari/server.h>
 #include <hikari/sheet.h>
 #include <hikari/tile.h>
-#include <hikari/view_interface.h>
 #include <hikari/workspace.h>
 
 struct hikari_mark;
@@ -34,7 +34,7 @@ struct hikari_view_decoration {
 };
 
 struct hikari_view {
-  struct hikari_view_interface view_interface;
+  struct hikari_node node;
   enum hikari_view_type type;
 
   struct hikari_sheet *sheet;
