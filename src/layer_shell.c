@@ -208,6 +208,9 @@ hikari_layer_init(
 
   wlr_layer_surface->output = output->wlr_output;
 
+  layer->commit.notify = commit_handler;
+  wl_signal_add(&wlr_layer_surface->surface->events.commit, &layer->commit);
+
   layer->destroy.notify = destroy_handler;
   wl_signal_add(&wlr_layer_surface->surface->events.destroy, &layer->destroy);
 
@@ -226,6 +229,7 @@ hikari_layer_fini(struct hikari_layer *layer)
 
   wl_list_remove(&layer->layer_surfaces);
 
+  wl_list_remove(&layer->commit.link);
   wl_list_remove(&layer->destroy.link);
   wl_list_remove(&layer->map.link);
 }
@@ -364,6 +368,11 @@ commit_handler(struct wl_listener *listener, void *data)
   struct wlr_box old_geometry = layer->geometry;
   struct hikari_output *output = layer->output;
 
+  if(!layer->mapped) {
+    calculate_geometry(layer);
+    return;
+  }
+
   assert(layer->mapped);
 
   calculate_exclusive(layer->output);
@@ -420,9 +429,6 @@ map(struct hikari_layer *layer)
 
   struct wlr_layer_surface_v1 *wlr_layer_surface = layer->surface;
 
-  layer->commit.notify = commit_handler;
-  wl_signal_add(&wlr_layer_surface->surface->events.commit, &layer->commit);
-
   layer->new_popup.notify = new_popup_handler;
   wl_signal_add(&wlr_layer_surface->events.new_popup, &layer->new_popup);
 
@@ -460,7 +466,6 @@ unmap(struct hikari_layer *layer)
   wl_list_remove(&layer->layer_surfaces);
   wl_list_init(&layer->layer_surfaces);
 
-  wl_list_remove(&layer->commit.link);
   wl_list_remove(&layer->new_popup.link);
   wl_list_remove(&layer->unmap.link);
 
