@@ -368,7 +368,7 @@ commit_handler(struct wl_listener *listener, void *data)
   struct wlr_box old_geometry = layer->geometry;
   struct hikari_output *output = layer->output;
 
-  if(!layer->mapped) {
+  if (!layer->mapped) {
     calculate_geometry(layer);
     return;
   }
