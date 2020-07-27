@@ -995,7 +995,8 @@ parse_layouts(
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
-    if (strlen(key) > 1) {
+    if (strlen(key) > 1 ||
+        !((key[0] >= 'a' && key[0] <= 'z') || isdigit(key[0]))) {
       fprintf(stderr, "configuration error: expected layout register name\n");
       goto done;
     }

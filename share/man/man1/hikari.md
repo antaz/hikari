@@ -245,7 +245,8 @@ Layout actions
 * **layout-restack-[append|prepend]**
 
   Adds non-floating sheet views to an existing layout without changing layout
-  order of already tiled views.
+  order of already tiled views. If no layout is present the default layout for
+  the current sheet is applied.
 
 Mark actions
 ------------
@@ -278,11 +279,11 @@ Mode actions
 
 * **mode-enter-layout**
 
-  Layout selection awaits one of the layout registers **a** to **z** to be
-  selected. *ESC* cancels this mode without selecting a layout. If the layout
-  register happens to be empty this action is a no-op. If the view that
-  currently has focus can be tiled and is not borrowed it will get raised to the
-  top of the stack.
+  Layout selection awaits one of the layout registers to be selected. Valid
+  registers range from **a** to **z** and **0** to **9**. *ESC* cancels this
+  mode without selecting a layout. If the layout register happens to be empty
+  this action is a no-op. If the view that currently has focus can be tiled and
+  is not borrowed it will get raised to the top of the stack.
 
 * **mode-enter-mark-assign**
 
@@ -668,8 +669,10 @@ out a sheet will incorporate all of its views unless they are **invisible** or
 views to its original geometry (also resetting maximization).
 
 Configuring layouts happens in the _layouts_ section in the configuration file.
-Layouts are assigned to layout registers from **a** to **z**. A layout itself is
-a combination of splits and containers with tiling algorithms.
+Layouts are assigned to layout registers from **a** to **z** and special layout
+registers **0** to **9** which correspond to default layouts for a respective
+sheet. A layout itself is a combination of splits and containers with tiling
+algorithms.
 
 Splits are used to subdivide regions of space and containers are used to consume
 views and layout them according to a specific tiling algorithm.

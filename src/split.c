@@ -292,3 +292,10 @@ hikari_split_free(struct hikari_split *split)
     } break;
   }
 }
+
+struct hikari_split *
+hikari_sheet_default_split(struct hikari_sheet *sheet)
+{
+  return hikari_configuration_lookup_layout(
+      hikari_configuration, 48 + sheet->nr);
+}

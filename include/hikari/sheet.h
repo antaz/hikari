@@ -115,4 +115,7 @@ hikari_sheet_show_invisible(struct hikari_sheet *sheet);
 void
 hikari_sheet_show_group(struct hikari_sheet *sheet, struct hikari_group *group);
 
+struct hikari_split *
+hikari_sheet_default_split(struct hikari_sheet *sheet);
+
 #endif

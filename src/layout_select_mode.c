@@ -24,7 +24,8 @@ lookup_layout(struct hikari_configuration *configuration,
   uint32_t codepoint = hikari_keyboard_get_codepoint(keyboard, keycode);
 
   struct hikari_split *split = NULL;
-  if (codepoint != 0 && (codepoint >= 'a' && codepoint <= 'z')) {
+  if (codepoint != 0 && ((codepoint >= 'a' && codepoint <= 'z') ||
+                            (codepoint >= '0' && codepoint <= '9'))) {
     char layout_register = codepoint;
     struct hikari_layout_config *layout_config;
     wl_list_for_each (layout_config, &configuration->layout_configs, link) {
