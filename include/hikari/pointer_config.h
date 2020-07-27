@@ -15,6 +15,7 @@ struct hikari_pointer_config {
 
   HIKARI_OPTION(accel, double);
   HIKARI_OPTION(disable_while_typing, enum libinput_config_dwt_state);
+  HIKARI_OPTION(middle_emulation, enum libinput_config_middle_emulation_state);
   HIKARI_OPTION(natural_scrolling, bool);
   HIKARI_OPTION(scroll_button, uint32_t);
   HIKARI_OPTION(scroll_method, enum libinput_config_scroll_method);
@@ -36,6 +37,7 @@ hikari_pointer_config_merge(struct hikari_pointer_config *pointer_config,
 
 HIKARI_OPTION_FUNS(pointer, accel, double)
 HIKARI_OPTION_FUNS(pointer, disable_while_typing, bool)
+HIKARI_OPTION_FUNS(pointer, middle_emulation, bool);
 HIKARI_OPTION_FUNS(pointer, natural_scrolling, bool)
 HIKARI_OPTION_FUNS(pointer, scroll_button, uint32_t)
 HIKARI_OPTION_FUNS(pointer, scroll_method, enum libinput_config_scroll_method)

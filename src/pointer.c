@@ -67,6 +67,14 @@ hikari_pointer_configure(struct hikari_pointer *pointer,
       }
     }
 
+    if (hikari_pointer_config_has_middle_emulation(pointer_config)) {
+      if (libinput_device_config_middle_emulation_is_available(
+              libinput_device)) {
+        libinput_device_config_middle_emulation_set_enabled(libinput_device,
+            hikari_pointer_config_get_middle_emulation(pointer_config));
+      }
+    }
+
     if (hikari_pointer_config_has_scroll_method(pointer_config)) {
       libinput_device_config_scroll_set_method(libinput_device,
           hikari_pointer_config_get_scroll_method(pointer_config));

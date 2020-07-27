@@ -17,6 +17,8 @@ hikari_pointer_config_init(
 
   hikari_pointer_config_init_accel(pointer_config, 0);
   hikari_pointer_config_init_disable_while_typing(pointer_config, false);
+  hikari_pointer_config_init_middle_emulation(
+      pointer_config, LIBINPUT_CONFIG_MIDDLE_EMULATION_DISABLED);
   hikari_pointer_config_init_natural_scrolling(pointer_config, false);
   hikari_pointer_config_init_scroll_button(pointer_config, 0);
   hikari_pointer_config_init_scroll_method(pointer_config, 0);
@@ -39,6 +41,7 @@ hikari_pointer_config_merge(struct hikari_pointer_config *pointer_config,
   hikari_pointer_config_merge_##option(pointer_config, default_config);
   MERGE(accel);
   MERGE(disable_while_typing);
+  MERGE(middle_emulation);
   MERGE(natural_scrolling);
   MERGE(scroll_button);
   MERGE(scroll_method);

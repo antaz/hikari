@@ -936,6 +936,11 @@ are available.
   Enable or disable *disable-while-typing* if available. This setting expects a
   boolean value.
 
+* **middle-emulation**
+
+  Enable or disable middle click emulation if available. This setting expects a
+  boolean value.
+
 * **natural-scrolling**
 
   Enable or disable *natural-scrolling* if available. This setting expects a

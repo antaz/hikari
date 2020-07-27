@@ -1304,6 +1304,22 @@ parse_pointer_config(struct hikari_pointer_config *pointer_config,
         hikari_pointer_config_set_tap_drag_lock(
             pointer_config, LIBINPUT_CONFIG_DRAG_LOCK_DISABLED);
       }
+    } else if (!strcmp(key, "middle-emulation")) {
+      bool middle_emulation;
+      if (!ucl_object_toboolean_safe(cur, &middle_emulation)) {
+        fprintf(stderr,
+            "configuration error: expected boolean for "
+            "\"middle-emulation\"\n");
+        goto done;
+      }
+
+      if (middle_emulation) {
+        hikari_pointer_config_set_middle_emulation(
+            pointer_config, LIBINPUT_CONFIG_MIDDLE_EMULATION_ENABLED);
+      } else {
+        hikari_pointer_config_set_middle_emulation(
+            pointer_config, LIBINPUT_CONFIG_MIDDLE_EMULATION_DISABLED);
+      }
     } else if (!strcmp(key, "natural-scrolling")) {
       bool natural_scrolling;
       if (!ucl_object_toboolean_safe(cur, &natural_scrolling)) {
