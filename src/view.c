@@ -257,6 +257,7 @@ migrate_view(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
 void
 hikari_view_init(struct hikari_view *view,
     enum hikari_view_type type,
+    bool child,
     struct hikari_workspace *workspace)
 {
 #if !defined(NDEBUG)
@@ -275,6 +276,7 @@ hikari_view_init(struct hikari_view *view,
   view->tile = NULL;
   view->id = NULL;
   view->use_csd = false;
+  view->child = child;
   view->current_geometry = &view->geometry;
   view->current_unmaximized_geometry = &view->geometry;
 

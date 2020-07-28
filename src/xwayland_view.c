@@ -153,20 +153,21 @@ static void
 first_map(struct hikari_xwayland_view *xwayland_view, bool *focus)
 {
   struct hikari_view *view = (struct hikari_view *)xwayland_view;
+  struct wlr_xwayland_surface *xwayland_surface = xwayland_view->surface;
   struct wlr_box *geometry = &view->geometry;
 
   view->border.state = HIKARI_BORDER_INACTIVE;
 
-  geometry->width = xwayland_view->surface->width;
-  geometry->height = xwayland_view->surface->height;
+  geometry->width = xwayland_surface->width;
+  geometry->height = xwayland_surface->height;
   hikari_view_refresh_geometry(view, geometry);
 
-  const char *app_id = get_class(xwayland_view->surface);
+  const char *app_id = get_class(xwayland_surface);
 
   struct hikari_view_config *view_config =
       hikari_configuration_resolve_view_config(hikari_configuration, app_id);
 
-  hikari_view_set_title(view, xwayland_view->surface->title);
+  hikari_view_set_title(view, xwayland_surface->title);
   hikari_view_configure(view, app_id, view_config);
 
   struct hikari_output *output = view->output;
@@ -396,7 +397,7 @@ hikari_xwayland_view_init(struct hikari_xwayland_view *xwayland_view,
 {
   struct hikari_view *view = &xwayland_view->view;
 
-  hikari_view_init(view, HIKARI_XWAYLAND_VIEW, workspace);
+  hikari_view_init(view, HIKARI_XWAYLAND_VIEW, false, workspace);
 
   view->node.surface_at = surface_at;
   view->node.focus = focus;

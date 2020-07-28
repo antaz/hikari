@@ -44,6 +44,7 @@ struct hikari_view {
   struct wlr_surface *surface;
 
   bool use_csd;
+  bool child;
   unsigned int flags;
   char *title;
   char *id;
@@ -139,6 +140,7 @@ FLAG(forced, 4UL)
 void
 hikari_view_init(struct hikari_view *view,
     enum hikari_view_type type,
+    bool child,
     struct hikari_workspace *workspace);
 
 void

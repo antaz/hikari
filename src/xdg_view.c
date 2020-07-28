@@ -126,12 +126,13 @@ get_app_id(struct hikari_xdg_view *xdg_view)
 static void
 first_map(struct hikari_xdg_view *xdg_view, bool *focus)
 {
-  assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
+  struct wlr_xdg_surface *xdg_surface = xdg_view->surface;
+  assert(xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
   struct hikari_view *view = (struct hikari_view *)xdg_view;
   struct wlr_box *geometry = &xdg_view->view.geometry;
 
-  wlr_xdg_surface_get_geometry(xdg_view->surface, geometry);
+  wlr_xdg_surface_get_geometry(xdg_surface, geometry);
   hikari_view_refresh_geometry(view, geometry);
 
   const char *app_id = get_app_id(xdg_view);
@@ -142,7 +143,9 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
   struct hikari_view_config *view_config =
       hikari_configuration_resolve_view_config(hikari_configuration, app_id);
 
-  hikari_view_set_title(view, xdg_view->surface->toplevel->title);
+  struct wlr_xdg_toplevel *xdg_toplevel = xdg_surface->toplevel;
+
+  hikari_view_set_title(view, xdg_toplevel->title);
   hikari_view_configure(view, app_id, view_config);
 }
 
@@ -489,7 +492,11 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
     struct wlr_xdg_surface *xdg_surface,
     struct hikari_workspace *workspace)
 {
-  hikari_view_init(&xdg_view->view, HIKARI_XDG_VIEW, workspace);
+  assert(xdg_surface->toplevel != NULL);
+
+  bool child = xdg_surface->toplevel->parent != NULL;
+
+  hikari_view_init(&xdg_view->view, HIKARI_XDG_VIEW, child, workspace);
 
 #if !defined(NDEBUG)
   printf("NEW XDG %p\n", xdg_view);
