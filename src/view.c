@@ -596,7 +596,7 @@ hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
       hikari_mark_set(mark, view);
     }
 
-    focus = view_config->focus;
+    focus = hikari_view_config_resolve_focus(view_config);
   } else {
     group = hikari_server_find_or_create_group(view->id);
     focus = false;

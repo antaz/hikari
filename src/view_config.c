@@ -10,18 +10,26 @@
 #include <hikari/server.h>
 #include <hikari/view.h>
 
+static void
+init_properties(struct hikari_view_properties *properties)
+{
+  properties->group_name = NULL;
+  properties->sheet_nr = -1;
+  properties->mark = NULL;
+  properties->focus = false;
+  properties->invisible = false;
+  properties->floating = false;
+  properties->publicview = false;
+
+  hikari_position_config_init(&properties->position);
+}
+
 void
 hikari_view_config_init(struct hikari_view_config *view_config)
 {
-  view_config->group_name = NULL;
-  view_config->sheet_nr = -1;
-  view_config->mark = NULL;
-  view_config->focus = false;
-  view_config->invisible = false;
-  view_config->floating = false;
-  view_config->publicview = false;
+  view_config->app_id = NULL;
 
-  hikari_position_config_init(&view_config->position);
+  init_properties(&view_config->properties);
 }
 
 void
@@ -30,7 +38,7 @@ hikari_view_config_fini(struct hikari_view_config *view_config)
   assert(view_config != NULL);
 
   hikari_free(view_config->app_id);
-  hikari_free(view_config->group_name);
+  hikari_free(view_config->properties.group_name);
 }
 
 struct hikari_sheet *
@@ -39,9 +47,10 @@ hikari_view_config_resolve_sheet(struct hikari_view_config *view_config)
   assert(view_config != NULL);
 
   struct hikari_sheet *sheet;
+  struct hikari_view_properties *properties = &view_config->properties;
 
-  if (view_config->sheet_nr != -1) {
-    sheet = hikari_server.workspace->sheets + view_config->sheet_nr;
+  if (properties->sheet_nr != -1) {
+    sheet = hikari_server.workspace->sheets + properties->sheet_nr;
   } else {
     sheet = hikari_server.workspace->sheet;
   }
@@ -56,9 +65,9 @@ hikari_view_config_resolve_group(
   struct hikari_group *group;
 
   if (view_config != NULL) {
-    if (view_config->group_name != NULL &&
-        strlen(view_config->group_name) > 0) {
-      group = hikari_server_find_or_create_group(view_config->group_name);
+    struct hikari_view_properties *properties = &view_config->properties;
+    if (properties->group_name != NULL && strlen(properties->group_name) > 0) {
+      group = hikari_server_find_or_create_group(properties->group_name);
     } else {
       group = hikari_server_find_or_create_group(app_id);
     }
@@ -79,11 +88,12 @@ hikari_view_config_resolve_position(struct hikari_view_config *view_config,
 
   struct hikari_output *output = hikari_server.workspace->output;
   struct wlr_box *geometry = hikari_view_border_geometry(view);
+  struct hikari_view_properties *properties = &view_config->properties;
 
-  switch (view_config->position.type) {
+  switch (properties->position.type) {
     case HIKARI_POSITION_CONFIG_TYPE_ABSOLUTE:
-      *x = view_config->position.config.absolute.x;
-      *y = view_config->position.config.absolute.y;
+      *x = properties->position.config.absolute.x;
+      *y = properties->position.config.absolute.y;
       break;
 
     case HIKARI_POSITION_CONFIG_TYPE_AUTO:
@@ -92,7 +102,7 @@ hikari_view_config_resolve_position(struct hikari_view_config *view_config,
       break;
 
     case HIKARI_POSITION_CONFIG_TYPE_RELATIVE:
-      switch (view_config->position.config.relative) {
+      switch (properties->position.config.relative) {
         case HIKARI_POSITION_CONFIG_RELATIVE_BOTTOM_LEFT:
           hikari_geometry_position_bottom_left(
               geometry, &output->usable_area, x, y);
@@ -144,6 +154,7 @@ bool
 hikari_view_config_parse(
     struct hikari_view_config *view_config, const ucl_object_t *view_config_obj)
 {
+  struct hikari_view_properties *properties = &view_config->properties;
   bool success = false;
 
   ucl_object_iter_t it = ucl_object_iterate_new(view_config_obj);
@@ -169,7 +180,7 @@ hikari_view_config_parse(
         goto done;
       }
 
-      view_config->group_name = strdup(group_name);
+      properties->group_name = strdup(group_name);
 
     } else if (!strcmp(key, "sheet")) {
       int64_t sheet_nr;
@@ -180,7 +191,7 @@ hikari_view_config_parse(
         goto done;
       }
 
-      view_config->sheet_nr = sheet_nr;
+      properties->sheet_nr = sheet_nr;
     } else if (!strcmp(key, "mark")) {
       const char *mark_name;
 
@@ -198,9 +209,9 @@ hikari_view_config_parse(
         goto done;
       }
 
-      view_config->mark = &hikari_marks[mark_name[0] - 'a'];
+      properties->mark = &hikari_marks[mark_name[0] - 'a'];
     } else if (!strcmp(key, "position")) {
-      if (!hikari_position_config_parse(&view_config->position, cur)) {
+      if (!hikari_position_config_parse(&properties->position, cur)) {
         goto done;
       }
     } else if (!strcmp(key, "focus")) {
@@ -213,7 +224,7 @@ hikari_view_config_parse(
         goto done;
       }
 
-      view_config->focus = focus;
+      properties->focus = focus;
     } else if (!strcmp(key, "invisible")) {
       bool invisible;
 
@@ -224,7 +235,7 @@ hikari_view_config_parse(
         goto done;
       }
 
-      view_config->invisible = invisible;
+      properties->invisible = invisible;
     } else if (!strcmp(key, "floating")) {
       bool floating;
 
@@ -235,7 +246,7 @@ hikari_view_config_parse(
         goto done;
       }
 
-      view_config->floating = floating;
+      properties->floating = floating;
     } else if (!strcmp(key, "public")) {
       bool publicview;
 
@@ -246,7 +257,7 @@ hikari_view_config_parse(
         goto done;
       }
 
-      view_config->publicview = publicview;
+      properties->publicview = publicview;
     } else {
       fprintf(
           stderr, "configuration error: unkown \"views\" key \"%s\"\n", key);

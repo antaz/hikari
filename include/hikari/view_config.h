@@ -10,22 +10,23 @@
 struct hikari_mark;
 struct hikari_view;
 
-struct hikari_view_config {
-  struct wl_list link;
-
-  char *app_id;
+struct hikari_view_properties {
   char *group_name;
-
   int sheet_nr;
-
   struct hikari_mark *mark;
-
   struct hikari_position_config position;
-
   bool focus;
   bool invisible;
   bool floating;
   bool publicview;
+};
+
+struct hikari_view_config {
+  struct wl_list link;
+
+  char *app_id;
+
+  struct hikari_view_properties properties;
 };
 
 void
@@ -55,35 +56,35 @@ static inline bool
 hikari_view_config_resolve_focus(struct hikari_view_config *view_config)
 {
   assert(view_config != NULL);
-  return view_config->focus;
+  return view_config->properties.focus;
 }
 
 static inline bool
 hikari_view_config_resolve_invisible(struct hikari_view_config *view_config)
 {
   assert(view_config != NULL);
-  return view_config->invisible;
+  return view_config->properties.invisible;
 }
 
 static inline bool
 hikari_view_config_resolve_floating(struct hikari_view_config *view_config)
 {
   assert(view_config != NULL);
-  return view_config->floating;
+  return view_config->properties.floating;
 }
 
 static inline bool
 hikari_view_config_resolve_public(struct hikari_view_config *view_config)
 {
   assert(view_config != NULL);
-  return view_config->publicview;
+  return view_config->properties.publicview;
 }
 
 static inline struct hikari_mark *
 hikari_view_config_resolve_mark(struct hikari_view_config *view_config)
 {
   assert(view_config != NULL);
-  return view_config->mark;
+  return view_config->properties.mark;
 }
 
 #endif
