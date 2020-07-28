@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.1.1
+
+* Allow geometry changes to unmapped surface (fixes `mako`)
+* handle `NULL` app id
+* check if surface is valid on input grab cursor move (fixes `wlroots` assert)
+
 ## 2.1.0
 
 * update to `wlroots` 0.11.0
