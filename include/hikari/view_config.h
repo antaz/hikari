@@ -47,6 +47,10 @@ hikari_view_config_resolve_position(struct hikari_view_config *view_config,
     int *x,
     int *y);
 
+bool
+hikari_view_config_parse(struct hikari_view_config *view_config,
+    const ucl_object_t *view_config_obj);
+
 static inline bool
 hikari_view_config_resolve_focus(struct hikari_view_config *view_config)
 {

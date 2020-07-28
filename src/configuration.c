@@ -638,68 +638,6 @@ done:
 }
 
 static bool
-parse_position(const ucl_object_t *position_obj, int *x, int *y)
-{
-  bool success = false;
-  ucl_object_iter_t it = ucl_object_iterate_new(position_obj);
-
-  int64_t ret_x = 0;
-  int64_t ret_y = 0;
-  bool parsed_x = false;
-  bool parsed_y = false;
-
-  const ucl_object_t *cur;
-  while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
-    const char *key = ucl_object_key(cur);
-
-    if (!strcmp(key, "x")) {
-      if (!ucl_object_toint_safe(cur, &ret_x)) {
-        fprintf(stderr,
-            "configuration error: expected integer for \"x\"-coordinate\n");
-        goto done;
-      }
-
-      parsed_x = true;
-    } else if (!strcmp(key, "y")) {
-      if (!ucl_object_toint_safe(cur, &ret_y)) {
-        fprintf(stderr,
-            "configuration error: expected integer for \"y\"-coordinate\n");
-        goto done;
-      }
-
-      parsed_y = true;
-    } else {
-      fprintf(stderr,
-          "configuration error: unknown \"position\" key \"%s\"\n",
-          key);
-      goto done;
-    }
-  }
-
-  if (!parsed_x) {
-    fprintf(stderr,
-        "configuration error: missing \"x\"-coordinate in \"position\2\n");
-    goto done;
-  }
-
-  if (!parsed_y) {
-    fprintf(stderr,
-        "configuration error: missing \"y\"-coordinate in \"position\"\n");
-    goto done;
-  }
-
-  success = true;
-
-  *x = ret_x;
-  *y = ret_y;
-
-done:
-  ucl_object_iterate_free(it);
-
-  return success;
-}
-
-static bool
 parse_view_config(struct hikari_configuration *configuration,
     const ucl_object_t *view_config_obj,
     struct hikari_view_config **view_config)
@@ -760,44 +698,9 @@ parse_view_config(struct hikari_configuration *configuration,
 
       (*view_config)->mark = &hikari_marks[mark_name[0] - 'a'];
     } else if (!strcmp(key, "position")) {
-      ucl_type_t type = ucl_object_type(cur);
-      int x;
-      int y;
-      const char *relative;
-      enum hikari_position_config_relative relative_config;
-
-      switch (type) {
-        case UCL_OBJECT:
-          if (!parse_position(cur, &x, &y)) {
-            fprintf(stderr,
-                "configuration error: failed to parse \"views\" "
-                "\"position\"\n");
-            goto done;
-          }
-
-          hikari_position_config_set_absolute(&(*view_config)->position, x, y);
-          break;
-
-        case UCL_STRING:
-          if (!ucl_object_tostring_safe(cur, &relative) ||
-              !hikari_position_config_relative_parse(
-                  &relative_config, relative)) {
-            fprintf(stderr,
-                "configuration error: failed to parse \"views\" "
-                "\"position\"\n");
-            goto done;
-          }
-
-          hikari_position_config_set_relative(
-              &(*view_config)->position, relative_config);
-          break;
-
-        default:
-          fprintf(stderr,
-              "configuration error: failed to parse \"views\" \"position\"\n");
-          goto done;
+      if (!hikari_position_config_parse(&(*view_config)->position, cur)) {
+        goto done;
       }
-
     } else if (!strcmp(key, "focus")) {
       bool focus;
 
@@ -1609,17 +1512,13 @@ parse_output_config(struct hikari_output_config *output_config,
         goto done;
       }
     } else if (!strcmp(key, "position")) {
-      int x;
-      int y;
       struct hikari_position_config position;
-
-      if (!parse_position(cur, &x, &y)) {
+      if (!hikari_position_config_absolute_parse(&position, cur)) {
         fprintf(stderr,
-            "configuration error: failed to parse output \"position\"\n");
+            "configuration error: could not parse \"output\" \"position\"");
         goto done;
       }
 
-      hikari_position_config_set_absolute(&position, x, y);
       hikari_output_config_set_position(output_config, position);
     } else {
       fprintf(stderr,

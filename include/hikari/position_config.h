@@ -2,6 +2,7 @@
 #define HIKARI_POSITION_CONFIG_H
 
 #include <stdbool.h>
+#include <ucl.h>
 
 struct hikari_position_config_absolute {
   int x;
@@ -49,6 +50,15 @@ hikari_position_config_set_relative(
 
 bool
 hikari_position_config_relative_parse(
-    enum hikari_position_config_relative *relative_config, const char *str);
+    struct hikari_position_config *position_config, const char *str);
+
+bool
+hikari_position_config_absolute_parse(
+    struct hikari_position_config *position_config,
+    const ucl_object_t *position_config_obj);
+
+bool
+hikari_position_config_parse(struct hikari_position_config *position_config,
+    const ucl_object_t *position_config_obj);
 
 #endif
