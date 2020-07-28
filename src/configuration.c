@@ -638,129 +638,6 @@ done:
 }
 
 static bool
-parse_view_config(struct hikari_configuration *configuration,
-    const ucl_object_t *view_config_obj,
-    struct hikari_view_config **view_config)
-{
-  bool success = false;
-
-  hikari_view_config_init(*view_config);
-
-  ucl_object_iter_t it = ucl_object_iterate_new(view_config_obj);
-
-  const ucl_object_t *cur;
-  while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
-    const char *key = ucl_object_key(cur);
-
-    if (!strcmp(key, "group")) {
-      char *group_name = copy_in_config_string(cur);
-      if (group_name == NULL) {
-        fprintf(stderr,
-            "configuration error: expected string for \"views\" "
-            "\"group\"\n");
-        goto done;
-      } else if (strlen(group_name) == 0) {
-        hikari_free(group_name);
-        fprintf(stderr,
-            "configuration error: expected non-empty string for \"views\" "
-            "\"group\"\n");
-        goto done;
-      }
-
-      (*view_config)->group_name = group_name;
-
-    } else if (!strcmp(key, "sheet")) {
-      int64_t sheet_nr;
-      if (!ucl_object_toint_safe(cur, &sheet_nr)) {
-        fprintf(stderr,
-            "configuration error: expected integer for \"views\" "
-            "\"sheet\"\n");
-        goto done;
-      }
-
-      (*view_config)->sheet_nr = sheet_nr;
-    } else if (!strcmp(key, "mark")) {
-      const char *mark_name;
-
-      if (!ucl_object_tostring_safe(cur, &mark_name)) {
-        fprintf(stderr,
-            "configuration error: expected string for \"views\" \"mark\"");
-        goto done;
-      }
-
-      if (strlen(mark_name) != 1) {
-        fprintf(stderr,
-            "configuration error: invalid \"mark\" register \"%s\" for "
-            "\"views\"\n",
-            mark_name);
-        goto done;
-      }
-
-      (*view_config)->mark = &hikari_marks[mark_name[0] - 'a'];
-    } else if (!strcmp(key, "position")) {
-      if (!hikari_position_config_parse(&(*view_config)->position, cur)) {
-        goto done;
-      }
-    } else if (!strcmp(key, "focus")) {
-      bool focus;
-
-      if (!ucl_object_toboolean_safe(cur, &focus)) {
-        fprintf(stderr,
-            "configuration error: expected boolean for \"views\" "
-            "\"focus\"\n");
-        goto done;
-      }
-
-      (*view_config)->focus = focus;
-    } else if (!strcmp(key, "invisible")) {
-      bool invisible;
-
-      if (!ucl_object_toboolean_safe(cur, &invisible)) {
-        fprintf(stderr,
-            "configuration error: expected boolean for \"views\" "
-            "\"invisible\"\n");
-        goto done;
-      }
-
-      (*view_config)->invisible = invisible;
-    } else if (!strcmp(key, "floating")) {
-      bool floating;
-
-      if (!ucl_object_toboolean_safe(cur, &floating)) {
-        fprintf(stderr,
-            "configuration error: expected boolean for \"views\" "
-            "\"floating\"\n");
-        goto done;
-      }
-
-      (*view_config)->floating = floating;
-    } else if (!strcmp(key, "public")) {
-      bool publicview;
-
-      if (!ucl_object_toboolean_safe(cur, &publicview)) {
-        fprintf(stderr,
-            "configuration error: expected boolean for \"views\" "
-            "\"public\"\n");
-        goto done;
-      }
-
-      (*view_config)->publicview = publicview;
-    } else {
-      fprintf(
-          stderr, "configuration error: unkown \"views\" key \"%s\"\n", key);
-      goto done;
-    }
-  }
-
-  success = true;
-
-done:
-  ucl_object_iterate_free(it);
-
-  return success;
-}
-
-static bool
 parse_view_configs(
     struct hikari_configuration *configuration, const ucl_object_t *obj)
 {
@@ -772,6 +649,7 @@ parse_view_configs(
     struct hikari_view_config *view_config =
         hikari_malloc(sizeof(struct hikari_view_config));
 
+    hikari_view_config_init(view_config);
     wl_list_insert(&configuration->view_configs, &view_config->link);
 
     const char *key = ucl_object_key(cur);
@@ -780,7 +658,7 @@ parse_view_configs(
     view_config->app_id = hikari_malloc(keylen + 1);
     strcpy(view_config->app_id, key);
 
-    if (!parse_view_config(configuration, cur, &view_config)) {
+    if (!hikari_view_config_parse(view_config, cur)) {
       fprintf(stderr,
           "configuration error: failed to parse \"views\" \"%s\"\n",
           key);

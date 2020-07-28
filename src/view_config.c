@@ -140,19 +140,11 @@ hikari_view_config_resolve_position(struct hikari_view_config *view_config,
   }
 }
 
-static char *
-copy_in_config_string(const ucl_object_t *obj)
-{
-  return NULL;
-}
-
 bool
 hikari_view_config_parse(
     struct hikari_view_config *view_config, const ucl_object_t *view_config_obj)
 {
   bool success = false;
-
-  hikari_view_config_init(view_config);
 
   ucl_object_iter_t it = ucl_object_iterate_new(view_config_obj);
 
@@ -161,21 +153,23 @@ hikari_view_config_parse(
     const char *key = ucl_object_key(cur);
 
     if (!strcmp(key, "group")) {
-      char *group_name = copy_in_config_string(cur);
-      if (group_name == NULL) {
+      const char *group_name;
+
+      if (!ucl_object_tostring_safe(cur, &group_name)) {
         fprintf(stderr,
             "configuration error: expected string for \"views\" "
             "\"group\"\n");
         goto done;
-      } else if (strlen(group_name) == 0) {
-        hikari_free(group_name);
+      }
+
+      if (strlen(group_name) == 0) {
         fprintf(stderr,
             "configuration error: expected non-empty string for \"views\" "
             "\"group\"\n");
         goto done;
       }
 
-      view_config->group_name = group_name;
+      view_config->group_name = strdup(group_name);
 
     } else if (!strcmp(key, "sheet")) {
       int64_t sheet_nr;
