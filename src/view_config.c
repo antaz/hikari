@@ -45,11 +45,16 @@ hikari_view_config_fini(struct hikari_view_config *view_config)
 {
   assert(view_config != NULL);
 
-  if (view_config->child_properties != &view_config->properties) {
-    fini_properties(view_config->child_properties);
+  struct hikari_view_properties *properties = &view_config->properties;
+  struct hikari_view_properties *child_properties =
+      view_config->child_properties;
+
+  if (child_properties != properties) {
+    fini_properties(child_properties);
+    hikari_free(child_properties);
   }
 
-  fini_properties(&view_config->properties);
+  fini_properties(properties);
   hikari_free(view_config->app_id);
 }
 
@@ -155,117 +160,136 @@ hikari_view_properties_resolve_position(
   }
 }
 
-bool
-hikari_view_config_parse(
-    struct hikari_view_config *view_config, const ucl_object_t *view_config_obj)
+static bool
+parse_property(struct hikari_view_properties *properties,
+    const char *key,
+    const ucl_object_t *property_obj)
 {
-  struct hikari_view_properties *properties = &view_config->properties;
   bool success = false;
 
+  if (!strcmp(key, "group")) {
+    const char *group_name;
+
+    if (!ucl_object_tostring_safe(property_obj, &group_name)) {
+      fprintf(stderr,
+          "configuration error: expected string for \"views\" "
+          "\"group\"\n");
+      goto done;
+    }
+
+    if (strlen(group_name) == 0) {
+      fprintf(stderr,
+          "configuration error: expected non-empty string for \"views\" "
+          "\"group\"\n");
+      goto done;
+    }
+
+    hikari_free(properties->group_name);
+    properties->group_name = strdup(group_name);
+  } else if (!strcmp(key, "sheet")) {
+    int64_t sheet_nr;
+    if (!ucl_object_toint_safe(property_obj, &sheet_nr)) {
+      fprintf(stderr,
+          "configuration error: expected integer for \"views\" "
+          "\"sheet\"\n");
+      goto done;
+    }
+
+    properties->sheet_nr = sheet_nr;
+  } else if (!strcmp(key, "mark")) {
+    const char *mark_name;
+
+    if (!ucl_object_tostring_safe(property_obj, &mark_name)) {
+      fprintf(stderr,
+          "configuration error: expected string for \"views\" \"mark\"");
+      goto done;
+    }
+
+    if (strlen(mark_name) != 1) {
+      fprintf(stderr,
+          "configuration error: invalid \"mark\" register \"%s\" for "
+          "\"views\"\n",
+          mark_name);
+      goto done;
+    }
+
+    properties->mark = &hikari_marks[mark_name[0] - 'a'];
+  } else if (!strcmp(key, "position")) {
+    if (!hikari_position_config_parse(&properties->position, property_obj)) {
+      goto done;
+    }
+  } else if (!strcmp(key, "focus")) {
+    bool focus;
+
+    if (!ucl_object_toboolean_safe(property_obj, &focus)) {
+      fprintf(stderr,
+          "configuration error: expected boolean for \"views\" "
+          "\"focus\"\n");
+      goto done;
+    }
+
+    properties->focus = focus;
+  } else if (!strcmp(key, "invisible")) {
+    bool invisible;
+
+    if (!ucl_object_toboolean_safe(property_obj, &invisible)) {
+      fprintf(stderr,
+          "configuration error: expected boolean for \"views\" "
+          "\"invisible\"\n");
+      goto done;
+    }
+
+    properties->invisible = invisible;
+  } else if (!strcmp(key, "floating")) {
+    bool floating;
+
+    if (!ucl_object_toboolean_safe(property_obj, &floating)) {
+      fprintf(stderr,
+          "configuration error: expected boolean for \"views\" "
+          "\"floating\"\n");
+      goto done;
+    }
+
+    properties->floating = floating;
+  } else if (!strcmp(key, "public")) {
+    bool publicview;
+
+    if (!ucl_object_toboolean_safe(property_obj, &publicview)) {
+      fprintf(stderr,
+          "configuration error: expected boolean for \"views\" "
+          "\"public\"\n");
+      goto done;
+    }
+
+    properties->publicview = publicview;
+  } else {
+    fprintf(stderr, "configuration error: unkown \"views\" key \"%s\"\n", key);
+    goto done;
+  }
+
+  success = true;
+
+done:
+
+  return success;
+}
+
+static bool
+parse_properties(struct hikari_view_properties *properties,
+    const ucl_object_t *view_config_obj)
+{
+  bool success = false;
   ucl_object_iter_t it = ucl_object_iterate_new(view_config_obj);
 
   const ucl_object_t *cur;
   while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
     const char *key = ucl_object_key(cur);
 
-    if (!strcmp(key, "group")) {
-      const char *group_name;
+    if (!strcmp(key, "inherit")) {
+      continue;
+    }
 
-      if (!ucl_object_tostring_safe(cur, &group_name)) {
-        fprintf(stderr,
-            "configuration error: expected string for \"views\" "
-            "\"group\"\n");
-        goto done;
-      }
-
-      if (strlen(group_name) == 0) {
-        fprintf(stderr,
-            "configuration error: expected non-empty string for \"views\" "
-            "\"group\"\n");
-        goto done;
-      }
-
-      properties->group_name = strdup(group_name);
-
-    } else if (!strcmp(key, "sheet")) {
-      int64_t sheet_nr;
-      if (!ucl_object_toint_safe(cur, &sheet_nr)) {
-        fprintf(stderr,
-            "configuration error: expected integer for \"views\" "
-            "\"sheet\"\n");
-        goto done;
-      }
-
-      properties->sheet_nr = sheet_nr;
-    } else if (!strcmp(key, "mark")) {
-      const char *mark_name;
-
-      if (!ucl_object_tostring_safe(cur, &mark_name)) {
-        fprintf(stderr,
-            "configuration error: expected string for \"views\" \"mark\"");
-        goto done;
-      }
-
-      if (strlen(mark_name) != 1) {
-        fprintf(stderr,
-            "configuration error: invalid \"mark\" register \"%s\" for "
-            "\"views\"\n",
-            mark_name);
-        goto done;
-      }
-
-      properties->mark = &hikari_marks[mark_name[0] - 'a'];
-    } else if (!strcmp(key, "position")) {
-      if (!hikari_position_config_parse(&properties->position, cur)) {
-        goto done;
-      }
-    } else if (!strcmp(key, "focus")) {
-      bool focus;
-
-      if (!ucl_object_toboolean_safe(cur, &focus)) {
-        fprintf(stderr,
-            "configuration error: expected boolean for \"views\" "
-            "\"focus\"\n");
-        goto done;
-      }
-
-      properties->focus = focus;
-    } else if (!strcmp(key, "invisible")) {
-      bool invisible;
-
-      if (!ucl_object_toboolean_safe(cur, &invisible)) {
-        fprintf(stderr,
-            "configuration error: expected boolean for \"views\" "
-            "\"invisible\"\n");
-        goto done;
-      }
-
-      properties->invisible = invisible;
-    } else if (!strcmp(key, "floating")) {
-      bool floating;
-
-      if (!ucl_object_toboolean_safe(cur, &floating)) {
-        fprintf(stderr,
-            "configuration error: expected boolean for \"views\" "
-            "\"floating\"\n");
-        goto done;
-      }
-
-      properties->floating = floating;
-    } else if (!strcmp(key, "public")) {
-      bool publicview;
-
-      if (!ucl_object_toboolean_safe(cur, &publicview)) {
-        fprintf(stderr,
-            "configuration error: expected boolean for \"views\" "
-            "\"public\"\n");
-        goto done;
-      }
-
-      properties->publicview = publicview;
-    } else {
-      fprintf(
-          stderr, "configuration error: unkown \"views\" key \"%s\"\n", key);
+    if (!parse_property(properties, key, cur)) {
       goto done;
     }
   }
@@ -274,6 +298,102 @@ hikari_view_config_parse(
 
 done:
   ucl_object_iterate_free(it);
+
+  return success;
+}
+
+static bool
+parse_inherited_properties(struct hikari_view_properties *properties,
+    struct hikari_view_properties *child_properties,
+    const ucl_object_t *inherit_obj)
+{
+  bool success = false;
+  ucl_object_iter_t it = ucl_object_iterate_new(inherit_obj);
+
+  const ucl_object_t *cur;
+  while ((cur = ucl_object_iterate_safe(it, false)) != NULL) {
+    ucl_type_t type = ucl_object_type(cur);
+    const char *attr;
+
+    switch (type) {
+      case UCL_STRING:
+        if (!ucl_object_tostring_safe(cur, &attr)) {
+          goto done;
+        }
+
+        if (!strcmp(attr, "group")) {
+          if (properties->group_name != NULL) {
+            child_properties->group_name = strdup(properties->group_name);
+          } else {
+            child_properties->group_name = NULL;
+          }
+        } else if (!strcmp(attr, "sheet")) {
+          child_properties->sheet_nr = properties->sheet_nr;
+        } else if (!strcmp(attr, "mark")) {
+          child_properties->mark = properties->mark;
+        } else if (!strcmp(attr, "position")) {
+          memcpy(&child_properties->position,
+              &properties->position,
+              sizeof(struct hikari_position_config));
+        } else if (!strcmp(attr, "focus")) {
+          child_properties->focus = properties->focus;
+        } else if (!strcmp(attr, "invisible")) {
+          child_properties->invisible = properties->invisible;
+        } else if (!strcmp(attr, "floating")) {
+          child_properties->floating = properties->floating;
+        } else if (!strcmp(attr, "publicview")) {
+          child_properties->publicview = properties->publicview;
+        }
+        break;
+
+      case UCL_OBJECT:
+        parse_properties(child_properties, cur);
+        break;
+
+      default:
+        goto done;
+    }
+  }
+
+  success = true;
+
+done:
+  ucl_object_iterate_free(it);
+
+  return success;
+}
+
+bool
+hikari_view_config_parse(
+    struct hikari_view_config *view_config, const ucl_object_t *view_config_obj)
+{
+  struct hikari_view_properties *properties = &view_config->properties;
+  bool success = false;
+
+  if (!parse_properties(properties, view_config_obj)) {
+    goto done;
+  }
+
+  const ucl_object_t *inherit_obj =
+      ucl_object_lookup(view_config_obj, "inherit");
+
+  if (inherit_obj != NULL) {
+    view_config->child_properties =
+        hikari_malloc(sizeof(struct hikari_view_properties));
+
+    struct hikari_view_properties *child_properties =
+        view_config->child_properties;
+    init_properties(child_properties);
+
+    if (!parse_inherited_properties(
+            properties, child_properties, inherit_obj)) {
+      goto done;
+    }
+  }
+
+  success = true;
+
+done:
 
   return success;
 }

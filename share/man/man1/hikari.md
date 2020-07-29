@@ -595,6 +595,28 @@ can be used to specify certain properties you want for that view to apply.
   created automatically). If no group is specified a group name equal to the
   view *id* is chosen.
 
+* **inherit**
+
+  Lets the user specify a list of properties which should be inherited to child
+  views (e.g. dialogs). To inherit a property just state the name of the
+  property as a string. Additionally use an object to overwrite specific values
+  if they should differ from the parent's configuration. Values that are not
+  explicitly inherited resort to their default. If **inherit** is not specified
+  the child view is going to use the parent's configuration.
+
+```
+  scratchpad {
+    mark = s
+    sheet = 0
+    position = center
+    invisible = true
+    floating = false
+    focus = true
+
+    inherit = [ sheet, { floating = true } ]
+  }
+```
+
 * **invisible**
 
   Takes a boolean to specify the view's **invisible** state on startup. The
