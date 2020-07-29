@@ -27,6 +27,7 @@ struct hikari_view_config {
   char *app_id;
 
   struct hikari_view_properties properties;
+  struct hikari_view_properties *child_properties;
 };
 
 void
@@ -35,15 +36,23 @@ hikari_view_config_init(struct hikari_view_config *view_config);
 void
 hikari_view_config_fini(struct hikari_view_config *view_config);
 
+static inline struct hikari_view_properties *
+hikari_view_config_resolve_properties(
+    struct hikari_view_config *view_config, bool child)
+{
+  return child ? view_config->child_properties : &view_config->properties;
+}
+
 struct hikari_sheet *
-hikari_view_config_resolve_sheet(struct hikari_view_config *view_config);
+hikari_view_properties_resolve_sheet(struct hikari_view_properties *properties);
 
 struct hikari_group *
-hikari_view_config_resolve_group(
-    struct hikari_view_config *view_config, const char *app_id);
+hikari_view_properties_resolve_group(
+    struct hikari_view_properties *properties, const char *app_id);
 
 void
-hikari_view_config_resolve_position(struct hikari_view_config *view_config,
+hikari_view_properties_resolve_position(
+    struct hikari_view_properties *properties,
     struct hikari_view *view,
     int *x,
     int *y);
@@ -51,40 +60,5 @@ hikari_view_config_resolve_position(struct hikari_view_config *view_config,
 bool
 hikari_view_config_parse(struct hikari_view_config *view_config,
     const ucl_object_t *view_config_obj);
-
-static inline bool
-hikari_view_config_resolve_focus(struct hikari_view_config *view_config)
-{
-  assert(view_config != NULL);
-  return view_config->properties.focus;
-}
-
-static inline bool
-hikari_view_config_resolve_invisible(struct hikari_view_config *view_config)
-{
-  assert(view_config != NULL);
-  return view_config->properties.invisible;
-}
-
-static inline bool
-hikari_view_config_resolve_floating(struct hikari_view_config *view_config)
-{
-  assert(view_config != NULL);
-  return view_config->properties.floating;
-}
-
-static inline bool
-hikari_view_config_resolve_public(struct hikari_view_config *view_config)
-{
-  assert(view_config != NULL);
-  return view_config->properties.publicview;
-}
-
-static inline struct hikari_mark *
-hikari_view_config_resolve_mark(struct hikari_view_config *view_config)
-{
-  assert(view_config != NULL);
-  return view_config->properties.mark;
-}
 
 #endif

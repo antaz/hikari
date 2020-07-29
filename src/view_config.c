@@ -30,6 +30,14 @@ hikari_view_config_init(struct hikari_view_config *view_config)
   view_config->app_id = NULL;
 
   init_properties(&view_config->properties);
+
+  view_config->child_properties = &view_config->properties;
+}
+
+static void
+fini_properties(struct hikari_view_properties *properties)
+{
+  hikari_free(properties->group_name);
 }
 
 void
@@ -37,18 +45,20 @@ hikari_view_config_fini(struct hikari_view_config *view_config)
 {
   assert(view_config != NULL);
 
+  if (view_config->child_properties != &view_config->properties) {
+    fini_properties(view_config->child_properties);
+  }
+
+  fini_properties(&view_config->properties);
   hikari_free(view_config->app_id);
-  hikari_free(view_config->properties.group_name);
 }
 
 struct hikari_sheet *
-hikari_view_config_resolve_sheet(struct hikari_view_config *view_config)
+hikari_view_properties_resolve_sheet(struct hikari_view_properties *properties)
 {
-  assert(view_config != NULL);
+  assert(properties != NULL);
 
   struct hikari_sheet *sheet;
-  struct hikari_view_properties *properties = &view_config->properties;
-
   if (properties->sheet_nr != -1) {
     sheet = hikari_server.workspace->sheets + properties->sheet_nr;
   } else {
@@ -59,18 +69,13 @@ hikari_view_config_resolve_sheet(struct hikari_view_config *view_config)
 }
 
 struct hikari_group *
-hikari_view_config_resolve_group(
-    struct hikari_view_config *view_config, const char *app_id)
+hikari_view_properties_resolve_group(
+    struct hikari_view_properties *properties, const char *app_id)
 {
   struct hikari_group *group;
 
-  if (view_config != NULL) {
-    struct hikari_view_properties *properties = &view_config->properties;
-    if (properties->group_name != NULL && strlen(properties->group_name) > 0) {
-      group = hikari_server_find_or_create_group(properties->group_name);
-    } else {
-      group = hikari_server_find_or_create_group(app_id);
-    }
+  if (properties->group_name != NULL && strlen(properties->group_name) > 0) {
+    group = hikari_server_find_or_create_group(properties->group_name);
   } else {
     group = hikari_server_find_or_create_group(app_id);
   }
@@ -79,16 +84,16 @@ hikari_view_config_resolve_group(
 }
 
 void
-hikari_view_config_resolve_position(struct hikari_view_config *view_config,
+hikari_view_properties_resolve_position(
+    struct hikari_view_properties *properties,
     struct hikari_view *view,
     int *x,
     int *y)
 {
-  assert(view_config != NULL);
+  assert(properties != NULL);
 
   struct hikari_output *output = hikari_server.workspace->output;
   struct wlr_box *geometry = hikari_view_border_geometry(view);
-  struct hikari_view_properties *properties = &view_config->properties;
 
   switch (properties->position.type) {
     case HIKARI_POSITION_CONFIG_TYPE_ABSOLUTE:

@@ -590,15 +590,19 @@ hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
 
   if (view_config != NULL) {
     struct hikari_mark *mark;
+    struct hikari_view_properties *properties =
+        hikari_view_config_resolve_properties(view_config, view->child);
 
-    group = hikari_view_config_resolve_group(view_config, view->id);
-    mark = hikari_view_config_resolve_mark(view_config);
+    assert(properties != NULL);
+
+    group = hikari_view_properties_resolve_group(properties, view->id);
+    mark = properties->mark;
 
     if (mark != NULL && mark->view == NULL) {
       hikari_mark_set(mark, view);
     }
 
-    focus = hikari_view_config_resolve_focus(view_config);
+    focus = properties->focus;
   } else {
     group = hikari_server_find_or_create_group(view->id);
     focus = false;
@@ -1698,14 +1702,17 @@ hikari_view_configure(struct hikari_view *view,
   set_app_id(view, app_id);
 
   if (view_config != NULL) {
-    sheet = hikari_view_config_resolve_sheet(view_config);
+    struct hikari_view_properties *properties =
+        hikari_view_config_resolve_properties(view_config, view->child);
+
+    sheet = hikari_view_properties_resolve_sheet(properties);
     output = sheet->workspace->output;
 
-    invisible = hikari_view_config_resolve_invisible(view_config);
-    floating = hikari_view_config_resolve_floating(view_config);
-    publicview = hikari_view_config_resolve_public(view_config);
+    invisible = properties->invisible;
+    floating = properties->floating;
+    publicview = properties->publicview;
 
-    hikari_view_config_resolve_position(view_config, view, &x, &y);
+    hikari_view_properties_resolve_position(properties, view, &x, &y);
   } else {
     sheet = hikari_server.workspace->sheet;
     output = sheet->workspace->output;
