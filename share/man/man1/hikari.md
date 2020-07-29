@@ -376,6 +376,10 @@ View actions
 
   Moves the focused view **step** pixels into the given direction.
 
+* **view-move-[center[|-left|-right]|[bottom|top]-[left|middle|right]]**
+
+  Moves the focused view to the given position on the output.
+
 * **view-only**
 
   Hides every other view except the focused one.

@@ -49,17 +49,26 @@ parse_binding(struct wl_list *action_configs,
     *arg = NULL;
 #endif
 
-#define PARSE_MOVE_BINDING(d)                                                  \
+#define PARSE_MOVE_BINDING(d, f)                                               \
   }                                                                            \
-  else if (!strcmp(str, "view-move-" #d))                                      \
+  else if (!strcmp(str, "view-move-" d))                                      \
   {                                                                            \
-    *action = hikari_server_move_view_##d;                                     \
+    *action = hikari_server_move_view_##f;                                     \
     *arg = NULL;
 
-    PARSE_MOVE_BINDING(up)
-    PARSE_MOVE_BINDING(down)
-    PARSE_MOVE_BINDING(left)
-    PARSE_MOVE_BINDING(right)
+    PARSE_MOVE_BINDING("up", up)
+    PARSE_MOVE_BINDING("down", down)
+    PARSE_MOVE_BINDING("left", left)
+    PARSE_MOVE_BINDING("right", right)
+    PARSE_MOVE_BINDING("bottom-left", bottom_left)
+    PARSE_MOVE_BINDING("bottom-middle", bottom_middle)
+    PARSE_MOVE_BINDING("bottom-right", bottom_right)
+    PARSE_MOVE_BINDING("center-left", center_left)
+    PARSE_MOVE_BINDING("center", center)
+    PARSE_MOVE_BINDING("center-right", center_right)
+    PARSE_MOVE_BINDING("top-left", top_left)
+    PARSE_MOVE_BINDING("top-middle", top_middle)
+    PARSE_MOVE_BINDING("top-right", top_right)
 #undef PARSE_MOVE_BINDING
 
 #define PARSE_SNAP_BINDING(d)                                                  \

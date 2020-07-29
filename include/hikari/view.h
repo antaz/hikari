@@ -195,6 +195,33 @@ void
 hikari_view_move(struct hikari_view *view, int x, int y);
 
 void
+hikari_view_move_bottom_left(struct hikari_view *view);
+
+void
+hikari_view_move_bottom_middle(struct hikari_view *view);
+
+void
+hikari_view_move_bottom_right(struct hikari_view *view);
+
+void
+hikari_view_move_center_left(struct hikari_view *view);
+
+void
+hikari_view_move_center(struct hikari_view *view);
+
+void
+hikari_view_move_center_right(struct hikari_view *view);
+
+void
+hikari_view_move_top_left(struct hikari_view *view);
+
+void
+hikari_view_move_top_middle(struct hikari_view *view);
+
+void
+hikari_view_move_top_right(struct hikari_view *view);
+
+void
 hikari_view_move_absolute(struct hikari_view *view, int x, int y);
 
 void

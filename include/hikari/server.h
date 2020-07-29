@@ -235,6 +235,23 @@ hikari_server_move_view_left(void *arg);
 void
 hikari_server_move_view_right(void *arg);
 
+#define MOVE(pos)                                                              \
+  static inline void hikari_server_move_view_##pos(void *arg)                  \
+  {                                                                            \
+    hikari_workspace_move_view_##pos(hikari_server.workspace);                 \
+  }
+
+MOVE(bottom_left)
+MOVE(bottom_middle)
+MOVE(bottom_right)
+MOVE(center_left)
+MOVE(center)
+MOVE(center_right)
+MOVE(top_left)
+MOVE(top_middle)
+MOVE(top_right)
+#undef MOVE
+
 void
 hikari_server_increase_view_size_up(void *arg);
 

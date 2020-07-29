@@ -54,6 +54,33 @@ void
 hikari_workspace_move_view(struct hikari_workspace *workspace, int dx, int dy);
 
 void
+hikari_workspace_move_view_bottom_left(struct hikari_workspace *workspace);
+
+void
+hikari_workspace_move_view_bottom_middle(struct hikari_workspace *workspace);
+
+void
+hikari_workspace_move_view_bottom_right(struct hikari_workspace *workspace);
+
+void
+hikari_workspace_move_view_center_left(struct hikari_workspace *workspace);
+
+void
+hikari_workspace_move_view_center(struct hikari_workspace *workspace);
+
+void
+hikari_workspace_move_view_center_right(struct hikari_workspace *workspace);
+
+void
+hikari_workspace_move_view_top_left(struct hikari_workspace *workspace);
+
+void
+hikari_workspace_move_view_top_middle(struct hikari_workspace *workspace);
+
+void
+hikari_workspace_move_view_top_right(struct hikari_workspace *workspace);
+
+void
 hikari_workspace_move_resize_view(struct hikari_workspace *workspace,
     int dx,
     int dy,

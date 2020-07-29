@@ -573,6 +573,34 @@ hikari_view_move_absolute(struct hikari_view *view, int x, int y)
   move_view(view, geometry, x, y);
 }
 
+#define MOVE(pos)                                                              \
+  void hikari_view_move_##pos(struct hikari_view *view)                        \
+  {                                                                            \
+    assert(view != NULL);                                                      \
+                                                                               \
+    struct hikari_output *output = view->output;                               \
+    struct wlr_box *usable_area = &output->usable_area;                        \
+    struct wlr_box *border_geometry = hikari_view_border_geometry(view);       \
+    struct wlr_box *geometry = hikari_view_geometry(view);                     \
+                                                                               \
+    int x;                                                                     \
+    int y;                                                                     \
+    hikari_geometry_position_##pos(border_geometry, usable_area, &x, &y);      \
+                                                                               \
+    move_view(view, geometry, x, y);                                           \
+  }
+
+MOVE(bottom_left)
+MOVE(bottom_middle)
+MOVE(bottom_right)
+MOVE(center_left)
+MOVE(center)
+MOVE(center_right)
+MOVE(top_left)
+MOVE(top_middle)
+MOVE(top_right)
+#undef MOVE
+
 void
 hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
 {

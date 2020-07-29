@@ -508,6 +508,27 @@ hikari_workspace_move_resize_view(
   hikari_view_move_resize(focus_view, dx, dy, dwidth, dheight);
 }
 
+#define MOVE(pos)                                                              \
+  void hikari_workspace_move_view_##pos(struct hikari_workspace *workspace)    \
+  {                                                                            \
+    FOCUS_GUARD(workspace, focus_view);                                        \
+                                                                               \
+    hikari_server_set_cycling();                                               \
+                                                                               \
+    hikari_view_move_##pos(focus_view);                                        \
+  }
+
+MOVE(bottom_left)
+MOVE(bottom_middle)
+MOVE(bottom_right)
+MOVE(center_left)
+MOVE(center)
+MOVE(center_right)
+MOVE(top_left)
+MOVE(top_middle)
+MOVE(top_right)
+#undef MOVE
+
 void
 hikari_workspace_snap_view_up(struct hikari_workspace *workspace)
 {
