@@ -648,7 +648,7 @@ can be used to specify certain properties you want for that view to apply.
   * *top-middle*
   * *top-right*
 
-  This allows positioning a view relative to the ouptut.
+  This allows positioning a view relative to the output.
 
 * **public**
 
