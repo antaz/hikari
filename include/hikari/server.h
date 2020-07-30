@@ -15,7 +15,6 @@
 #include <hikari/group_assign_mode.h>
 #include <hikari/indicator.h>
 #include <hikari/input_grab_mode.h>
-#include <hikari/layer_shell.h>
 #include <hikari/layout_select_mode.h>
 #include <hikari/lock_mode.h>
 #include <hikari/mark_assign_mode.h>
@@ -25,6 +24,10 @@
 #include <hikari/resize_mode.h>
 #include <hikari/sheet_assign_mode.h>
 #include <hikari/workspace.h>
+
+#ifdef HAVE_LAYERSHELL
+#include <hikari/layer_shell.h>
+#endif
 
 struct wlr_input_device;
 struct wlr_xcursor_manager;

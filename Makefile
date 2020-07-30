@@ -1,3 +1,7 @@
+.ifmake clean
+WITH_ALL = YES
+.endif
+
 .ifdef WITH_ALL
 WITH_XWAYLAND = YES
 WITH_SCREENCOPY = YES
@@ -66,9 +70,13 @@ OBJS = \
 	view.o \
 	view_config.o \
 	workspace.o \
-	xdg_view.o \
+	xdg_view.o
+
+.ifdef WITH_XWAYLAND
+OBJS += \
 	xwayland_unmanaged_view.o \
 	xwayland_view.o
+.endif
 
 WAYLAND_PROTOCOLS != pkg-config --variable pkgdatadir wayland-protocols
 
@@ -163,12 +171,18 @@ LIBS = \
 	${LIBINPUT_LIBS} \
 	${UCL_LIBS}
 
+PROTOCOL_HEADERS = xdg-shell-protocol.h
+
+.ifdef WITH_LAYERSHELL
+PROTOCOL_HEADERS += wlr-layer-shell-unstable-v1-protocol.h
+.endif
+
 all: hikari hikari-unlocker
 
 version.h:
 	echo "#define HIKARI_VERSION \"${VERSION}\"" >> version.h
 
-hikari: version.h xdg-shell-protocol.h wlr-layer-shell-unstable-v1-protocol.h ${OBJS}
+hikari: version.h ${PROTOCOL_HEADERS} ${OBJS}
 	${CC} ${LDFLAGS} ${CFLAGS} ${INCLUDES} -o ${.TARGET} ${OBJS} ${LIBS}
 
 xdg-shell-protocol.h:
@@ -186,9 +200,8 @@ clean-doc:
 
 clean: clean-doc
 	@echo "cleaning headers"
-	@test -e _darcs && rm version.h ||:
-	@rm xdg-shell-protocol.h 2> /dev/null ||:
-	@rm wlr-layer-shell-unstable-v1-protocol.h 2> /dev/null ||:
+	@test -e _darcs && rm version.h 2> /dev/null ||:
+	@rm ${PROTOCOL_HEADERS} 2> /dev/null ||:
 	@echo "cleaning object files"
 	@rm ${OBJS} 2> /dev/null ||:
 	@echo "cleaning executables"
