@@ -51,7 +51,7 @@ parse_binding(struct wl_list *action_configs,
 
 #define PARSE_MOVE_BINDING(d, f)                                               \
   }                                                                            \
-  else if (!strcmp(str, "view-move-" d))                                      \
+  else if (!strcmp(str, "view-move-" d))                                       \
   {                                                                            \
     *action = hikari_server_move_view_##f;                                     \
     *arg = NULL;
