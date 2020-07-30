@@ -136,6 +136,15 @@ bmake PREFIX=/usr/local install
 
 `uninstall` requires the same values for prefixes.
 
+### Building with all features enabled
+
+The following sections explain how to enabled features on an individual basis.
+However, to enable every feature the build system offers the `WITH_ALL` flag.
+
+```
+make WITH_ALL=YES
+```
+
 #### Building with XWayland support
 
 `hikari` offers optional XWayland support which is enabled via setting
