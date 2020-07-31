@@ -397,7 +397,7 @@ hikari_xwayland_view_init(struct hikari_xwayland_view *xwayland_view,
 {
   struct hikari_view *view = &xwayland_view->view;
 
-  hikari_view_init(view, HIKARI_XWAYLAND_VIEW, false, workspace);
+  hikari_view_init(view, false, workspace);
 
   view->node.surface_at = surface_at;
   view->node.focus = focus;

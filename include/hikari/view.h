@@ -23,8 +23,6 @@
 struct hikari_mark;
 struct hikari_renderer;
 
-enum hikari_view_type { HIKARI_XDG_VIEW, HIKARI_XWAYLAND_VIEW };
-
 struct hikari_view;
 
 struct hikari_view_decoration {
@@ -35,8 +33,6 @@ struct hikari_view_decoration {
 
 struct hikari_view {
   struct hikari_node node;
-  enum hikari_view_type type;
-
   struct hikari_sheet *sheet;
   struct hikari_group *group;
   struct hikari_mark *mark;
@@ -138,10 +134,8 @@ FLAG(forced, 4UL)
 #undef FLAG
 
 void
-hikari_view_init(struct hikari_view *view,
-    enum hikari_view_type type,
-    bool child,
-    struct hikari_workspace *workspace);
+hikari_view_init(
+    struct hikari_view *view, bool child, struct hikari_workspace *workspace);
 
 void
 hikari_view_fini(struct hikari_view *view);

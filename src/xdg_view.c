@@ -496,7 +496,7 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
 
   bool child = xdg_surface->toplevel->parent != NULL;
 
-  hikari_view_init(&xdg_view->view, HIKARI_XDG_VIEW, child, workspace);
+  hikari_view_init(&xdg_view->view, child, workspace);
 
 #if !defined(NDEBUG)
   printf("NEW XDG %p\n", xdg_view);

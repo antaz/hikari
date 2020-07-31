@@ -255,15 +255,12 @@ migrate_view(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
 }
 
 void
-hikari_view_init(struct hikari_view *view,
-    enum hikari_view_type type,
-    bool child,
-    struct hikari_workspace *workspace)
+hikari_view_init(
+    struct hikari_view *view, bool child, struct hikari_workspace *workspace)
 {
 #if !defined(NDEBUG)
   printf("VIEW INIT %p\n", view);
 #endif
-  view->type = type;
   view->flags = hikari_view_hidden_flag;
   view->border.state = HIKARI_BORDER_INACTIVE;
   view->sheet = NULL;
