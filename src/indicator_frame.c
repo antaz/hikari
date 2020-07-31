@@ -17,33 +17,55 @@ void
 hikari_indicator_frame_refresh_geometry(
     struct hikari_indicator_frame *indicator_frame, struct hikari_view *view)
 {
-  struct wlr_box *geometry;
+  struct wlr_box *top_bottom_geometry;
+  struct wlr_box *left_right_geometry;
 
   if (view->border.state == HIKARI_BORDER_NONE) {
-    geometry = hikari_view_geometry(view);
+    top_bottom_geometry = hikari_view_geometry(view);
+    left_right_geometry = top_bottom_geometry;
+  } else if (view->maximized_state == NULL) {
+    top_bottom_geometry = hikari_view_border_geometry(view);
+    left_right_geometry = top_bottom_geometry;
   } else {
-    geometry = hikari_view_border_geometry(view);
+    switch (view->maximized_state->maximization) {
+      case HIKARI_MAXIMIZATION_VERTICALLY_MAXIMIZED:
+        top_bottom_geometry = hikari_view_geometry(view);
+        left_right_geometry = hikari_view_border_geometry(view);
+        break;
+
+      case HIKARI_MAXIMIZATION_HORIZONTALLY_MAXIMIZED:
+        top_bottom_geometry = hikari_view_border_geometry(view);
+        left_right_geometry = hikari_view_geometry(view);
+        break;
+
+      case HIKARI_MAXIMIZATION_FULLY_MAXIMIZED:
+        top_bottom_geometry = hikari_view_geometry(view);
+        left_right_geometry = top_bottom_geometry;
+        break;
+    }
   }
 
   int border = hikari_configuration->border;
 
-  indicator_frame->top.x = geometry->x;
-  indicator_frame->top.y = geometry->y;
-  indicator_frame->top.width = geometry->width;
+  indicator_frame->top.x = top_bottom_geometry->x;
+  indicator_frame->top.y = top_bottom_geometry->y;
+  indicator_frame->top.width = top_bottom_geometry->width;
   indicator_frame->top.height = border;
 
-  indicator_frame->bottom.x = geometry->x;
-  indicator_frame->bottom.y = geometry->y + geometry->height - border;
-  indicator_frame->bottom.width = geometry->width;
+  indicator_frame->bottom.x = top_bottom_geometry->x;
+  indicator_frame->bottom.y =
+      top_bottom_geometry->y + top_bottom_geometry->height - border;
+  indicator_frame->bottom.width = top_bottom_geometry->width;
   indicator_frame->bottom.height = border;
 
-  indicator_frame->left.x = geometry->x;
-  indicator_frame->left.y = geometry->y;
+  indicator_frame->left.x = left_right_geometry->x;
+  indicator_frame->left.y = left_right_geometry->y;
   indicator_frame->left.width = border;
-  indicator_frame->left.height = geometry->height;
+  indicator_frame->left.height = left_right_geometry->height;
 
-  indicator_frame->right.x = geometry->x + geometry->width - border;
-  indicator_frame->right.y = geometry->y;
+  indicator_frame->right.x =
+      left_right_geometry->x + left_right_geometry->width - border;
+  indicator_frame->right.y = left_right_geometry->y;
   indicator_frame->right.width = border;
-  indicator_frame->right.height = geometry->height;
+  indicator_frame->right.height = left_right_geometry->height;
 }
