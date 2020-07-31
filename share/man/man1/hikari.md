@@ -608,19 +608,6 @@ can be used to specify certain properties you want for that view to apply.
   explicitly inherited resort to their default. If **inherit** is not specified
   the child view is going to use the parent's configuration.
 
-```
-  scratchpad {
-    mark = s
-    sheet = 0
-    position = center
-    invisible = true
-    floating = false
-    focus = true
-
-    inherit = [ sheet, { floating = true } ]
-  }
-```
-
 * **invisible**
 
   Takes a boolean to specify the view's **invisible** state on startup. The
@@ -663,7 +650,9 @@ can be used to specify certain properties you want for that view to apply.
 
 To configure views of the **systat** *id* to become a member of the group
 *monitor* and automatically assign them to sheet **0** with a given position and
-focus grabbing we would do something like this.
+focus grabbing we would do something like this. Child views inherit the
+**group** and **sheet** property while overwriting **floating** to *true*, all
+the other properties are set to their respective default values.
 
 ```
 systat = {
@@ -674,6 +663,8 @@ systat = {
     y = 1077
   }
   focus = true
+
+  inherit = [ group, sheet, { floating = true } ]
 }
 ```
 
