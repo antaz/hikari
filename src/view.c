@@ -99,6 +99,19 @@ refresh_border_geometry(struct hikari_view *view)
   hikari_indicator_frame_refresh_geometry(&view->indicator_frame, view);
 }
 
+static inline void
+move_view_constrained(
+    struct hikari_view *view, struct wlr_box *geometry, int x, int y)
+{
+  if (!hikari_view_is_hidden(view)) {
+    hikari_view_damage_whole(view);
+    hikari_indicator_damage(&hikari_server.indicator, view);
+  }
+
+  hikari_geometry_constrain_relative(
+      geometry, &view->output->usable_area, x, y);
+}
+
 static void
 move_view(struct hikari_view *view, struct wlr_box *geometry, int x, int y)
 {
@@ -111,23 +124,21 @@ move_view(struct hikari_view *view, struct wlr_box *geometry, int x, int y)
         if (y != 0) {
           return;
         }
+        move_view_constrained(view, geometry, x, y);
+        view->geometry.x = x;
         break;
 
       case HIKARI_MAXIMIZATION_HORIZONTALLY_MAXIMIZED:
         if (x != 0) {
           return;
         }
+        move_view_constrained(view, geometry, x, y);
+        view->geometry.y = y;
         break;
     }
+  } else {
+    move_view_constrained(view, geometry, x, y);
   }
-
-  if (!hikari_view_is_hidden(view)) {
-    hikari_view_damage_whole(view);
-    hikari_indicator_damage(&hikari_server.indicator, view);
-  }
-
-  hikari_geometry_constrain_relative(
-      geometry, &view->output->usable_area, x, y);
 
   if (view->move != NULL) {
     view->move(view, geometry->x, geometry->y);
