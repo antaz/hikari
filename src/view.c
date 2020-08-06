@@ -116,22 +116,30 @@ static void
 move_view(struct hikari_view *view, struct wlr_box *geometry, int x, int y)
 {
   if (view->maximized_state != NULL) {
+    struct wlr_box *usable_area;
+
     switch (view->maximized_state->maximization) {
       case HIKARI_MAXIMIZATION_FULLY_MAXIMIZED:
         return;
 
       case HIKARI_MAXIMIZATION_VERTICALLY_MAXIMIZED:
-        if (y != 0) {
+        usable_area = &view->output->usable_area;
+
+        if (y != usable_area->y) {
           return;
         }
+
         move_view_constrained(view, geometry, x, y);
         view->geometry.x = x;
         break;
 
       case HIKARI_MAXIMIZATION_HORIZONTALLY_MAXIMIZED:
-        if (x != 0) {
+        usable_area = &view->output->usable_area;
+
+        if (x != usable_area->x) {
           return;
         }
+
         move_view_constrained(view, geometry, x, y);
         view->geometry.y = y;
         break;
