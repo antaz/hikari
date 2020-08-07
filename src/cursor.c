@@ -1,6 +1,7 @@
 #include <hikari/cursor.h>
 
 #include <assert.h>
+#include <errno.h>
 
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_xcursor_manager.h>
@@ -31,6 +32,39 @@ request_set_cursor_handler(struct wl_listener *listener, void *data);
 
 static void
 surface_destroy_handler(struct wl_listener *listener, void *data);
+
+static unsigned long
+get_cursor_size(void)
+{
+  const char *cursor_size = getenv("XCURSOR_SIZE");
+
+  if (cursor_size != NULL && strlen(cursor_size) > 0) {
+    errno = 0;
+    char *end;
+    unsigned long size = strtoul(cursor_size, &end, 10);
+    if (*end == '\0' && errno == 0) {
+      return size;
+    }
+  }
+
+  setenv("XCURSOR_SIZE", "16", 1);
+
+  return 16;
+}
+
+static const char *
+get_cursor_theme(void)
+{
+  char *cursor_theme = getenv("XCURSOR_THEME");
+
+  if (cursor_theme != NULL && strlen(cursor_theme) > 0) {
+    return cursor_theme;
+  }
+
+  setenv("XCURSOR_THEME", "Adwaita", 1);
+
+  return "Adwaita";
+}
 
 static void
 configure_bindings(struct hikari_cursor *cursor, struct wl_list *bindings)
@@ -74,8 +108,19 @@ configure_bindings(struct hikari_cursor *cursor, struct wl_list *bindings)
 }
 
 void
-hikari_cursor_init(struct hikari_cursor *cursor, struct wlr_cursor *wlr_cursor)
+hikari_cursor_init(
+    struct hikari_cursor *cursor, struct wlr_output_layout *output_layout)
 {
+  struct wlr_cursor *wlr_cursor = wlr_cursor_create();
+
+  wlr_cursor_attach_output_layout(wlr_cursor, output_layout);
+
+  const char *cursor_theme = get_cursor_theme();
+  unsigned long cursor_size = get_cursor_size();
+
+  cursor->cursor_mgr = wlr_xcursor_manager_create(cursor_theme, cursor_size);
+  wlr_xcursor_manager_load(cursor->cursor_mgr, 1);
+
   cursor->wlr_cursor = wlr_cursor;
 
   wl_list_init(&cursor->surface_destroy.link);
@@ -96,6 +141,8 @@ hikari_cursor_fini(struct hikari_cursor *cursor)
 {
   hikari_binding_group_fini(cursor->bindings);
   hikari_cursor_deactivate(cursor);
+
+  wlr_xcursor_manager_destroy(cursor->cursor_mgr);
 }
 
 void
@@ -146,7 +193,7 @@ hikari_cursor_set_image(struct hikari_cursor *cursor, const char *path)
 
   if (path != NULL) {
     wlr_xcursor_manager_set_cursor_image(
-        hikari_server.cursor_mgr, path, cursor->wlr_cursor);
+        cursor->cursor_mgr, path, cursor->wlr_cursor);
   } else {
     wlr_cursor_set_image(cursor->wlr_cursor, NULL, 0, 0, 0, 0, 0, 0);
   }

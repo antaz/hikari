@@ -2,6 +2,7 @@
 #define HIKARI_CURSOR_H
 
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_xcursor_manager.h>
 
 #include <hikari/binding_group.h>
 
@@ -9,6 +10,7 @@ struct hikari_output;
 
 struct hikari_cursor {
   struct wlr_cursor *wlr_cursor;
+  struct wlr_xcursor_manager *cursor_mgr;
 
   struct wl_listener motion_absolute;
   struct wl_listener motion;
@@ -22,7 +24,8 @@ struct hikari_cursor {
 };
 
 void
-hikari_cursor_init(struct hikari_cursor *cursor, struct wlr_cursor *wlr_cursor);
+hikari_cursor_init(
+    struct hikari_cursor *cursor, struct wlr_output_layout *output_layout);
 
 void
 hikari_cursor_fini(struct hikari_cursor *cursor);

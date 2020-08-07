@@ -30,7 +30,6 @@
 #endif
 
 struct wlr_input_device;
-struct wlr_xcursor_manager;
 
 struct hikari_output;
 struct hikari_group;
@@ -98,7 +97,6 @@ struct hikari_server {
   struct hikari_workspace *workspace;
 
   struct hikari_cursor cursor;
-  struct wlr_xcursor_manager *cursor_mgr;
 
   struct wl_list pointers;
   struct wl_list keyboards;

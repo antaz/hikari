@@ -19,7 +19,6 @@
 #include <wlr/types/wlr_primary_selection_v1.h>
 #include <wlr/types/wlr_seat.h>
 #include <wlr/types/wlr_server_decoration.h>
-#include <wlr/types/wlr_xcursor_manager.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
 
@@ -495,49 +494,10 @@ setup_xwayland(struct hikari_server *server)
 }
 #endif
 
-static unsigned long
-get_cursor_size(void)
-{
-  const char *cursor_size = getenv("XCURSOR_SIZE");
-
-  if (cursor_size != NULL && strlen(cursor_size) > 0) {
-    errno = 0;
-    char *end;
-    unsigned long size = strtoul(cursor_size, &end, 10);
-    if (*end == '\0' && errno == 0) {
-      return size;
-    }
-  }
-
-  return 24;
-}
-
-static const char *
-get_cursor_theme(void)
-{
-  char *cursor_theme = getenv("XCURSOR_THEME");
-
-  if (cursor_theme != NULL && strlen(cursor_theme) > 0) {
-    return cursor_theme;
-  }
-
-  return "default";
-}
-
 static void
 setup_cursor(struct hikari_server *server)
 {
-  struct wlr_cursor *wlr_cursor = wlr_cursor_create();
-
-  wlr_cursor_attach_output_layout(wlr_cursor, server->output_layout);
-
-  const char *cursor_theme = get_cursor_theme();
-  unsigned long cursor_size = get_cursor_size();
-
-  server->cursor_mgr = wlr_xcursor_manager_create(cursor_theme, cursor_size);
-  wlr_xcursor_manager_load(server->cursor_mgr, 1);
-
-  hikari_cursor_init(&hikari_server.cursor, wlr_cursor);
+  hikari_cursor_init(&hikari_server.cursor, server->output_layout);
 
   hikari_cursor_configure_bindings(
       &hikari_server.cursor, &hikari_configuration->mouse_binding_configs);
