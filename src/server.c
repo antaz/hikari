@@ -784,6 +784,7 @@ server_init(struct hikari_server *server, char *config_path)
 #ifndef NDEBUG
   server->track_damage = false;
 #endif
+  server->shutdown_timer = NULL;
   server->config_path = config_path;
 
   hikari_configuration = hikari_malloc(sizeof(struct hikari_configuration));
@@ -924,16 +925,65 @@ hikari_server_start(char *config_path, char *autostart)
   wl_display_run(hikari_server.display);
 }
 
+static int
+shutdown_handler(void *data)
+{
+  struct hikari_server *server = &hikari_server;
+
+  if (server->shutdown_timer == NULL) {
+    return 0;
+  }
+
+  struct hikari_output *output;
+  wl_list_for_each (output, &server->outputs, server_outputs) {
+    if (!wl_list_empty(&output->views)) {
+      wl_event_source_timer_update(server->shutdown_timer, 1000);
+      return 0;
+    }
+  }
+
+  wl_display_terminate(hikari_server.display);
+
+  return 0;
+}
+
+static void
+destroy_shutdown_timer(struct hikari_server *server)
+{
+  wl_event_source_timer_update(server->shutdown_timer, 0);
+  wl_event_source_remove(server->shutdown_timer);
+
+  server->shutdown_timer = NULL;
+}
+
 void
 hikari_server_terminate(void *arg)
 {
-  wl_display_terminate(hikari_server.display);
+  struct hikari_server *server = &hikari_server;
+
+  if (server->shutdown_timer != NULL) {
+    destroy_shutdown_timer(server);
+    wl_display_terminate(server->display);
+    return;
+  }
+
+  struct hikari_output *output;
+  wl_list_for_each (output, &server->outputs, server_outputs) {
+    struct hikari_view *view, *view_temp;
+    wl_list_for_each_safe (view, view_temp, &output->views, output_views) {
+      hikari_view_quit(view);
+    }
+  }
+
+  server->shutdown_timer =
+      wl_event_loop_add_timer(server->event_loop, shutdown_handler, NULL);
+
+  wl_event_source_timer_update(server->shutdown_timer, 100);
 }
 
 void
 hikari_server_stop(void)
 {
-
   wl_list_remove(&hikari_server.new_output.link);
   wl_list_remove(&hikari_server.new_input.link);
   wl_list_remove(&hikari_server.new_xdg_surface.link);
@@ -944,6 +994,10 @@ hikari_server_stop(void)
 #ifdef HAVE_XWAYLAND
   wl_list_remove(&hikari_server.new_xwayland_surface.link);
 #endif
+
+  if (hikari_server.shutdown_timer != NULL) {
+    destroy_shutdown_timer(&hikari_server);
+  }
 
   hikari_cursor_fini(&hikari_server.cursor);
   hikari_indicator_fini(&hikari_server.indicator);

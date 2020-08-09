@@ -180,7 +180,9 @@ General actions
 
 * **quit**
 
-  Quit **hikari**.
+  Issues a quit operation to all views, allowing them to prompt their shutdown
+  dialog if they have any. Issuing this operation again during shutdown will
+  terminate **hikari** right away.
 
 * **reload**
 

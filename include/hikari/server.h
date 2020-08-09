@@ -43,6 +43,8 @@ struct hikari_server {
   const char *socket;
   char *config_path;
 
+  struct wl_event_source *shutdown_timer;
+
   struct hikari_indicator indicator;
 
   struct wl_display *display;
