@@ -448,6 +448,18 @@ refresh_geometry(struct hikari_view *view)
   }
 }
 
+static inline int
+constrain_size(int min, int max, int value)
+{
+  if (value > max) {
+    return max;
+  } else if (value < min) {
+    return min;
+  } else {
+    return value;
+  }
+}
+
 static void
 queue_resize(struct hikari_view *view,
     struct wlr_box *geometry,
@@ -456,32 +468,41 @@ queue_resize(struct hikari_view *view,
     int requested_width,
     int requested_height)
 {
-  assert(view->maximized_state == NULL);
-
   struct hikari_operation *op = &view->pending_operation;
 
   int min_width;
   int min_height;
   int max_width;
   int max_height;
-  view->constraints(view, &min_width, &min_height, &max_width, &max_height);
 
   int new_width;
   int new_height;
-  if (requested_width > max_width) {
-    new_width = max_width;
-  } else if (requested_width < min_width) {
-    new_width = min_width;
-  } else {
-    new_width = requested_width;
-  }
 
-  if (requested_height > max_height) {
-    new_height = max_height;
-  } else if (requested_height < min_height) {
-    new_height = min_height;
+  if (view->maximized_state != NULL) {
+    switch (view->maximized_state->maximization) {
+      case HIKARI_MAXIMIZATION_FULLY_MAXIMIZED:
+        return;
+
+      case HIKARI_MAXIMIZATION_VERTICALLY_MAXIMIZED:
+        view->constraints(
+            view, &min_width, &min_height, &max_width, &max_height);
+        new_width = constrain_size(min_width, max_width, requested_width);
+        new_height = geometry->height;
+        view->geometry.width = new_width;
+        break;
+
+      case HIKARI_MAXIMIZATION_HORIZONTALLY_MAXIMIZED:
+        view->constraints(
+            view, &min_width, &min_height, &max_width, &max_height);
+        new_width = geometry->width;
+        new_height = constrain_size(min_height, max_height, requested_height);
+        view->geometry.height = new_height;
+        break;
+    }
   } else {
-    new_height = requested_height;
+    view->constraints(view, &min_width, &min_height, &max_width, &max_height);
+    new_width = constrain_size(min_width, max_width, requested_width);
+    new_height = constrain_size(min_height, max_height, requested_height);
   }
 
   if (new_height == geometry->height && new_width == geometry->width) {
@@ -510,7 +531,7 @@ hikari_view_resize(struct hikari_view *view, int dwidth, int dheight)
   assert(view->resize != NULL);
   assert(view->constraints != NULL);
 
-  if (view->maximized_state != NULL || hikari_view_is_dirty(view)) {
+  if (hikari_view_is_dirty(view)) {
     return;
   }
 
@@ -534,7 +555,7 @@ hikari_view_resize_absolute(struct hikari_view *view, int width, int height)
   assert(view->resize != NULL);
   assert(view->constraints != NULL);
 
-  if (view->maximized_state != NULL || hikari_view_is_dirty(view)) {
+  if (hikari_view_is_dirty(view)) {
     return;
   }
 
@@ -550,7 +571,7 @@ hikari_view_move_resize(
   assert(view->resize != NULL);
   assert(view->constraints != NULL);
 
-  if (view->maximized_state != NULL || hikari_view_is_dirty(view)) {
+  if (hikari_view_is_dirty(view)) {
     return;
   }
 
