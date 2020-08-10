@@ -984,44 +984,46 @@ hikari_server_terminate(void *arg)
 void
 hikari_server_stop(void)
 {
-  wl_list_remove(&hikari_server.new_output.link);
-  wl_list_remove(&hikari_server.new_input.link);
-  wl_list_remove(&hikari_server.new_xdg_surface.link);
-  wl_list_remove(&hikari_server.request_set_primary_selection.link);
-  wl_list_remove(&hikari_server.request_start_drag.link);
-  wl_list_remove(&hikari_server.start_drag.link);
-  wl_list_remove(&hikari_server.output_layout_change.link);
+  struct hikari_server *server = &hikari_server;
+
+  wl_list_remove(&server->new_output.link);
+  wl_list_remove(&server->new_input.link);
+  wl_list_remove(&server->new_xdg_surface.link);
+  wl_list_remove(&server->request_set_primary_selection.link);
+  wl_list_remove(&server->request_start_drag.link);
+  wl_list_remove(&server->start_drag.link);
+  wl_list_remove(&server->output_layout_change.link);
 #ifdef HAVE_XWAYLAND
-  wl_list_remove(&hikari_server.new_xwayland_surface.link);
+  wl_list_remove(&server->new_xwayland_surface.link);
 #endif
 
-  if (hikari_server.shutdown_timer != NULL) {
-    destroy_shutdown_timer(&hikari_server);
+  if (server->shutdown_timer != NULL) {
+    destroy_shutdown_timer(server);
   }
 
-  hikari_cursor_fini(&hikari_server.cursor);
-  hikari_indicator_fini(&hikari_server.indicator);
+  hikari_cursor_fini(&server->cursor);
+  hikari_indicator_fini(&server->indicator);
 
-  hikari_lock_mode_fini(&hikari_server.lock_mode);
-  hikari_mark_assign_mode_fini(&hikari_server.mark_assign_mode);
+  hikari_lock_mode_fini(&server->lock_mode);
+  hikari_mark_assign_mode_fini(&server->mark_assign_mode);
 
 #if HAVE_XWAYLAND
-  wlr_xwayland_destroy(hikari_server.xwayland);
+  wlr_xwayland_destroy(server->xwayland);
 #endif
-  wl_display_destroy_clients(hikari_server.display);
-  wlr_seat_destroy(hikari_server.seat);
-  wl_display_destroy(hikari_server.display);
+  wl_display_destroy_clients(server->display);
+  wlr_seat_destroy(server->seat);
+  wl_display_destroy(server->display);
 
-  hikari_output_fini(hikari_server.noop_output);
-  hikari_free(hikari_server.noop_output);
+  hikari_output_fini(server->noop_output);
+  hikari_free(server->noop_output);
 
-  wlr_output_layout_destroy(hikari_server.output_layout);
+  wlr_output_layout_destroy(server->output_layout);
 
   hikari_configuration_fini(hikari_configuration);
   hikari_free(hikari_configuration);
   hikari_marks_fini();
 
-  free(hikari_server.config_path);
+  free(server->config_path);
 }
 
 struct hikari_group *
