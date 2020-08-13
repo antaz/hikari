@@ -248,8 +248,11 @@ void
 hikari_view_activate(struct hikari_view *view, bool active);
 
 void
-hikari_view_migrate(
-    struct hikari_view *view, struct hikari_sheet *sheet, int x, int y);
+hikari_view_migrate(struct hikari_view *view,
+    struct hikari_sheet *sheet,
+    int x,
+    int y,
+    bool center);
 
 void
 hikari_view_configure(struct hikari_view *view,

@@ -1443,7 +1443,7 @@ hikari_server_switch_to_mark(void *arg)
 
 void
 hikari_server_migrate_focus_view(
-    struct hikari_output *output, double lx, double ly)
+    struct hikari_output *output, double lx, double ly, bool center)
 {
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
@@ -1451,8 +1451,11 @@ hikari_server_migrate_focus_view(
 
   struct hikari_sheet *sheet = output->workspace->sheet;
 
-  hikari_view_migrate(
-      focus_view, sheet, lx - output->geometry.x, ly - output->geometry.y);
+  hikari_view_migrate(focus_view,
+      sheet,
+      lx - output->geometry.x,
+      ly - output->geometry.y,
+      center);
 
   hikari_indicator_update_sheet(
       &hikari_server.indicator, output, sheet, focus_view->flags);
@@ -1485,7 +1488,7 @@ move_view(int dx, int dy)
   if (wlr_output == NULL || wlr_output->data == view_output) {
     hikari_view_move(focus_view, dx, dy);
   } else {
-    hikari_server_migrate_focus_view(wlr_output->data, lx, ly);
+    hikari_server_migrate_focus_view(wlr_output->data, lx, ly, false);
   }
 }
 
@@ -1540,7 +1543,7 @@ move_resize_view(int dx, int dy, int dwidth, int dheight)
   if (wlr_output == NULL || wlr_output->data == view_output) {
     hikari_view_move_resize(focus_view, dx, dy, dwidth, dheight);
   } else {
-    hikari_server_migrate_focus_view(wlr_output->data, lx, ly);
+    hikari_server_migrate_focus_view(wlr_output->data, lx, ly, false);
     hikari_view_resize(focus_view, dheight, dwidth);
   }
 }

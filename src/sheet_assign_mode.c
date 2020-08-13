@@ -44,10 +44,18 @@ confirm_sheet_assign(struct hikari_workspace *workspace)
   struct hikari_sheet_assign_mode *mode = get_mode();
   struct hikari_view *focus_view = workspace->focus_view;
   struct hikari_sheet *sheet = mode->sheet;
+  struct hikari_output *view_output = focus_view->output;
+  struct hikari_output *sheet_output = sheet->workspace->output;
 
   assert(sheet != NULL);
 
-  hikari_view_pin_to_sheet(focus_view, sheet);
+  if (sheet_output == view_output) {
+    hikari_view_pin_to_sheet(focus_view, sheet);
+  } else {
+    int lx = sheet_output->geometry.x + focus_view->geometry.x;
+    int ly = sheet_output->geometry.y + focus_view->geometry.y;
+    hikari_server_migrate_focus_view(sheet_output, lx, ly, true);
+  }
 
   hikari_server_enter_normal_mode(NULL);
 }

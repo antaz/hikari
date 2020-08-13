@@ -270,19 +270,6 @@ queue_reset(struct hikari_view *view, bool center)
       hikari_view_is_tiled(view) ? !hikari_tile_is_attached(view->tile) : true);
 }
 
-static void
-migrate_view(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
-{
-  assert(hikari_view_is_hidden(view));
-
-  view->output = sheet->workspace->output;
-  view->sheet = sheet;
-
-  move_to_top(view);
-
-  queue_reset(view, center);
-}
-
 void
 hikari_view_init(
     struct hikari_view *view, bool child, struct hikari_workspace *workspace)
@@ -1144,35 +1131,13 @@ hikari_view_reset_geometry(struct hikari_view *view)
 }
 
 static void
-pin_migrate(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
-{
-  assert(view != NULL);
-  assert(sheet != NULL);
-
-  struct hikari_output *output = sheet->workspace->output;
-
-  if (!hikari_view_is_hidden(view)) {
-    hikari_view_hide(view);
-  }
-
-  hikari_geometry_constrain_absolute(&view->geometry,
-      &output->usable_area,
-      view->geometry.x,
-      view->geometry.y);
-
-  migrate_view(view, sheet, true);
-}
-
-static void
 pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
 {
   assert(view != NULL);
   assert(sheet != NULL);
-
-  bool migrate = view->sheet->workspace->output != sheet->workspace->output;
+  assert(sheet->workspace->output == view->output);
 
   if (view->sheet == sheet) {
-    assert(!migrate);
     assert(!hikari_view_is_hidden(view));
 
     if (view->sheet->workspace->sheet != sheet && sheet->nr != 0) {
@@ -1183,25 +1148,21 @@ pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
       hikari_indicator_damage(&hikari_server.indicator, view);
     }
   } else {
-    if (migrate) {
-      pin_migrate(view, sheet, center);
+    if (hikari_sheet_is_visible(sheet)) {
+      place_visibly_above(view, sheet->workspace);
+
+      hikari_view_damage_whole(view);
+      hikari_indicator_damage(&hikari_server.indicator, view);
     } else {
-      if (hikari_sheet_is_visible(sheet)) {
-        place_visibly_above(view, sheet->workspace);
+      hikari_view_hide(view);
+    }
 
-        hikari_view_damage_whole(view);
-        hikari_indicator_damage(&hikari_server.indicator, view);
-      } else {
-        hikari_view_hide(view);
-      }
+    view->sheet = sheet;
 
-      view->sheet = sheet;
-
-      if (hikari_view_is_tiled(view)) {
-        hikari_view_reset_geometry(view);
-      } else {
-        move_to_top(view);
-      }
+    if (hikari_view_is_tiled(view)) {
+      hikari_view_reset_geometry(view);
+    } else {
+      move_to_top(view);
     }
   }
 }
@@ -1752,9 +1713,25 @@ hikari_view_activate(struct hikari_view *view, bool active)
   }
 }
 
+static void
+migrate_view(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
+{
+  assert(hikari_view_is_hidden(view));
+
+  view->output = sheet->workspace->output;
+  view->sheet = sheet;
+
+  move_to_top(view);
+
+  queue_reset(view, center);
+}
+
 void
-hikari_view_migrate(
-    struct hikari_view *view, struct hikari_sheet *sheet, int x, int y)
+hikari_view_migrate(struct hikari_view *view,
+    struct hikari_sheet *sheet,
+    int x,
+    int y,
+    bool center)
 {
   struct hikari_output *output = sheet->workspace->output;
   struct wlr_box *view_geometry = hikari_view_geometry(view);
@@ -1770,13 +1747,13 @@ hikari_view_migrate(
       &view->geometry, &output->usable_area, x, y);
   hikari_geometry_constrain_relative(view_geometry, &output->usable_area, x, y);
 
+  migrate_view(view, sheet, center);
+
 #ifdef HAVE_XWAYLAND
   if (view->move != NULL) {
     view->move(view, view_geometry->x, view_geometry->y);
   }
 #endif
-
-  migrate_view(view, sheet, false);
 
   if (hikari_view_is_hidden(view)) {
     hikari_view_show(view);
