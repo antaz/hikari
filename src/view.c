@@ -148,9 +148,11 @@ move_view(struct hikari_view *view, struct wlr_box *geometry, int x, int y)
     move_view_constrained(view, geometry, x, y);
   }
 
+#ifdef HAVE_XWAYLAND
   if (view->move != NULL) {
     view->move(view, geometry->x, geometry->y);
   }
+#endif
 
   refresh_border_geometry(view);
 
@@ -248,12 +250,20 @@ queue_reset(struct hikari_view *view, bool center)
       view_geometry->height == geometry->height) {
     hikari_view_commit_pending_operation(view, view_geometry);
   } else {
-    op->serial = view->resize(view, geometry->width, geometry->height);
-
+#ifdef HAVE_XWAYLAND
     if (view->move_resize != NULL) {
-      view->move_resize(
-          view, geometry->x, geometry->y, geometry->width, geometry->height);
+      op->serial = 0;
+      view->move_resize(view,
+          op->geometry.x,
+          op->geometry.y,
+          op->geometry.width,
+          op->geometry.height);
+    } else {
+      op->serial = view->resize(view, op->geometry.width, op->geometry.height);
     }
+#else
+    op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+#endif
   }
 
   assert(
@@ -860,8 +870,11 @@ queue_tile(struct hikari_view *view,
 
   hikari_view_set_dirty(view);
 
-  if (current_geometry->width != op->geometry.width ||
-      current_geometry->height != op->geometry.height) {
+  if (current_geometry->width == op->geometry.width &&
+      current_geometry->height == op->geometry.height) {
+    hikari_view_commit_pending_operation(view, current_geometry);
+  } else {
+#ifdef HAVE_XWAYLAND
     if (view->move_resize != NULL) {
       op->serial = 0;
       view->move_resize(view,
@@ -872,8 +885,9 @@ queue_tile(struct hikari_view *view,
     } else {
       op->serial = view->resize(view, op->geometry.width, op->geometry.height);
     }
-  } else {
-    hikari_view_commit_pending_operation(view, current_geometry);
+#else
+    op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+#endif
   }
 }
 
@@ -907,6 +921,7 @@ queue_full_maximize(struct hikari_view *view)
   op->geometry = output->usable_area;
   op->center = true;
 
+#ifdef HAVE_XWAYLAND
   if (view->move_resize != NULL) {
     op->serial = 0;
     view->move_resize(view,
@@ -917,6 +932,9 @@ queue_full_maximize(struct hikari_view *view)
   } else {
     op->serial = view->resize(view, op->geometry.width, op->geometry.height);
   }
+#else
+  op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+#endif
 }
 
 static void
@@ -935,6 +953,7 @@ queue_unmaximize(struct hikari_view *view)
   }
   op->center = true;
 
+#ifdef HAVE_XWAYLAND
   if (view->move_resize != NULL) {
     op->serial = 0;
     view->move_resize(view,
@@ -945,6 +964,9 @@ queue_unmaximize(struct hikari_view *view)
   } else {
     op->serial = view->resize(view, op->geometry.width, op->geometry.height);
   }
+#else
+  op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+#endif
 }
 
 void
@@ -994,6 +1016,7 @@ queue_horizontal_maximize(struct hikari_view *view)
   op->geometry.width = output->usable_area.width;
   op->center = true;
 
+#ifdef HAVE_XWAYLAND
   if (view->move_resize != NULL) {
     op->serial = 0;
     view->move_resize(view,
@@ -1004,6 +1027,9 @@ queue_horizontal_maximize(struct hikari_view *view)
   } else {
     op->serial = view->resize(view, op->geometry.width, op->geometry.height);
   }
+#else
+  op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+#endif
 }
 
 static void
@@ -1024,6 +1050,7 @@ queue_vertical_maximize(struct hikari_view *view)
   op->geometry.width = geometry->width;
   op->center = true;
 
+#ifdef HAVE_XWAYLAND
   if (view->move_resize != NULL) {
     op->serial = 0;
     view->move_resize(view,
@@ -1034,6 +1061,9 @@ queue_vertical_maximize(struct hikari_view *view)
   } else {
     op->serial = view->resize(view, op->geometry.width, op->geometry.height);
   }
+#else
+  op->serial = view->resize(view, op->geometry.width, op->geometry.height);
+#endif
 }
 
 void
@@ -1740,9 +1770,11 @@ hikari_view_migrate(
       &view->geometry, &output->usable_area, x, y);
   hikari_geometry_constrain_relative(view_geometry, &output->usable_area, x, y);
 
+#ifdef HAVE_XWAYLAND
   if (view->move != NULL) {
     view->move(view, view_geometry->x, view_geometry->y);
   }
+#endif
 
   migrate_view(view, sheet, false);
 

@@ -66,8 +66,10 @@ struct hikari_view {
   struct hikari_view_decoration decoration;
 
   uint32_t (*resize)(struct hikari_view *, int, int);
+#ifdef HAVE_XWAYLAND
   void (*move)(struct hikari_view *, int, int);
   void (*move_resize)(struct hikari_view *, int, int, int, int);
+#endif
   void (*activate)(struct hikari_view *, bool);
   void (*quit)(struct hikari_view *);
   void (*constraints)(struct hikari_view *, int *, int *, int *, int *);
