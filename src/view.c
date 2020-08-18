@@ -1130,8 +1130,40 @@ hikari_view_reset_geometry(struct hikari_view *view)
   queue_reset(view, true);
 }
 
-static void
-pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
+void
+hikari_view_evacuate(struct hikari_view *view, struct hikari_sheet *sheet)
+{
+#ifndef NDEBUG
+  printf("EVACUATE VIEW %p\n", view);
+#endif
+
+  if (hikari_server.workspace->focus_view == view) {
+    hikari_workspace_focus_view(hikari_server.workspace, NULL);
+  }
+
+  view->output = sheet->workspace->output;
+  view->sheet = sheet;
+
+  if (!hikari_view_is_hidden(view)) {
+    raise_view(view);
+
+    if (hikari_sheet_is_visible(sheet)) {
+      hikari_view_damage_whole(view);
+      hikari_indicator_damage(&hikari_server.indicator, view);
+    } else {
+      hikari_view_hide(view);
+    }
+  } else {
+    move_to_top(view);
+  }
+
+  if (hikari_view_is_tiled(view) || hikari_view_is_maximized(view)) {
+    queue_reset(view, false);
+  }
+}
+
+void
+hikari_view_pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet)
 {
   assert(view != NULL);
   assert(sheet != NULL);
@@ -1160,27 +1192,11 @@ pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet, bool center)
     view->sheet = sheet;
 
     if (hikari_view_is_tiled(view)) {
-      hikari_view_reset_geometry(view);
+      queue_reset(view, true);
     } else {
       move_to_top(view);
     }
   }
-}
-
-void
-hikari_view_evacuate(struct hikari_view *view, struct hikari_sheet *sheet)
-{
-#ifndef NDEBUG
-  printf("EVACUATE VIEW %p\n", view);
-#endif
-
-  pin_to_sheet(view, sheet, false);
-}
-
-void
-hikari_view_pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet)
-{
-  pin_to_sheet(view, sheet, true);
 }
 
 void
