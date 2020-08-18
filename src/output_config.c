@@ -41,7 +41,14 @@ hikari_output_config_merge(struct hikari_output_config *output_config,
 #define MERGE(option)                                                          \
   hikari_output_config_merge_##option(output_config, default_config);
 
-  MERGE(background);
+  if (hikari_output_config_merge_background(output_config, default_config)) {
+    char *background = default_config->background.value;
+
+    if (background != NULL) {
+      output_config->background.value = strdup(background);
+    }
+  }
+
   MERGE(background_fit);
   MERGE(position);
 #undef MERGE
