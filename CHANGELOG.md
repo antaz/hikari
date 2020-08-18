@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.2
+
+* Typo fixes in manpage
+* Fix double free on configuration reload
+
 ## 2.1.1
 
 * Allow geometry changes to unmapped surface (fixes `mako`)
