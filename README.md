@@ -215,7 +215,7 @@ make WITHOUT_SUID=YES install
 
 The `hikari` community gears to be inclusive and welcoming to everyone, this is
 why we chose to adhere to the [Geekfeminism Code of
-Conduct](https://geekfeminismdotorg.wordpress.com/about/code-of-conduct/).
+Conduct](https://hikari.acmelabs.space/coc.html).
 
 If you care to be a part of our community, please join our Matrix chat at
 `#hikari:acmelabs.space` and/or subscribe to our mailing list by sending a mail

@@ -226,6 +226,7 @@ hikari-${VERSION}.tar.gz: version.h share/man/man1/hikari.1
 		Makefile \
 		LICENSE \
 		README.md \
+		CoC.md \
 		CHANGELOG.md \
 		share/man/man1/hikari.md \
 		share/man/man1/hikari.1 \
