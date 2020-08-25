@@ -361,11 +361,9 @@ void
 hikari_workspace_focus_view(
     struct hikari_workspace *workspace, struct hikari_view *view)
 {
-  struct wlr_seat *seat = hikari_server.seat;
+  assert(hikari_server_in_normal_mode());
 
-  if (!hikari_server_in_normal_mode()) {
-    hikari_server_enter_normal_mode(NULL);
-  }
+  struct wlr_seat *seat = hikari_server.seat;
 
   struct hikari_workspace *current_workspace = hikari_server.workspace;
   struct hikari_view *focus_view = current_workspace->focus_view;

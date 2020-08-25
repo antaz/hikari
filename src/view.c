@@ -778,6 +778,12 @@ hikari_view_hide(struct hikari_view *view)
 
   if (hikari_view_is_focus_view(view)) {
     if (hikari_view_has_focus(view)) {
+      assert(!hikari_server_in_lock_mode());
+
+      if (!hikari_server_in_normal_mode()) {
+        hikari_server_enter_normal_mode(NULL);
+      }
+
       hikari_workspace_focus_view(hikari_server.workspace, NULL);
     } else {
       view->sheet->workspace->focus_view = NULL;

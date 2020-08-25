@@ -321,7 +321,17 @@ hikari_output_fini(struct hikari_output *output)
     }
 
     hikari_workspace_merge(workspace, merge_workspace);
-    hikari_workspace_focus_view(merge_workspace, NULL);
+
+    if (!hikari_server_in_lock_mode()) {
+      if (!hikari_server_in_normal_mode()) {
+        hikari_server_enter_normal_mode(NULL);
+      }
+
+      hikari_workspace_focus_view(merge_workspace, NULL);
+    } else {
+      merge_workspace->focus_view = NULL;
+      hikari_server.workspace = merge_workspace;
+    }
 
     wl_list_remove(&output->server_outputs);
     wl_list_remove(&output->damage_destroy.link);
