@@ -5,6 +5,9 @@
 #include <hikari/memory.h>
 #include <hikari/renderer.h>
 #include <hikari/server.h>
+#ifdef HAVE_XWAYLAND
+#include <hikari/view.h>
+#endif
 
 static inline void
 render_image_to_surface(cairo_surface_t *output,
@@ -372,3 +375,17 @@ hikari_output_move(struct hikari_output *output, double lx, double ly)
 CYCLE_OUTPUT(next)
 CYCLE_OUTPUT(prev)
 #undef CYCLE_OUTPUT
+
+#ifdef HAVE_XWAYLAND
+void
+hikari_output_rearrange_xwayland_views(struct hikari_output *output)
+{
+  struct hikari_view *view;
+  wl_list_for_each (view, &output->views, output_views) {
+    if (view->move != NULL) {
+      struct wlr_box *geometry = hikari_view_geometry(view);
+      view->move(view, geometry->x, geometry->y);
+    }
+  }
+}
+#endif

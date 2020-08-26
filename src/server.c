@@ -691,7 +691,7 @@ output_layout_change_handler(struct wl_listener *listener, void *data)
   struct hikari_server *server =
       wl_container_of(listener, server, output_layout_change);
 
-  struct hikari_output *output = NULL;
+  struct hikari_output *output;
   wl_list_for_each (output, &server->outputs, server_outputs) {
     struct wlr_output *wlr_output = output->wlr_output;
     struct wlr_box *output_box =
@@ -711,6 +711,10 @@ output_layout_change_handler(struct wl_listener *listener, void *data)
           output_config->background.value,
           output_config->background_fit.value);
     }
+
+#ifdef HAVE_XWAYLAND
+    hikari_output_rearrange_xwayland_views(output);
+#endif
   }
 }
 

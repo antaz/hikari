@@ -76,6 +76,11 @@ hikari_output_next(struct hikari_output *output);
 struct hikari_output *
 hikari_output_prev(struct hikari_output *output);
 
+#ifdef HAVE_XWAYLAND
+void
+hikari_output_rearrange_xwayland_views(struct hikari_output *output);
+#endif
+
 static inline void
 hikari_output_add_damage(struct hikari_output *output, struct wlr_box *region)
 {
