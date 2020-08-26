@@ -384,7 +384,7 @@ raise_floating(struct hikari_sheet *sheet)
 {
   struct hikari_view *view, *view_temp, *first = NULL;
   wl_list_for_each_reverse_safe (view, view_temp, &sheet->views, sheet_views) {
-    if (hikari_view_is_floating(view)) {
+    if (!hikari_view_is_hidden(view) && hikari_view_is_floating(view)) {
       if (first == view) {
         break;
       } else if (first == NULL) {
