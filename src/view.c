@@ -66,7 +66,8 @@ static void
 place_visibly_above(
     struct hikari_view *view, struct hikari_workspace *workspace)
 {
-  assert(!hikari_view_is_hidden(view));
+  assert(hikari_view_is_forced(view) ? hikari_view_is_hidden(view)
+                                     : !hikari_view_is_hidden(view));
 
   wl_list_remove(&view->visible_server_views);
   wl_list_insert(&hikari_server.visible_views, &view->visible_server_views);
@@ -165,7 +166,8 @@ move_view(struct hikari_view *view, struct wlr_box *geometry, int x, int y)
 static void
 increase_group_visiblity(struct hikari_view *view)
 {
-  assert(!hikari_view_is_hidden(view));
+  assert(hikari_view_is_forced(view) ? hikari_view_is_hidden(view)
+                                     : !hikari_view_is_hidden(view));
 
   struct hikari_group *group = view->group;
 
@@ -187,6 +189,20 @@ decrease_group_visibility(struct hikari_view *view)
   if (wl_list_empty(&group->visible_views)) {
     wl_list_remove(&group->visible_server_groups);
   }
+}
+
+static void
+hide(struct hikari_view *view)
+{
+  decrease_group_visibility(view);
+
+  wl_list_remove(&view->workspace_views);
+  wl_list_init(&view->workspace_views);
+
+  wl_list_remove(&view->visible_server_views);
+  wl_list_init(&view->visible_server_views);
+
+  hikari_view_set_hidden(view);
 }
 
 static void
@@ -270,6 +286,24 @@ queue_reset(struct hikari_view *view, bool center)
       hikari_view_is_tiled(view) ? !hikari_tile_is_attached(view->tile) : true);
 }
 
+static void
+clear_focus(struct hikari_view *view)
+{
+  if (hikari_view_is_focus_view(view)) {
+    if (hikari_view_has_focus(view)) {
+      assert(!hikari_server_in_lock_mode());
+
+      if (!hikari_server_in_normal_mode()) {
+        hikari_server_enter_normal_mode(NULL);
+      }
+
+      hikari_workspace_focus_view(hikari_server.workspace, NULL);
+    } else {
+      view->sheet->workspace->focus_view = NULL;
+    }
+  }
+}
+
 void
 hikari_view_init(
     struct hikari_view *view, bool child, struct hikari_workspace *workspace)
@@ -301,6 +335,8 @@ void
 hikari_view_fini(struct hikari_view *view)
 {
   assert(hikari_view_is_hidden(view));
+  assert(!hikari_view_is_mapped(view));
+  assert(!hikari_view_is_forced(view));
 
 #if !defined(NDEBUG)
   printf("DESTROY VIEW %p\n", view);
@@ -677,21 +713,45 @@ hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
   wl_list_insert(&group->views, &view->group_views);
   wl_list_insert(&output->views, &view->output_views);
 
-  hikari_view_show(view);
+  if (!hikari_server_in_lock_mode() || hikari_view_is_public(view)) {
+    hikari_view_show(view);
 
-  if (focus) {
-    hikari_view_center_cursor(view);
+    if (focus) {
+      hikari_view_center_cursor(view);
+    }
+
+    hikari_server_cursor_focus();
+  } else {
+    hikari_view_set_forced(view);
+    increase_group_visiblity(view);
+    raise_view(view);
   }
-
-  hikari_server_cursor_focus();
 }
 
 void
 hikari_view_unmap(struct hikari_view *view)
 {
-  assert(hikari_view_is_hidden(view));
   assert(!hikari_view_is_unmanaged(view));
   assert(hikari_view_is_mapped(view));
+
+  if (hikari_view_is_forced(view)) {
+    if (hikari_view_is_hidden(view)) {
+      hide(view);
+    } else {
+      hikari_view_damage_whole(view);
+      hikari_view_set_hidden(view);
+    }
+
+    hikari_view_unset_forced(view);
+  }
+
+  if (!hikari_view_is_hidden(view)) {
+    hikari_view_hide(view);
+    hikari_server_cursor_focus();
+  }
+
+  assert(hikari_view_is_hidden(view));
+  assert(!hikari_view_is_forced(view));
 
   view->surface = NULL;
 
@@ -738,6 +798,8 @@ hikari_view_show(struct hikari_view *view)
 {
   assert(view != NULL);
   assert(hikari_view_is_hidden(view));
+  assert(!hikari_view_is_forced(view));
+
 #if !defined(NDEBUG)
   printf("SHOW %p\n", view);
 #endif
@@ -752,44 +814,18 @@ hikari_view_show(struct hikari_view *view)
   assert(is_first_view(view));
 }
 
-static void
-hide(struct hikari_view *view)
-{
-  decrease_group_visibility(view);
-
-  wl_list_remove(&view->workspace_views);
-  wl_list_init(&view->workspace_views);
-
-  wl_list_remove(&view->visible_server_views);
-  wl_list_init(&view->visible_server_views);
-
-  hikari_view_set_hidden(view);
-}
-
 void
 hikari_view_hide(struct hikari_view *view)
 {
   assert(view != NULL);
   assert(!hikari_view_is_hidden(view));
+  assert(!hikari_view_is_forced(view));
 
 #if !defined(NDEBUG)
   printf("HIDE %p\n", view);
 #endif
 
-  if (hikari_view_is_focus_view(view)) {
-    if (hikari_view_has_focus(view)) {
-      assert(!hikari_server_in_lock_mode());
-
-      if (!hikari_server_in_normal_mode()) {
-        hikari_server_enter_normal_mode(NULL);
-      }
-
-      hikari_workspace_focus_view(hikari_server.workspace, NULL);
-    } else {
-      view->sheet->workspace->focus_view = NULL;
-    }
-  }
-
+  clear_focus(view);
   hide(view);
 
   hikari_view_damage_whole(view);
@@ -1143,24 +1179,34 @@ hikari_view_evacuate(struct hikari_view *view, struct hikari_sheet *sheet)
   printf("EVACUATE VIEW %p\n", view);
 #endif
 
-  if (hikari_server.workspace->focus_view == view) {
-    hikari_workspace_focus_view(hikari_server.workspace, NULL);
-  }
+  clear_focus(view);
 
   view->output = sheet->workspace->output;
   view->sheet = sheet;
 
   if (!hikari_view_is_hidden(view)) {
-    raise_view(view);
+    if (hikari_view_is_forced(view)) {
+      move_to_top(view);
+    } else {
+      raise_view(view);
+    }
 
     if (hikari_sheet_is_visible(sheet)) {
       hikari_view_damage_whole(view);
       hikari_indicator_damage(&hikari_server.indicator, view);
     } else {
-      hikari_view_hide(view);
+      if (hikari_view_is_forced(view)) {
+        move_to_top(view);
+      } else {
+        hikari_view_hide(view);
+      }
     }
   } else {
-    move_to_top(view);
+    if (hikari_view_is_forced(view)) {
+      raise_view(view);
+    } else {
+      move_to_top(view);
+    }
   }
 
   if (hikari_view_is_tiled(view) || hikari_view_is_maximized(view)) {
@@ -1481,7 +1527,12 @@ commit_pending_operation(
     struct hikari_view *view, struct hikari_operation *operation)
 {
   if (!hikari_view_is_hidden(view)) {
-    raise_view(view);
+    if (!hikari_view_is_forced(view)) {
+      raise_view(view);
+    } else {
+      move_to_top(view);
+    }
+
     commit_pending_geometry(view, &operation->geometry);
     if (operation->center) {
       hikari_view_center_cursor(view);
@@ -1491,13 +1542,21 @@ commit_pending_operation(
     hikari_view_refresh_geometry(view, &operation->geometry);
 
     if (hikari_sheet_is_visible(view->sheet)) {
-      hikari_view_show(view);
+      if (!hikari_view_is_forced(view)) {
+        hikari_view_show(view);
+      } else {
+        raise_view(view);
+      }
       if (operation->center) {
         hikari_view_center_cursor(view);
         hikari_server_cursor_focus();
       }
     } else {
-      move_to_top(view);
+      if (!hikari_view_is_forced(view)) {
+        move_to_top(view);
+      } else {
+        raise_view(view);
+      }
     }
   }
 }

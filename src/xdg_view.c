@@ -218,11 +218,6 @@ unmap(struct hikari_view *view)
   printf("XDG UNMAP %p\n", view);
 #endif
 
-  if (!hikari_view_is_hidden(view)) {
-    hikari_view_hide(view);
-    hikari_server_cursor_focus();
-  }
-
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
 
   assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);

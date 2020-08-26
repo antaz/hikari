@@ -219,17 +219,12 @@ unmap(struct hikari_view *view)
   printf("XWAYLAND UNMAP %p\n", view);
 #endif
 
-  if (!hikari_view_is_hidden(view)) {
-    hikari_view_hide(view);
-    hikari_server_cursor_focus();
-  }
-
   struct hikari_xwayland_view *xwayland_view =
       (struct hikari_xwayland_view *)view;
 
-  wl_list_remove(&xwayland_view->commit.link);
-
   hikari_view_unmap(view);
+
+  wl_list_remove(&xwayland_view->commit.link);
 }
 
 static void
