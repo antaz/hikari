@@ -1285,10 +1285,6 @@ hikari_server_enter_mark_select_switch_mode(void *arg)
 void
 hikari_server_enter_layout_select_mode(void *arg)
 {
-  struct hikari_server *server = &hikari_server;
-
-  hikari_cursor_set_image(&server->cursor, "context-menu");
-
   struct hikari_workspace *workspace = hikari_server.workspace;
   struct hikari_view *focus_view = workspace->focus_view;
 

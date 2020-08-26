@@ -6,12 +6,13 @@
 #include <wlr/types/wlr_keyboard.h>
 
 #include <hikari/configuration.h>
+#include <hikari/cursor.h>
 #include <hikari/indicator.h>
-#include <hikari/indicator_frame.h>
 #include <hikari/keyboard.h>
 #include <hikari/layout_config.h>
 #include <hikari/normal_mode.h>
 #include <hikari/renderer.h>
+#include <hikari/server.h>
 #include <hikari/view.h>
 #include <hikari/workspace.h>
 
@@ -97,5 +98,9 @@ hikari_layout_select_mode_enter(void)
 {
   struct hikari_server *server = &hikari_server;
 
+  assert(server->workspace != NULL);
+
   server->mode = (struct hikari_mode *)&server->layout_select_mode;
+
+  hikari_cursor_set_image(&server->cursor, "context-menu");
 }
