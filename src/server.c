@@ -1255,31 +1255,16 @@ hikari_server_enter_input_grab_mode(void *arg)
   hikari_input_grab_mode_enter(focus_view);
 }
 
-static void
-enter_mark_select(bool switch_workspace)
-{
-  hikari_cursor_set_image(&hikari_server.cursor, "link");
-
-  struct hikari_workspace *workspace = hikari_server.workspace;
-  struct hikari_view *focus_view = workspace->focus_view;
-
-  if (focus_view != NULL) {
-    update_indication(focus_view);
-  }
-
-  hikari_mark_select_mode_enter(switch_workspace);
-}
-
 void
 hikari_server_enter_mark_select_mode(void *arg)
 {
-  enter_mark_select(false);
+  hikari_mark_select_mode_enter(false);
 }
 
 void
 hikari_server_enter_mark_select_switch_mode(void *arg)
 {
-  enter_mark_select(true);
+  hikari_mark_select_mode_enter(true);
 }
 
 void

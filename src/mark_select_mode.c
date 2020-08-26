@@ -3,6 +3,7 @@
 #include <assert.h>
 #include <stdbool.h>
 
+#include <hikari/cursor.h>
 #include <hikari/keyboard.h>
 #include <hikari/mark.h>
 #include <hikari/renderer.h>
@@ -78,6 +79,10 @@ hikari_mark_select_mode_enter(bool switch_workspace)
 
   assert(server->workspace != NULL);
 
+  hikari_workspace_focus_view(server->workspace, NULL);
+
   server->mark_select_mode.switch_workspace = switch_workspace;
   server->mode = (struct hikari_mode *)&server->mark_select_mode;
+
+  hikari_cursor_set_image(&hikari_server.cursor, "link");
 }
