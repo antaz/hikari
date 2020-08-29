@@ -57,12 +57,6 @@ void
 hikari_output_enable(struct hikari_output *output);
 
 void
-hikari_output_enable_content(struct hikari_output *output);
-
-void
-hikari_output_disable_content(struct hikari_output *output);
-
-void
 hikari_output_load_background(struct hikari_output *output,
     const char *path,
     enum hikari_background_fit background_fit);
