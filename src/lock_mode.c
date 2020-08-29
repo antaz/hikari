@@ -142,9 +142,7 @@ disable_outputs(void)
 
   struct hikari_output *output;
   wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
-    if (output->enabled) {
-      hikari_output_disable(output);
-    }
+    hikari_output_disable(output);
 
     hikari_output_damage_whole(output);
   }
@@ -167,9 +165,7 @@ enable_outputs(void)
 
   struct hikari_output *output;
   wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
-    if (!output->enabled) {
-      hikari_output_enable(output);
-    }
+    hikari_output_enable(output);
   }
 
   mode->outputs_disabled = false;
@@ -278,10 +274,7 @@ cancel(void)
 
   struct hikari_output *output;
   wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
-    if (!output->enabled) {
-      hikari_output_enable(output);
-    }
-
+    hikari_output_enable(output);
     hikari_output_damage_whole(output);
   }
 

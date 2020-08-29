@@ -113,7 +113,10 @@ void
 hikari_output_disable(struct hikari_output *output)
 {
   assert(output != NULL);
-  assert(output->enabled);
+
+  if (!output->enabled) {
+    return;
+  }
 
   struct wlr_output *wlr_output = output->wlr_output;
 
@@ -131,7 +134,10 @@ void
 hikari_output_enable(struct hikari_output *output)
 {
   assert(output != NULL);
-  assert(!output->enabled);
+
+  if (output->enabled) {
+    return;
+  }
 
   struct wlr_output *wlr_output = output->wlr_output;
 
@@ -183,9 +189,7 @@ damage_destroy_handler(struct wl_listener *listener, void *data)
   struct hikari_output *output =
       wl_container_of(listener, output, damage_destroy);
 
-  if (output->enabled) {
-    hikari_output_disable(output);
-  }
+  hikari_output_disable(output);
 }
 
 #ifdef HAVE_LAYERSHELL
@@ -303,9 +307,7 @@ hikari_output_fini(struct hikari_output *output)
   close_layers(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND]);
 #endif
 
-  if (output->enabled) {
-    hikari_output_disable(output);
-  }
+  hikari_output_disable(output);
 
   wl_list_remove(&output->destroy.link);
 
