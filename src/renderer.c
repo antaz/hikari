@@ -963,7 +963,26 @@ hikari_renderer_dnd_mode(struct hikari_renderer *renderer)
 void
 hikari_renderer_layout_select_mode(struct hikari_renderer *renderer)
 {
-  render_default_workspace(renderer);
+  struct hikari_output *output = renderer->wlr_output->data;
+
+  render_background(renderer, 1);
+  render_workspace(renderer);
+
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  if (focus_view != NULL && focus_view->output == output) {
+    renderer->geometry = hikari_view_border_geometry(focus_view);
+
+    render_indicator_frame(&focus_view->indicator_frame,
+        hikari_configuration->indicator_selected,
+        renderer);
+
+    render_indicator(&hikari_server.indicator, renderer);
+  }
+
+#ifdef HAVE_LAYERSHELL
+  render_overlay(renderer);
+#endif
 }
 
 void

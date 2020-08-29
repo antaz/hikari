@@ -75,7 +75,14 @@ button_handler(
 
 static void
 cancel(void)
-{}
+{
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  if (focus_view != NULL) {
+    hikari_view_damage_whole(focus_view);
+    hikari_indicator_damage(&hikari_server.indicator, focus_view);
+  }
+}
 
 static void
 cursor_move(uint32_t time_msec)
