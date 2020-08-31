@@ -83,7 +83,7 @@ map_handler(struct wl_listener *listener, void *data)
       &xwayland_unmanaged_view->commit);
 
   wl_list_insert(&output->unmanaged_xwayland_views,
-      &xwayland_unmanaged_view->unmanaged_server_views);
+      &xwayland_unmanaged_view->unmanaged_output_views);
 
   hikari_output_add_damage(output, geometry);
 }
@@ -92,7 +92,7 @@ static void
 unmap(struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view)
 {
   wl_list_remove(&xwayland_unmanaged_view->commit.link);
-  wl_list_remove(&xwayland_unmanaged_view->unmanaged_server_views);
+  wl_list_remove(&xwayland_unmanaged_view->unmanaged_output_views);
 
   xwayland_unmanaged_view->hidden = true;
 

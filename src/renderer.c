@@ -440,7 +440,7 @@ render_unmanaged_views(struct hikari_renderer *renderer)
   struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view;
   wl_list_for_each_reverse (xwayland_unmanaged_view,
       &output->unmanaged_xwayland_views,
-      unmanaged_server_views) {
+      unmanaged_output_views) {
 
     renderer->geometry = &xwayland_unmanaged_view->geometry;
 
@@ -543,7 +543,7 @@ frame_done(struct hikari_output *output, struct timespec *now)
   struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view;
   wl_list_for_each_reverse (xwayland_unmanaged_view,
       &output->unmanaged_xwayland_views,
-      unmanaged_server_views) {
+      unmanaged_output_views) {
     wlr_surface_for_each_surface(
         xwayland_unmanaged_view->surface->surface, send_frame_done, now);
   }

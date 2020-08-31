@@ -104,7 +104,7 @@ hikari_workspace_merge(
   wl_list_for_each_reverse_safe (unmanaged_xwayland_view,
       unmanaged_xwayland_view_temp,
       &workspace->output->unmanaged_xwayland_views,
-      unmanaged_server_views) {
+      unmanaged_output_views) {
     hikari_xwayland_unmanaged_evacuate(unmanaged_xwayland_view, into);
   }
 #endif

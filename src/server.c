@@ -368,7 +368,7 @@ node_at(double lx,
   struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = NULL;
   wl_list_for_each (xwayland_unmanaged_view,
       &output->unmanaged_xwayland_views,
-      unmanaged_server_views) {
+      unmanaged_output_views) {
     node = (struct hikari_node *)xwayland_unmanaged_view;
 
     if (surface_at(node, ox, oy, surface, sx, sy)) {
