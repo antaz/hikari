@@ -20,6 +20,17 @@ was_updated(struct wlr_xwayland_surface *surface,
 }
 
 static void
+recalculate_geometry(struct wlr_box *geometry,
+    struct wlr_xwayland_surface *surface,
+    struct hikari_output *output)
+{
+  geometry->x = surface->x - output->geometry.x;
+  geometry->y = surface->y - output->geometry.y;
+  geometry->width = surface->width;
+  geometry->height = surface->height;
+}
+
+static void
 commit_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view =
@@ -199,5 +210,21 @@ hikari_xwayland_unmanaged_view_init(
   xwayland_unmanaged_view->request_configure.notify = request_configure_handler;
   wl_signal_add(&xwayland_surface->events.request_configure,
       &xwayland_unmanaged_view->request_configure);
+}
+
+void
+hikari_xwayland_unmanaged_evacuate(
+    struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view,
+    struct hikari_workspace *workspace)
+{
+  struct hikari_output *output = workspace->output;
+  struct wlr_xwayland_surface *surface = xwayland_unmanaged_view->surface;
+  struct wlr_box *geometry = &xwayland_unmanaged_view->geometry;
+
+  xwayland_unmanaged_view->workspace = workspace;
+
+  recalculate_geometry(geometry, surface, output);
+
+  hikari_output_add_damage(output, &xwayland_unmanaged_view->geometry);
 }
 #endif

@@ -36,4 +36,9 @@ hikari_xwayland_unmanaged_view_init(
     struct wlr_xwayland_surface *xwayland_surface,
     struct hikari_workspace *workspace);
 
+void
+hikari_xwayland_unmanaged_evacuate(
+    struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view,
+    struct hikari_workspace *workspace);
+
 #endif

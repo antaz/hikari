@@ -25,6 +25,7 @@
 #include <hikari/sheet.h>
 #include <hikari/xdg_view.h>
 #ifdef HAVE_XWAYLAND
+#include <hikari/xwayland_unmanaged_view.h>
 #include <hikari/xwayland_view.h>
 #endif
 
@@ -96,6 +97,17 @@ hikari_workspace_merge(
       hikari_view_evacuate(view, to);
     }
   }
+
+#ifdef HAVE_XWAYLAND
+  struct hikari_xwayland_unmanaged_view *unmanaged_xwayland_view,
+      *unmanaged_xwayland_view_temp;
+  wl_list_for_each_reverse_safe (unmanaged_xwayland_view,
+      unmanaged_xwayland_view_temp,
+      &workspace->output->unmanaged_xwayland_views,
+      unmanaged_server_views) {
+    hikari_xwayland_unmanaged_evacuate(unmanaged_xwayland_view, into);
+  }
+#endif
 }
 
 void
