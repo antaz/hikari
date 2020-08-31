@@ -43,10 +43,7 @@ commit_handler(struct wl_listener *listener, void *data)
   if (was_updated(surface, geometry, output)) {
     hikari_output_add_damage(output, &xwayland_unmanaged_view->geometry);
 
-    geometry->x = surface->x - output->geometry.x;
-    geometry->y = surface->y - output->geometry.y;
-    geometry->width = surface->width;
-    geometry->height = surface->height;
+    recalculate_geometry(geometry, surface, output);
 
     hikari_output_add_damage(output, geometry);
   } else if (output->enabled) {
@@ -79,10 +76,7 @@ map_handler(struct wl_listener *listener, void *data)
 
   xwayland_unmanaged_view->hidden = false;
 
-  geometry->x = xwayland_surface->x - output->geometry.x;
-  geometry->y = xwayland_surface->y - output->geometry.y;
-  geometry->width = xwayland_surface->width;
-  geometry->height = xwayland_surface->height;
+  recalculate_geometry(geometry, xwayland_surface, output);
 
   xwayland_unmanaged_view->commit.notify = commit_handler;
   wl_signal_add(&xwayland_surface->surface->events.commit,
