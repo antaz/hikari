@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.2.0
+
+* add support for virtual input (`wayvnc` support)
+* add middle click emulation
+* add fallback layouts
+* add child view configuration for native Wayland views
+* add output relative view positioning actions
+* add `WITH_ALL` compile option
+* improved handling of maximized views
+* add graceful shutdown
+* multi monitor improvements for Xwayland and locking
+* Fix assert fail with layout select and invisible views
+* Indicate focus view on layout select
+* clear focus on mark select
+* Fix indicator bar coloring bug
+
 ## 2.1.2
 
 * Typo fixes in manpage
