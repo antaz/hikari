@@ -1226,6 +1226,8 @@ hikari_view_pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet)
 
     if (view->sheet->workspace->sheet != sheet && sheet->nr != 0) {
       hikari_view_hide(view);
+      hikari_server_cursor_focus();
+
       move_to_top(view);
     } else {
       hikari_view_raise(view);
@@ -1239,6 +1241,7 @@ hikari_view_pin_to_sheet(struct hikari_view *view, struct hikari_sheet *sheet)
       hikari_indicator_damage(&hikari_server.indicator, view);
     } else {
       hikari_view_hide(view);
+      hikari_server_cursor_focus();
     }
 
     view->sheet = sheet;
