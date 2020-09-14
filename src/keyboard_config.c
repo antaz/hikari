@@ -301,7 +301,8 @@ has_set_options(struct hikari_xkb_config *xkb_config)
 }
 
 #define MERGE(option)                                                          \
-  if (hikari_xkb_config_merge_##option(config_xkb, default_xkb)) {             \
+  if (hikari_xkb_config_merge_##option(config_xkb, default_xkb) &&             \
+      default_xkb->option.value != NULL) {                                     \
     config_xkb->option.value = strdup(default_xkb->option.value);              \
   }
 
