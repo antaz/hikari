@@ -1095,7 +1095,7 @@ an identifier. The *begin* action is triggered when turning the switch on and
 *end* is triggered when turning it off.
 
 ```
-input {
+inputs {
   switches {
     "Control Method Lid Switch" = lock
   }
