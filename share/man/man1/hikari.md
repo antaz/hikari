@@ -160,6 +160,17 @@ terminal application.
 On startup **hikari** attempts to execute _~/.config/hikari/autostart_ to
 autostart applications.
 
+Environment Variables
+---------------------
+
+**hikari** supports the use of environment variables in its string values.
+Occurrences of `${VARIABLE}` or `$VARIABLE` inside a string will be substituted
+with the value of an environment variable named `VARIABLE`. If no such
+environment variable exists, no substituation takes place.
+
+You can use double dollar signs to escape variables: `$${VARIABLE}` will result
+in `${VARIABLE}`, `$$VARIABLE` will result in `$VARIABLE`.
+
 ACTIONS
 =======
 

@@ -36,6 +36,8 @@
 #include <hikari/view_config.h>
 #include <hikari/workspace.h>
 
+extern char **environ;
+
 struct hikari_configuration *hikari_configuration = NULL;
 
 static bool
@@ -1564,10 +1566,38 @@ done:
 }
 
 bool
+set_env_vars(struct ucl_parser *parser)
+{
+  for (char **current_var = environ; *current_var != NULL; ++current_var) {
+    const char *separator = strchr(*current_var, '=');
+    if (separator == NULL) {
+      continue;
+    }
+
+    const size_t name_length = separator - *current_var;
+    char *name = hikari_malloc(name_length + 1);
+    if (name == NULL) {
+      fprintf(stderr, "Could not allocate enough memory :(\n");
+      return false;
+    }
+    strncpy(name, *current_var, name_length);
+    name[name_length] = '\0';
+    ucl_parser_register_variable(parser, name, separator + 1);
+    hikari_free(name);
+  }
+
+  return true;
+}
+
+bool
 hikari_configuration_load(
     struct hikari_configuration *configuration, char *config_path)
 {
   struct ucl_parser *parser = ucl_parser_new(0);
+  if (!set_env_vars(parser)) {
+    ucl_parser_free(parser);
+    return false;
+  }
   bool success = false;
   const ucl_object_t *cur;
 
