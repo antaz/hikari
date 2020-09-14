@@ -1561,6 +1561,71 @@ hikari_server_increase_view_size_left(void *arg)
   move_resize_view(-step, 0, step, 0);
 }
 
+void
+hikari_server_lower_group(void *arg)
+{
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  if (focus_view == NULL) {
+    return;
+  }
+
+  struct hikari_group *group = focus_view->group;
+
+  hikari_group_lower(group, focus_view);
+  hikari_server_cursor_focus();
+}
+
+void
+hikari_server_raise_group(void *arg)
+{
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  if (focus_view == NULL) {
+    return;
+  }
+
+  struct hikari_group *group = focus_view->group;
+
+  hikari_group_raise(group, focus_view);
+}
+
+void
+hikari_server_only_group(void *arg)
+{
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  if (focus_view == NULL) {
+    return;
+  }
+
+  struct hikari_group *group = focus_view->group;
+
+  struct hikari_output *output;
+  wl_list_for_each (output, &hikari_server.outputs, server_outputs) {
+    hikari_workspace_clear(output->workspace);
+  }
+
+  hikari_group_show(group);
+  hikari_server_cursor_focus();
+}
+
+void
+hikari_server_hide_group(void *arg)
+{
+  struct hikari_view *focus_view = hikari_server.workspace->focus_view;
+
+  if (focus_view == NULL) {
+    return;
+  }
+
+  struct hikari_group *group = focus_view->group;
+  assert(group != NULL);
+
+  hikari_group_hide(group);
+  hikari_server_cursor_focus();
+}
+
 #ifndef NDEBUG
 void
 hikari_server_toggle_damage_tracking(void *arg)

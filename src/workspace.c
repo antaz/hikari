@@ -445,15 +445,6 @@ hikari_workspace_raise_view(struct hikari_workspace *workspace)
 }
 
 void
-hikari_workspace_raise_group(struct hikari_workspace *workspace)
-{
-  FOCUS_GUARD(workspace, focus_view);
-
-  hikari_group_raise(focus_view->group, focus_view);
-  hikari_indicator_damage(&hikari_server.indicator, focus_view);
-}
-
-void
 hikari_workspace_lower_view(struct hikari_workspace *workspace)
 {
   FOCUS_GUARD(workspace, focus_view);
@@ -466,17 +457,6 @@ hikari_workspace_lower_view(struct hikari_workspace *workspace)
   struct hikari_view *first = hikari_group_first_view(group);
 
   hikari_view_damage_border(first);
-
-  hikari_server_cursor_focus();
-}
-
-void
-hikari_workspace_lower_group(struct hikari_workspace *workspace)
-{
-  FOCUS_GUARD(workspace, focus_view);
-
-  hikari_group_lower(focus_view->group, focus_view);
-  hikari_indicator_damage(&hikari_server.indicator, focus_view);
 
   hikari_server_cursor_focus();
 }
@@ -904,21 +884,6 @@ hikari_workspace_exchange_main_layout_view(struct hikari_workspace *workspace)
 }
 
 void
-hikari_workspace_only_group(struct hikari_workspace *workspace)
-{
-  FOCUS_GUARD(workspace, focus_view);
-
-  struct hikari_group *group = focus_view->group;
-
-  struct hikari_view *view = NULL, *view_temp = NULL;
-  wl_list_for_each_safe (view, view_temp, &workspace->views, workspace_views) {
-    if (view->group != group) {
-      hikari_view_hide(view);
-    }
-  }
-}
-
-void
 hikari_workspace_sheet_show_group(struct hikari_workspace *workspace)
 {
   FOCUS_GUARD(workspace, focus_view);
@@ -930,32 +895,17 @@ hikari_workspace_sheet_show_group(struct hikari_workspace *workspace)
   hikari_server_cursor_focus();
 }
 
-void
-hikari_workspace_show_group(struct hikari_workspace *workspace)
-{
-  FOCUS_GUARD(workspace, focus_view);
-
-  struct hikari_group *group = focus_view->group;
-  hikari_workspace_clear(workspace);
-  hikari_group_show(group);
-  hikari_server_cursor_focus();
-}
-
 #define SHOW_VIEWS(cond)                                                       \
   {                                                                            \
-    struct hikari_view *view, *view_temp, *top = NULL;                         \
+    struct hikari_view *view, *view_temp;                                      \
     wl_list_for_each_reverse_safe (                                            \
         view, view_temp, &workspace->output->views, output_views) {            \
       if (cond) {                                                              \
-        if (top == view) {                                                     \
+        if (hikari_view_is_hidden(view)) {                                     \
+          hikari_view_show(view);                                              \
+        } else {                                                               \
           break;                                                               \
         }                                                                      \
-                                                                               \
-        if (top == NULL) {                                                     \
-          top = view;                                                          \
-        }                                                                      \
-                                                                               \
-        hikari_view_show(view);                                                \
       }                                                                        \
     }                                                                          \
   }
@@ -975,17 +925,18 @@ hikari_workspace_show_invisible(struct hikari_workspace *workspace)
   SHOW_VIEWS(hikari_view_is_invisible(view));
   hikari_server_cursor_focus();
 }
-#undef SHOW_VIEWS
 
 void
-hikari_workspace_hide_group(struct hikari_workspace *workspace)
+hikari_workspace_show_group(struct hikari_workspace *workspace)
 {
   FOCUS_GUARD(workspace, focus_view);
 
   struct hikari_group *group = focus_view->group;
-  hikari_group_hide(group);
+  hikari_workspace_clear(workspace);
+  SHOW_VIEWS(view->group == group);
   hikari_server_cursor_focus();
 }
+#undef SHOW_VIEWS
 
 void
 hikari_workspace_show_all_sheet_views(struct hikari_workspace *workspace)

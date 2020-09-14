@@ -199,6 +199,18 @@ hikari_server_find_group(const char *group_name);
 struct hikari_group *
 hikari_server_find_or_create_group(const char *group_name);
 
+void
+hikari_server_raise_group(void *arg);
+
+void
+hikari_server_lower_group(void *arg);
+
+void
+hikari_server_hide_group(void *arg);
+
+void
+hikari_server_only_group(void *arg);
+
 #define SHEET_ACTIONS(n)                                                       \
   static inline void hikari_server_display_sheet_##n(void *arg)                \
   {                                                                            \
@@ -348,14 +360,10 @@ WORKSPACE_ACTION(toggle_view_floating)
 WORKSPACE_ACTION(toggle_view_invisible)
 WORKSPACE_ACTION(toggle_view_public)
 WORKSPACE_ACTION(only_view)
-WORKSPACE_ACTION(only_group)
 WORKSPACE_ACTION(hide_view)
-WORKSPACE_ACTION(hide_group)
 WORKSPACE_ACTION(sheet_show_group)
 WORKSPACE_ACTION(raise_view)
-WORKSPACE_ACTION(raise_group)
 WORKSPACE_ACTION(lower_view)
-WORKSPACE_ACTION(lower_group)
 WORKSPACE_ACTION(show_invisible_sheet_views)
 WORKSPACE_ACTION(reset_view_geometry)
 WORKSPACE_ACTION(quit_view)

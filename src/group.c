@@ -51,19 +51,17 @@ hikari_group_raise(struct hikari_group *group, struct hikari_view *top)
   assert(group != NULL);
   assert(top != NULL);
 
-  struct hikari_view *view, *view_temp, *first = NULL;
+  hikari_view_raise(top);
+
+  struct hikari_view *view, *view_temp;
   wl_list_for_each_reverse_safe (
       view, view_temp, &group->visible_views, visible_group_views) {
     assert(!hikari_view_is_hidden(view));
 
-    if (view == first) {
-      break;
-    } else if (first == NULL) {
-      first = view;
-    }
-
     if (view != top) {
       hikari_view_raise(view);
+    } else {
+      break;
     }
   }
 
@@ -73,21 +71,20 @@ hikari_group_raise(struct hikari_group *group, struct hikari_view *top)
 void
 hikari_group_lower(struct hikari_group *group, struct hikari_view *top)
 {
+  assert(group != NULL);
+  assert(top != NULL);
+
   hikari_view_lower(top);
 
-  struct hikari_view *view, *view_temp, *first = NULL;
+  struct hikari_view *view, *view_temp;
   wl_list_for_each_safe (
       view, view_temp, &group->visible_views, visible_group_views) {
     assert(!hikari_view_is_hidden(view));
 
-    if (view == first) {
-      break;
-    } else if (first == NULL) {
-      first = view;
-    }
-
     if (view != top) {
       hikari_view_lower(view);
+    } else {
+      break;
     }
   }
 }
@@ -104,17 +101,13 @@ hikari_group_damage(struct hikari_group *group)
 void
 hikari_group_show(struct hikari_group *group)
 {
-  struct hikari_view *view, *view_temp, *top = NULL;
+  struct hikari_view *view, *view_temp;
   wl_list_for_each_reverse_safe (view, view_temp, &group->views, group_views) {
-    if (top == view) {
+    if (hikari_view_is_hidden(view)) {
+      hikari_view_show(view);
+    } else {
       break;
     }
-
-    if (top == NULL) {
-      top = view;
-    }
-
-    hikari_view_show(view);
   }
 }
 

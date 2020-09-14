@@ -440,19 +440,15 @@ hikari_sheet_is_visible(struct hikari_sheet *sheet)
 
 #define SHOW_VIEWS(cond)                                                       \
   {                                                                            \
-    struct hikari_view *view, *view_temp, *top = NULL;                         \
+    struct hikari_view *view, *view_temp;                                      \
     wl_list_for_each_reverse_safe (                                            \
         view, view_temp, &sheet->views, sheet_views) {                         \
       if (cond) {                                                              \
-        if (top == view) {                                                     \
+        if (hikari_view_is_hidden(view)) {                                     \
+          hikari_view_show(view);                                              \
+        } else {                                                               \
           break;                                                               \
         }                                                                      \
-                                                                               \
-        if (top == NULL) {                                                     \
-          top = view;                                                          \
-        }                                                                      \
-                                                                               \
-        hikari_view_show(view);                                                \
       }                                                                        \
     }                                                                          \
   }
