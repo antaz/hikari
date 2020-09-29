@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.2.1
+
+* NULL pointer check on keyboard_config merge
+* Fixed typo in the manpage
+* Recompute focus on view pinning
+
 ## 2.2.0
 
 * add support for virtual input (`wayvnc` support)
