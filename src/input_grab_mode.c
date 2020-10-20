@@ -6,6 +6,8 @@
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_seat.h>
 
+#include <hikari/action.h>
+#include <hikari/binding.h>
 #include <hikari/color.h>
 #include <hikari/configuration.h>
 #include <hikari/indicator_frame.h>
@@ -24,6 +26,25 @@ modifiers_handler(struct hikari_keyboard *keyboard)
       hikari_server.seat, &keyboard->device->keyboard->modifiers);
 }
 
+static bool
+handle_input(struct hikari_binding_group *map, uint32_t code)
+{
+  int nbindings = map->nbindings;
+  struct hikari_binding *bindings = map->bindings;
+
+  for (int i = 0; i < nbindings; i++) {
+    struct hikari_binding *binding = &bindings[i];
+
+    if (binding->keycode == code) {
+      struct hikari_event_action *event_action = &binding->action->begin;
+
+      return event_action->action == hikari_server_enter_input_grab_mode;
+    }
+  }
+
+  return false;
+}
+
 static void
 key_handler(
     struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
@@ -32,22 +53,14 @@ key_handler(
   uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->device->keyboard);
 
   if ((modifiers & WLR_MODIFIER_LOGO) && event->state == WLR_KEY_PRESSED) {
-    uint32_t keycode = event->keycode + 8;
-    const xkb_keysym_t *syms;
-    int nsyms = xkb_state_key_get_syms(
-        keyboard->device->keyboard->xkb_state, keycode, &syms);
+    uint32_t modifiers = hikari_server.keyboard_state.modifiers;
+    struct hikari_binding_group *bindings = &keyboard->bindings[modifiers];
 
-    for (int i = 0; i < nsyms; i++) {
-      switch (syms[i]) {
-        case XKB_KEY_g:
-          if (modifiers ==
-              (WLR_MODIFIER_LOGO | WLR_MODIFIER_ALT | WLR_MODIFIER_CTRL)) {
-            hikari_server_enter_normal_mode(NULL);
-            hikari_view_damage_border(workspace->focus_view);
-            hikari_server_cursor_focus();
-            return;
-          }
-      }
+    if (handle_input(bindings, event->keycode)) {
+      hikari_server_enter_normal_mode(NULL);
+      hikari_view_damage_border(workspace->focus_view);
+      hikari_server_cursor_focus();
+      return;
     }
   }
 
