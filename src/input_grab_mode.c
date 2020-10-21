@@ -50,9 +50,7 @@ key_handler(
     struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
 {
   struct hikari_workspace *workspace = hikari_server.workspace;
-  uint32_t modifiers = wlr_keyboard_get_modifiers(keyboard->device->keyboard);
-
-  if ((modifiers & WLR_MODIFIER_LOGO) && event->state == WLR_KEY_PRESSED) {
+  if (event->state == WLR_KEY_PRESSED) {
     uint32_t modifiers = hikari_server.keyboard_state.modifiers;
     struct hikari_binding_group *bindings = &keyboard->bindings[modifiers];
 
