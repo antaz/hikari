@@ -1565,7 +1565,7 @@ done:
   return success;
 }
 
-bool
+static bool
 set_env_vars(struct ucl_parser *parser)
 {
   for (char **current_var = environ; *current_var != NULL; ++current_var) {
