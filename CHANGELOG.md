@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.2
+
+* fix `input-grab-mode` for non-default bindings
+
 ## 2.2.1
 
 * NULL pointer check on keyboard_config merge
