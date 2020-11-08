@@ -211,6 +211,17 @@ communication with PAM, which is required for password authentication)
 make WITHOUT_SUID=YES install
 ```
 
+#### Building a DEBUG build
+
+In the case of a crash or a bug you should build a debug version of `hikari` and
+try to reproduce the issue. This builds `hikari` with debug symbols and
+sanitizers enabled. Extracting a stack trace for debugging purposes is also very
+helpful if you are planning to submit a bug report.
+
+```
+make DEBUG=YES
+```
+
 ## Community
 
 The `hikari` community gears to be inclusive and welcoming to everyone, this is
