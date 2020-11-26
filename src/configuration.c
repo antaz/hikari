@@ -984,6 +984,32 @@ parse_pointer_config(struct hikari_pointer_config *pointer_config,
       }
 
       hikari_pointer_config_set_accel(pointer_config, accel);
+    } else if (!strcmp(key, "accel-profile")) {
+      const char *accel_profile;
+      if (!ucl_object_tostring_safe(cur, &accel_profile)) {
+        fprintf(stderr,
+            "configuration error: expected string \"%s\" for "
+            "\"accel-profile\"\n",
+            pointer_name);
+        goto done;
+      }
+
+      if (!strcmp(accel_profile, "none")) {
+        hikari_pointer_config_set_accel_profile(
+            pointer_config, LIBINPUT_CONFIG_ACCEL_PROFILE_NONE);
+      } else if (!strcmp(accel_profile, "flat")) {
+        hikari_pointer_config_set_accel_profile(
+            pointer_config, LIBINPUT_CONFIG_ACCEL_PROFILE_FLAT);
+      } else if (!strcmp(accel_profile, "adaptive")) {
+        hikari_pointer_config_set_accel_profile(
+            pointer_config, LIBINPUT_CONFIG_ACCEL_PROFILE_ADAPTIVE);
+      } else {
+        fprintf(stderr,
+            "configuration error: unkown \"accel-profile\" \"%s\" for \"%s\"\n",
+            accel_profile,
+            pointer_name);
+        goto done;
+      }
     } else if (!strcmp(key, "scroll-method")) {
       const char *scroll_method;
       if (!ucl_object_tostring_safe(cur, &scroll_method)) {

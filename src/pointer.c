@@ -47,6 +47,11 @@ hikari_pointer_configure(struct hikari_pointer *pointer,
           libinput_device, hikari_pointer_config_get_accel(pointer_config));
     }
 
+    if (hikari_pointer_config_has_accel_profile(pointer_config)) {
+      libinput_device_config_accel_set_profile(libinput_device,
+          hikari_pointer_config_get_accel_profile(pointer_config));
+    }
+
     if (hikari_pointer_config_has_scroll_button(pointer_config)) {
       libinput_device_config_scroll_set_button(libinput_device,
           hikari_pointer_config_get_scroll_button(pointer_config));

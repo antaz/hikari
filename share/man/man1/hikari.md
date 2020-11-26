@@ -964,6 +964,11 @@ are available.
   Sets mouse acceleration for the pointer device to a value between **-1** and
   **1**.
 
+* **accel-profile**
+
+  Sets mouse acceleration profile for the pointer device to the given mode.
+  Valid values are *none*, *flat* and *adaptive*.
+
 * **disable-while-typing**
 
   Enable or disable *disable-while-typing* if available. This setting expects a
