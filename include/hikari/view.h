@@ -397,16 +397,4 @@ hikari_view_damage_border(struct hikari_view *view)
   hikari_output_add_damage(view->output, geometry);
 }
 
-static inline void
-hikari_view_schedule_frame(struct hikari_view *view)
-{
-  assert(view->surface != NULL);
-  assert(view->output != NULL);
-  assert(view->output->enabled);
-
-  if (hikari_view_is_dirty(view)) {
-    wlr_output_schedule_frame(view->output->wlr_output);
-  }
-}
-
 #endif

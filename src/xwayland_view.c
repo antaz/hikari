@@ -107,7 +107,7 @@ commit_handler(struct wl_listener *listener, void *data)
       if (visible) {
         hikari_view_damage_whole(view);
       } else if (output->enabled) {
-        hikari_view_schedule_frame(view);
+        hikari_output_schedule_frame(output);
       }
     } else if (output->enabled) {
       bool visible = !hikari_view_is_hidden(view);
@@ -120,7 +120,7 @@ commit_handler(struct wl_listener *listener, void *data)
         wlr_output_damage_add(output->damage, &damage);
         pixman_region32_fini(&damage);
       } else {
-        hikari_view_schedule_frame(view);
+        hikari_output_schedule_frame(output);
       }
     }
   }

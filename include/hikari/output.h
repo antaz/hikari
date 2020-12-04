@@ -86,4 +86,13 @@ hikari_output_add_damage(struct hikari_output *output, struct wlr_box *region)
   }
 }
 
+static inline void
+hikari_output_schedule_frame(struct hikari_output *output)
+{
+  assert(output != NULL);
+  assert(output->enabled);
+
+  wlr_output_schedule_frame(output->wlr_output);
+}
+
 #endif
