@@ -199,16 +199,13 @@ number that will be spliced into the manpage. The distribution tarball of
 `hikari` comes with a precompiled manpage removing the need for a `pandoc`
 installation.
 
-#### Installing without SUID
+#### Installing with SUID
 
-`hikari` requires root privileges during startup on BSD systems to initialize
-the `wlroots` backend, those are dropped as soon as possible. If you don't
-happen to need this you can prevent installation from setting this bit by
-issuing `WITHOUT_SUID`. (SUID is still set for `hikari-unlocker` to allow
-communication with PAM, which is required for password authentication)
+If `hikari` should require root privileges for startup, state `WITH_SUID=YES`
+during installation.
 
 ```
-make WITHOUT_SUID=YES install
+make WITH_SUID=YES install
 ```
 
 #### Building a DEBUG build
