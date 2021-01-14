@@ -89,8 +89,11 @@ repository, breaking changes might be encountered. These are documented in the
 ### Compiling and Installing
 
 The build process will produce two binaries `hikari` and `hikari-unlocker`. The
-latter one is used to check credentials for unlocking the screen. Both need to
-be installed with root setuid in your `PATH`.
+latter is used to check credentials for unlocking the screen, which needs to be
+installed with root setuid.  `hikari` can rely on `seatd`, `(e)logind` or other
+mechanisms to gain root privileges when required; however, if needed it can
+also be installed with root setuid - see "Installing with SUID" below.
+Both binaries need to be located in your `PATH`.
 
 `hikari` can be configured via `$XDG_CONFIG_HOME/hikari/hikari.conf`, the
 default configuration can be found under `$PREFIX/etc/hikari/hikari.conf`
