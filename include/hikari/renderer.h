@@ -16,7 +16,6 @@ struct hikari_renderer {
   struct wlr_renderer *wlr_renderer;
   pixman_region32_t *damage;
   struct wlr_box *geometry;
-  struct timespec *when;
 };
 
 void

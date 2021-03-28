@@ -431,6 +431,8 @@ hikari_view_init(
 
   hikari_view_unset_dirty(view);
   view->pending_operation.tile = NULL;
+
+  wl_list_init(&view->children);
 }
 
 void
@@ -773,6 +775,19 @@ MOVE(top_middle)
 MOVE(top_right)
 #undef MOVE
 
+static void
+new_subsurface_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_view *view = wl_container_of(listener, view, new_subsurface);
+
+  struct wlr_subsurface *wlr_subsurface = data;
+
+  struct hikari_view_subsurface *view_subsurface =
+      hikari_malloc(sizeof(struct hikari_view_subsurface));
+
+  hikari_view_subsurface_init(view_subsurface, view, wlr_subsurface);
+}
+
 void
 hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
 {
@@ -787,6 +802,19 @@ hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
 
   struct hikari_view_config *view_config =
       hikari_configuration_resolve_view_config(hikari_configuration, view->id);
+
+  view->surface = surface;
+
+  view->new_subsurface.notify = new_subsurface_handler;
+  wl_signal_add(&surface->events.new_subsurface, &view->new_subsurface);
+
+  struct wlr_subsurface *wlr_subsurface;
+  wl_list_for_each (wlr_subsurface, &surface->subsurfaces, parent_link) {
+    struct hikari_view_subsurface *subsurface =
+        (struct hikari_view_subsurface *)malloc(
+            sizeof(struct hikari_view_subsurface));
+    hikari_view_subsurface_init(subsurface, view, wlr_subsurface);
+  }
 
   if (view_config != NULL) {
     struct hikari_mark *mark;
@@ -809,7 +837,6 @@ hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
   }
 
   view->group = group;
-  view->surface = surface;
 
   wl_list_insert(&sheet->views, &view->sheet_views);
   wl_list_insert(&group->views, &view->group_views);
@@ -835,6 +862,16 @@ hikari_view_unmap(struct hikari_view *view)
 {
   assert(!hikari_view_is_unmanaged(view));
   assert(hikari_view_is_mapped(view));
+
+  wl_list_remove(&view->new_subsurface.link);
+
+  struct hikari_view_child *child, *child_temp;
+  wl_list_for_each_safe (child, child_temp, &view->children, link) {
+    struct hikari_view_subsurface *subsurface =
+        (struct hikari_view_subsurface *)child;
+    hikari_view_subsurface_fini(subsurface);
+    hikari_free(subsurface);
+  }
 
   if (hikari_view_is_forced(view)) {
     if (hikari_view_is_hidden(view)) {
@@ -1561,6 +1598,7 @@ hikari_view_subsurface_init(struct hikari_view_subsurface *view_subsurface,
 void
 hikari_view_child_fini(struct hikari_view_child *view_child)
 {
+  wl_list_remove(&view_child->link);
   wl_list_remove(&view_child->commit.link);
   wl_list_remove(&view_child->new_subsurface.link);
 }
@@ -1573,24 +1611,10 @@ hikari_view_subsurface_fini(struct hikari_view_subsurface *view_subsurface)
 }
 
 static void
-new_subsurface_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_view_child *view_child =
-      wl_container_of(listener, view_child, new_subsurface);
-
-  struct wlr_subsurface *wlr_subsurface = data;
-
-  struct hikari_view_subsurface *view_subsurface =
-      hikari_malloc(sizeof(struct hikari_view_subsurface));
-
-  hikari_view_subsurface_init(
-      view_subsurface, view_child->parent, wlr_subsurface);
-}
-
-static void
 damage_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 {
   struct hikari_damage_data *damage_data = data;
+  struct hikari_output *output = damage_data->output;
 
   if (damage_data->whole) {
     damage_whole_surface(surface, sx, sy, data);
@@ -1618,18 +1642,32 @@ damage_single_surface(struct wlr_surface *surface, int sx, int sy, void *data)
 }
 
 static void
-commit_view_child_handler(struct wl_listener *listener, void *data)
+commit_child_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_view_child *view_child =
       wl_container_of(listener, view_child, commit);
 
   struct hikari_view *parent = view_child->parent;
+  assert(!hikari_view_is_hidden(parent));
 
-  if (!hikari_view_is_hidden(parent)) {
-    struct wlr_surface *surface = view_child->surface;
+  struct wlr_surface *surface = view_child->surface;
 
-    hikari_view_damage_surface(parent, surface, false);
-  }
+  hikari_view_damage_surface(parent, surface, false);
+}
+
+static void
+new_subsurface_child_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_view_child *view_child =
+      wl_container_of(listener, view_child, new_subsurface);
+
+  struct wlr_subsurface *wlr_subsurface = data;
+
+  struct hikari_view_subsurface *view_subsurface =
+      hikari_malloc(sizeof(struct hikari_view_subsurface));
+
+  hikari_view_subsurface_init(
+      view_subsurface, view_child->parent, wlr_subsurface);
 }
 
 void
@@ -1640,11 +1678,13 @@ hikari_view_child_init(struct hikari_view_child *view_child,
   view_child->parent = parent;
   view_child->surface = surface;
 
-  view_child->new_subsurface.notify = new_subsurface_handler;
+  view_child->new_subsurface.notify = new_subsurface_child_handler;
   wl_signal_add(&surface->events.new_subsurface, &view_child->new_subsurface);
 
-  view_child->commit.notify = commit_view_child_handler;
+  view_child->commit.notify = commit_child_handler;
   wl_signal_add(&surface->events.commit, &view_child->commit);
+
+  wl_list_insert(&parent->children, &view_child->link);
 }
 
 void

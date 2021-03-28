@@ -57,6 +57,7 @@ struct hikari_view {
   struct wl_list group_views;
   struct wl_list visible_group_views;
   struct wl_list visible_server_views;
+  struct wl_list children;
 
   struct hikari_operation pending_operation;
 
@@ -73,9 +74,13 @@ struct hikari_view {
   void (*activate)(struct hikari_view *, bool);
   void (*quit)(struct hikari_view *);
   void (*constraints)(struct hikari_view *, int *, int *, int *, int *);
+
+  struct wl_listener new_subsurface;
 };
 
 struct hikari_view_child {
+  struct wl_list link;
+
   struct wlr_surface *surface;
   struct hikari_view *parent;
 

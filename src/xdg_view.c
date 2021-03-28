@@ -27,9 +27,6 @@ static void
 new_popup_handler(struct wl_listener *listener, void *data);
 
 static void
-new_subsurface_handler(struct wl_listener *listener, void *data);
-
-static void
 request_fullscreen_handler(struct wl_listener *listener, void *data);
 
 static void
@@ -186,10 +183,6 @@ map(struct hikari_view *view, bool focus)
   xdg_view->new_popup.notify = new_popup_handler;
   wl_signal_add(&xdg_surface->events.new_popup, &xdg_view->new_popup);
 
-  xdg_view->new_subsurface.notify = new_subsurface_handler;
-  wl_signal_add(
-      &xdg_surface->surface->events.new_subsurface, &xdg_view->new_subsurface);
-
   xdg_view->commit.notify = commit_handler;
   wl_signal_add(&xdg_view->surface->surface->events.commit, &xdg_view->commit);
 
@@ -227,7 +220,6 @@ unmap(struct hikari_view *view)
   wl_list_remove(&xdg_view->set_title.link);
   wl_list_remove(&xdg_view->request_fullscreen.link);
   wl_list_remove(&xdg_view->new_popup.link);
-  wl_list_remove(&xdg_view->new_subsurface.link);
   wl_list_remove(&xdg_view->commit.link);
 }
 
@@ -433,24 +425,6 @@ xdg_popup_create(struct wlr_xdg_popup *wlr_popup, struct hikari_view *parent)
       (struct hikari_view_child *)popup, parent, wlr_popup->base->surface);
 
   popup_unconstrain(popup);
-}
-
-static void
-new_subsurface_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_xdg_view *xdg_view =
-      wl_container_of(listener, xdg_view, new_subsurface);
-
-  struct wlr_subsurface *subsurface = data;
-
-  struct hikari_view_subsurface *view_subsurface =
-      hikari_malloc(sizeof(struct hikari_view_subsurface));
-
-  hikari_view_subsurface_init(view_subsurface, &xdg_view->view, subsurface);
-
-#if !defined(NDEBUG)
-  printf("SUBSURFACE\n");
-#endif
 }
 
 static void

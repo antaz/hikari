@@ -484,18 +484,15 @@ render_overlay(struct hikari_renderer *renderer)
 #endif
 
 static inline void
-render_output(struct hikari_output *output,
-    pixman_region32_t *damage,
-    struct timespec *now)
+render_output(struct hikari_output *output, pixman_region32_t *damage)
 {
   struct wlr_output *wlr_output = output->wlr_output;
   struct wlr_renderer *wlr_renderer =
       wlr_backend_get_renderer(wlr_output->backend);
 
-  struct hikari_renderer renderer = { .wlr_output = wlr_output,
-    .wlr_renderer = wlr_renderer,
-    .when = now,
-    .damage = damage };
+  struct hikari_renderer renderer = {
+    .wlr_output = wlr_output, .wlr_renderer = wlr_renderer, .damage = damage
+  };
 
   wlr_renderer_begin(wlr_renderer, wlr_output->width, wlr_output->height);
 
@@ -531,12 +528,15 @@ send_frame_done(struct wlr_surface *surface, int sx, int sy, void *data)
 }
 
 static inline void
-frame_done(struct hikari_output *output, struct timespec *now)
+frame_done(struct hikari_output *output)
 {
   struct hikari_view *view;
+  struct timespec now;
+  clock_gettime(CLOCK_MONOTONIC, &now);
+
   wl_list_for_each_reverse (view, &output->views, output_views) {
     hikari_node_for_each_surface(
-        (struct hikari_node *)view, send_frame_done, now);
+        (struct hikari_node *)view, send_frame_done, &now);
   }
 
 #ifdef HAVE_XWAYLAND
@@ -545,13 +545,13 @@ frame_done(struct hikari_output *output, struct timespec *now)
       &output->unmanaged_xwayland_views,
       unmanaged_output_views) {
     wlr_surface_for_each_surface(
-        xwayland_unmanaged_view->surface->surface, send_frame_done, now);
+        xwayland_unmanaged_view->surface->surface, send_frame_done, &now);
   }
 #endif
 
 #ifdef HAVE_LAYERSHELL
   for (int i = 0; i < 4; i++) {
-    layer_for_each(&output->layers[i], send_frame_done, now);
+    layer_for_each(&output->layers[i], send_frame_done, &now);
   }
 #endif
 }
@@ -559,25 +559,29 @@ frame_done(struct hikari_output *output, struct timespec *now)
 void
 hikari_renderer_damage_frame_handler(struct wl_listener *listener, void *data)
 {
-  bool needs_frame;
-  struct timespec now;
   struct hikari_output *output =
       wl_container_of(listener, output, damage_frame);
 
   pixman_region32_t buffer_damage;
   pixman_region32_init(&buffer_damage);
 
-  clock_gettime(CLOCK_MONOTONIC, &now);
-
-  if (wlr_output_damage_attach_render(
-          output->damage, &needs_frame, &buffer_damage) &&
-      needs_frame) {
-    render_output(output, &buffer_damage, &now);
+  bool needs_frame;
+  if (!wlr_output_damage_attach_render(
+          output->damage, &needs_frame, &buffer_damage)) {
+    goto render_done;
   }
 
+  if (!needs_frame) {
+    wlr_output_rollback(output->wlr_output);
+    goto render_done;
+  }
+
+  render_output(output, &buffer_damage);
+
+render_done:
   pixman_region32_fini(&buffer_damage);
 
-  frame_done(output, &now);
+  frame_done(output);
 }
 
 static inline void
