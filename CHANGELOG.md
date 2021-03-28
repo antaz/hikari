@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.3
+
+* fix noop resizes
+* fix subsurface handling (causes `firefox` 87 issues)
+
 ## 2.2.2
 
 * fix `input-grab-mode` for non-default bindings
