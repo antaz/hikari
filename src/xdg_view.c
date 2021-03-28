@@ -99,12 +99,8 @@ commit_handler(struct wl_listener *listener, void *data)
       }
     } else if (output->enabled) {
       if (visible) {
-        pixman_region32_t damage;
-        pixman_region32_init(&damage);
-        wlr_surface_get_effective_damage(surface->surface, &damage);
-        pixman_region32_translate(&damage, geometry->x, geometry->y);
-        wlr_output_damage_add(output->damage, &damage);
-        pixman_region32_fini(&damage);
+        hikari_output_add_effective_surface_damage(
+            output, surface->surface, geometry->x, geometry->y);
       } else {
         hikari_output_schedule_frame(output);
       }

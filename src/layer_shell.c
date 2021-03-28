@@ -298,12 +298,8 @@ damage(struct hikari_layer *layer, bool whole)
 
     hikari_output_add_damage(layer->output, &geometry);
   } else {
-    pixman_region32_t damage;
-    pixman_region32_init(&damage);
-    wlr_surface_get_effective_damage(surface, &damage);
-    pixman_region32_translate(&damage, layer->geometry.x, layer->geometry.y);
-    wlr_output_damage_add(layer->output->damage, &damage);
-    pixman_region32_fini(&damage);
+    hikari_output_add_effective_surface_damage(
+        layer->output, surface, layer->geometry.x, layer->geometry.y);
   }
 }
 
@@ -349,12 +345,7 @@ done:
 
     hikari_output_add_damage(output, &geometry);
   } else {
-    pixman_region32_t damage;
-    pixman_region32_init(&damage);
-    wlr_surface_get_effective_damage(surface, &damage);
-    pixman_region32_translate(&damage, ox, oy);
-    wlr_output_damage_add(layer->output->damage, &damage);
-    pixman_region32_fini(&damage);
+    hikari_output_add_effective_surface_damage(layer->output, surface, ox, oy);
   }
 }
 

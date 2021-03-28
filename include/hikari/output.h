@@ -95,4 +95,19 @@ hikari_output_schedule_frame(struct hikari_output *output)
   wlr_output_schedule_frame(output->wlr_output);
 }
 
+static inline void
+hikari_output_add_effective_surface_damage(
+    struct hikari_output *output, struct wlr_surface *surface, int x, int y)
+{
+  assert(surface != NULL);
+  assert(output->enabled);
+
+  pixman_region32_t damage;
+  pixman_region32_init(&damage);
+  wlr_surface_get_effective_damage(surface, &damage);
+  pixman_region32_translate(&damage, x, y);
+  wlr_output_damage_add(output->damage, &damage);
+  pixman_region32_fini(&damage);
+}
+
 #endif

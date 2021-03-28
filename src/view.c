@@ -1620,14 +1620,9 @@ damage_surface(struct wlr_surface *surface, int sx, int sy, void *data)
     damage_whole_surface(surface, sx, sy, data);
   } else {
     struct wlr_box *geometry = damage_data->geometry;
-    struct hikari_output *output = damage_data->output;
 
-    pixman_region32_t damage;
-    pixman_region32_init(&damage);
-    wlr_surface_get_effective_damage(surface, &damage);
-    pixman_region32_translate(&damage, geometry->x + sx, geometry->y + sy);
-    wlr_output_damage_add(output->damage, &damage);
-    pixman_region32_fini(&damage);
+    hikari_output_add_effective_surface_damage(
+        output, surface, geometry->x + sx, geometry->y + sy);
   }
 }
 
