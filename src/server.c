@@ -1011,16 +1011,14 @@ hikari_server_stop(void)
   hikari_lock_mode_fini(&server->lock_mode);
   hikari_mark_assign_mode_fini(&server->mark_assign_mode);
 
+  wl_display_destroy_clients(server->display);
+
 #if HAVE_XWAYLAND
   wlr_xwayland_destroy(server->xwayland);
 #endif
-  wl_display_destroy_clients(server->display);
+
   wlr_seat_destroy(server->seat);
   wl_display_destroy(server->display);
-
-  hikari_output_fini(server->noop_output);
-  hikari_free(server->noop_output);
-
   wlr_output_layout_destroy(server->output_layout);
 
   hikari_configuration_fini(hikari_configuration);
