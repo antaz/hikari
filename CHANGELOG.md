@@ -1,5 +1,14 @@
 # Changelog
 
+## 2.3.0
+
+* improvements for multi-monitor group operations
+* allow environment variables to be used in the configuration
+* add `accel-profile` configuration
+* allow `pkg-config` to be specified to support more build environments
+* do not rely on suid by default anymore (seatd is now preferred)
+* update to `wlroots` 0.13.0
+
 ## 2.2.3
 
 * fix noop resizes
