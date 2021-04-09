@@ -1,5 +1,7 @@
 #include <hikari/output.h>
 
+#include <drm_fourcc.h>
+
 #include <wlr/backend.h>
 
 #include <hikari/memory.h>
@@ -85,12 +87,8 @@ hikari_output_load_background(struct hikari_output *output,
   struct wlr_renderer *renderer =
       wlr_backend_get_renderer(output->wlr_output->backend);
 
-  output->background = wlr_texture_from_pixels(renderer,
-      WL_SHM_FORMAT_ARGB8888,
-      stride,
-      output_width,
-      output_height,
-      data);
+  output->background = wlr_texture_from_pixels(
+      renderer, DRM_FORMAT_ARGB8888, stride, output_width, output_height, data);
 
   cairo_surface_destroy(image);
   cairo_surface_destroy(output_surface);
