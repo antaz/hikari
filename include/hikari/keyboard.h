@@ -6,6 +6,7 @@
 #include <xkbcommon/xkbcommon.h>
 
 #include <wlr/types/wlr_input_device.h>
+#include <wlr/types/wlr_keyboard.h>
 
 #include <hikari/binding_group.h>
 #include <hikari/keyboard_config.h>

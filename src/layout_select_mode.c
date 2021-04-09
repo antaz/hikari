@@ -59,7 +59,7 @@ static void
 key_handler(
     struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
 {
-  if (event->state == WLR_KEY_PRESSED) {
+  if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
     apply_layout(hikari_configuration, event, keyboard);
   }
 }

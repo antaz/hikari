@@ -37,7 +37,7 @@ key_handler(
 {
   struct hikari_workspace *workspace = hikari_server.workspace;
 
-  if (event->state == WLR_KEY_PRESSED) {
+  if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
     mark_select(workspace, event, keyboard);
   }
 }

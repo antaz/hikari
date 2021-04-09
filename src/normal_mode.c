@@ -319,7 +319,7 @@ key_handler(
     return;
   }
 
-  if (event->state == WLR_KEY_PRESSED) {
+  if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
     uint32_t modifiers = hikari_server.keyboard_state.modifiers;
     struct hikari_binding_group *bindings = &keyboard->bindings[modifiers];
 

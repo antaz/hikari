@@ -177,7 +177,7 @@ key_handler(
 {
   struct hikari_lock_mode *mode = get_mode();
 
-  if (event->state == WLR_KEY_PRESSED) {
+  if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
     const xkb_keysym_t *syms;
     uint32_t keycode = event->keycode + 8;
     uint32_t codepoint;

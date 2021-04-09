@@ -22,7 +22,7 @@ static void
 key_handler(
     struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
 {
-  if (event->state == WLR_KEY_RELEASED) {
+  if (event->state == WL_KEYBOARD_KEY_STATE_RELEASED) {
     hikari_server_enter_normal_mode(NULL);
   }
 }

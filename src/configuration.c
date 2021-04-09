@@ -7,6 +7,7 @@
 
 #include <linux/input-event-codes.h>
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_switch.h>
 
 #include <hikari/action.h>
 #include <hikari/action_config.h>

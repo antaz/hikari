@@ -753,7 +753,7 @@ hikari_server_prepare_privileged(void)
     goto done;
   }
 
-  server->backend = wlr_backend_autocreate(server->display, NULL);
+  server->backend = wlr_backend_autocreate(server->display);
   if (server->backend == NULL) {
     fprintf(stderr, "error: could not create backend\n");
     goto done;

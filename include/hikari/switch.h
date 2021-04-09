@@ -2,6 +2,7 @@
 #define HIKARI_SWITCH_H
 
 #include <wlr/types/wlr_input_device.h>
+#include <wlr/types/wlr_switch.h>
 
 struct hikari_action;
 struct hikari_switch_config;
