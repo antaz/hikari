@@ -1,5 +1,7 @@
 #include <hikari/lock_indicator.h>
 
+#include <drm_fourcc.h>
+
 #include <wlr/backend.h>
 #include <wlr/render/wlr_renderer.h>
 #include <wlr/types/wlr_matrix.h>
@@ -45,7 +47,7 @@ init_indicator_circle(float color[static 4])
   int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, size);
 
   texture = wlr_texture_from_pixels(
-      wlr_renderer, WL_SHM_FORMAT_ARGB8888, stride, size, size, data);
+      wlr_renderer, DRM_FORMAT_ARGB8888, stride, size, size, data);
 
   cairo_surface_destroy(surface);
   g_object_unref(layout);
