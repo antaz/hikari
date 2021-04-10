@@ -1,6 +1,7 @@
 #include <hikari/indicator_bar.h>
 
 #include <cairo/cairo.h>
+#include <drm_fourcc.h>
 #include <pango/pangocairo.h>
 #include <string.h>
 
@@ -120,7 +121,7 @@ hikari_indicator_bar_update(struct hikari_indicator_bar *indicator_bar,
   int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width);
 
   indicator_bar->texture = wlr_texture_from_pixels(
-      wlr_renderer, WL_SHM_FORMAT_ARGB8888, stride, width, height, data);
+      wlr_renderer, DRM_FORMAT_ARGB8888, stride, width, height, data);
 
   cairo_surface_destroy(surface);
   g_object_unref(layout);
