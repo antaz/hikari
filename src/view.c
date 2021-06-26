@@ -809,7 +809,13 @@ hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
   wl_signal_add(&surface->events.new_subsurface, &view->new_subsurface);
 
   struct wlr_subsurface *wlr_subsurface;
-  wl_list_for_each (wlr_subsurface, &surface->subsurfaces, parent_link) {
+  wl_list_for_each (wlr_subsurface, &surface->subsurfaces_below, parent_link) {
+    struct hikari_view_subsurface *subsurface =
+        (struct hikari_view_subsurface *)malloc(
+            sizeof(struct hikari_view_subsurface));
+    hikari_view_subsurface_init(subsurface, view, wlr_subsurface);
+  }
+  wl_list_for_each (wlr_subsurface, &surface->subsurfaces_above, parent_link) {
     struct hikari_view_subsurface *subsurface =
         (struct hikari_view_subsurface *)malloc(
             sizeof(struct hikari_view_subsurface));
