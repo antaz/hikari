@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.1
+
+* update to `wloots` 0.14.0
+
 ## 2.3.0
 
 * improvements for multi-monitor group operations
