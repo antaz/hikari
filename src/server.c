@@ -11,7 +11,6 @@
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_data_control_v1.h>
 #include <wlr/types/wlr_data_device.h>
-#include <wlr/types/wlr_gtk_primary_selection.h>
 #include <wlr/types/wlr_input_device.h>
 #include <wlr/types/wlr_keyboard.h>
 #include <wlr/types/wlr_output_layout.h>
@@ -610,7 +609,6 @@ setup_selection(struct hikari_server *server)
 {
   wlr_data_control_manager_v1_create(server->display);
 
-  wlr_gtk_primary_selection_device_manager_create(server->display);
   wlr_primary_selection_v1_device_manager_create(server->display);
 
   server->seat = wlr_seat_create(server->display, "seat0");
