@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.3.2
+
+* fix crash on startup
+* fix flickering popups in `firefox`
+
 ## 2.3.1
 
 * update to `wloots` 0.14.0
