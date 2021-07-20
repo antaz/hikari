@@ -214,13 +214,7 @@ new_output_handler(struct wl_listener *listener, void *data)
   struct hikari_output *output = hikari_malloc(sizeof(struct hikari_output));
 
   hikari_output_init(output, wlr_output);
-  if (hikari_server.workspace == NULL) {
-    hikari_server.workspace = output->workspace;
-    hikari_cursor_activate(&hikari_server.cursor);
-    hikari_server.mode = (struct hikari_mode *)&hikari_server.normal_mode;
-  } else {
-    hikari_cursor_reset_image(&server->cursor);
-  }
+  hikari_cursor_reset_image(&server->cursor);
 }
 
 static bool
@@ -775,9 +769,15 @@ init_noop_output(struct hikari_server *server)
   server->noop_backend = wlr_noop_backend_create(server->display);
 
   struct wlr_output *wlr_output = wlr_noop_add_output(server->noop_backend);
+  struct hikari_output *noop_output =
+      hikari_malloc(sizeof(struct hikari_output));
 
-  server->noop_output = hikari_malloc(sizeof(struct hikari_output));
-  hikari_output_init(server->noop_output, wlr_output);
+  server->noop_output = noop_output;
+  hikari_output_init(noop_output, wlr_output);
+
+  hikari_server.workspace = noop_output->workspace;
+  hikari_cursor_activate(&hikari_server.cursor);
+  hikari_server.mode = (struct hikari_mode *)&hikari_server.normal_mode;
 }
 
 static void
