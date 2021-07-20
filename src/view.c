@@ -1658,6 +1658,16 @@ commit_child_handler(struct wl_listener *listener, void *data)
 }
 
 static void
+view_subsurface_create(
+    struct wlr_subsurface *wlr_subsurface, struct hikari_view *parent)
+{
+  struct hikari_view_subsurface *view_subsurface =
+      hikari_malloc(sizeof(struct hikari_view_subsurface));
+
+  hikari_view_subsurface_init(view_subsurface, parent, wlr_subsurface);
+}
+
+static void
 new_subsurface_child_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_view_child *view_child =
@@ -1665,11 +1675,7 @@ new_subsurface_child_handler(struct wl_listener *listener, void *data)
 
   struct wlr_subsurface *wlr_subsurface = data;
 
-  struct hikari_view_subsurface *view_subsurface =
-      hikari_malloc(sizeof(struct hikari_view_subsurface));
-
-  hikari_view_subsurface_init(
-      view_subsurface, view_child->parent, wlr_subsurface);
+  view_subsurface_create(wlr_subsurface, view_child->parent);
 }
 
 void
@@ -1687,6 +1693,14 @@ hikari_view_child_init(struct hikari_view_child *view_child,
   wl_signal_add(&surface->events.commit, &view_child->commit);
 
   wl_list_insert(&parent->children, &view_child->link);
+
+  struct wlr_subsurface *subsurface;
+  wl_list_for_each (subsurface, &surface->subsurfaces_below, parent_link) {
+    view_subsurface_create(subsurface, parent);
+  }
+  wl_list_for_each (subsurface, &surface->subsurfaces_above, parent_link) {
+    view_subsurface_create(subsurface, parent);
+  }
 }
 
 void
