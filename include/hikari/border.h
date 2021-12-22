@@ -1,7 +1,7 @@
 #if !defined(HIKARI_BORDER_H)
 #define HIKARI_BORDER_H
 
-#include <wlr/types/wlr_box.h>
+#include <wlr/util/box.h>
 
 #include <hikari/output.h>
 

@@ -487,8 +487,7 @@ static inline void
 render_output(struct hikari_output *output, pixman_region32_t *damage)
 {
   struct wlr_output *wlr_output = output->wlr_output;
-  struct wlr_renderer *wlr_renderer =
-      wlr_backend_get_renderer(wlr_output->backend);
+  struct wlr_renderer *wlr_renderer = wlr_output->renderer;
 
   struct hikari_renderer renderer = {
     .wlr_output = wlr_output, .wlr_renderer = wlr_renderer, .damage = damage

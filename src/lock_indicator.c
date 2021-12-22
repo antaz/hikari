@@ -19,8 +19,7 @@ init_indicator_circle(float color[static 4])
   const int size = 100;
 
   struct wlr_texture *texture;
-  struct wlr_renderer *wlr_renderer =
-      wlr_backend_get_renderer(hikari_server.backend);
+  struct wlr_renderer *wlr_renderer = hikari_server.renderer;
 
   cairo_surface_t *surface =
       cairo_image_surface_create(CAIRO_FORMAT_ARGB32, size, size);

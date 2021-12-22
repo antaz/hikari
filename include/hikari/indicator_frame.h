@@ -1,7 +1,7 @@
 #if !defined(HIKARIINDICATOR_FRAME_H)
 #define HIKARIINDICATOR_FRAME_H
 
-#include <wlr/types/wlr_box.h>
+#include <wlr/util/box.h>
 
 struct hikari_view;
 struct hikari_renderer;

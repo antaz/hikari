@@ -84,8 +84,7 @@ hikari_output_load_background(struct hikari_output *output,
   unsigned char *data = cairo_image_surface_get_data(output_surface);
   int stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, output_width);
 
-  struct wlr_renderer *renderer =
-      wlr_backend_get_renderer(output->wlr_output->backend);
+  struct wlr_renderer *renderer = output->wlr_output->renderer;
 
   output->background = wlr_texture_from_pixels(
       renderer, DRM_FORMAT_ARGB8888, stride, output_width, output_height, data);
@@ -196,7 +195,7 @@ close_layers(struct wl_list *layers)
 {
   struct hikari_layer *layer, *layer_temp;
   wl_list_for_each_safe (layer, layer_temp, layers, layer_surfaces) {
-    wlr_layer_surface_v1_close(layer->surface);
+    wlr_layer_surface_v1_destroy(layer->surface);
     layer->output = NULL;
   }
 }
@@ -257,7 +256,7 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 
     if (!wl_list_empty(&wlr_output->modes)) {
       struct wlr_output_mode *mode =
-          wl_container_of(wlr_output->modes.prev, mode, link);
+          wl_container_of(wlr_output->modes.next, mode, link);
       wlr_output_set_mode(wlr_output, mode);
     }
 

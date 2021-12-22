@@ -47,7 +47,7 @@ commit_handler(struct wl_listener *listener, void *data)
 
   struct hikari_view *view = (struct hikari_view *)xdg_view;
   struct wlr_xdg_surface *surface = xdg_view->surface;
-  uint32_t serial = surface->configure_serial;
+  uint32_t serial = surface->current.configure_serial;
 
   assert(view->surface != NULL);
 

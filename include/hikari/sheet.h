@@ -3,7 +3,7 @@
 
 #include <wayland-util.h>
 
-#include <wlr/types/wlr_box.h>
+#include <wlr/util/box.h>
 
 struct hikari_group;
 struct hikari_layout;

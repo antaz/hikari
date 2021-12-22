@@ -51,6 +51,7 @@ struct hikari_server {
   struct wl_event_loop *event_loop;
   struct wlr_backend *backend;
   struct wlr_renderer *renderer;
+  struct wlr_allocator *allocator;
   struct wlr_xdg_output_manager_v1 *output_manager;
   struct wlr_data_device_manager *data_device_manager;
 

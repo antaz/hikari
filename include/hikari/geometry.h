@@ -1,7 +1,7 @@
 #if !defined(HIKARI_GEOMETRY_H)
 #define HIKARI_GEOMETRY_H
 
-#include <wlr/types/wlr_box.h>
+#include <wlr/util/box.h>
 
 void
 hikari_geometry_split_vertical(struct wlr_box *src,

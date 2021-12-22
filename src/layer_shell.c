@@ -199,7 +199,7 @@ hikari_layer_init(
   layer->node.focus = focus;
   layer->node.for_each_surface = for_each_surface;
   layer->output = output;
-  layer->layer = wlr_layer_surface->client_pending.layer;
+  layer->layer = wlr_layer_surface->pending.layer;
   layer->surface = wlr_layer_surface;
   layer->mapped = false;
 
@@ -309,8 +309,8 @@ damage_popup(struct hikari_layer_popup *layer_popup, bool whole)
   struct wlr_xdg_popup *popup = layer_popup->popup;
   struct wlr_surface *surface = popup->base->surface;
 
-  int popup_sx = popup->geometry.x - popup->base->geometry.x;
-  int popup_sy = popup->geometry.y - popup->base->geometry.y;
+  int popup_sx = popup->geometry.x - popup->base->current.geometry.x;
+  int popup_sy = popup->geometry.y - popup->base->current.geometry.y;
   int ox = popup_sx, oy = popup_sy;
 
   struct hikari_layer *layer;

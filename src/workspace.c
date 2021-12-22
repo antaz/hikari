@@ -120,7 +120,7 @@ hikari_workspace_quit_view(struct hikari_workspace *workspace)
 
   if (focus_layer != NULL) {
     assert(focus_view == NULL);
-    wlr_layer_surface_v1_close(focus_layer->surface);
+    wlr_layer_surface_v1_destroy(focus_layer->surface);
     return;
   }
 #endif

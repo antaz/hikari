@@ -1,7 +1,7 @@
 #if !defined(HIKARI_OPERATION_H)
 #define HIKARI_OPERATION_H
 
-#include <wlr/types/wlr_box.h>
+#include <wlr/util/box.h>
 
 struct hikari_tile;
 

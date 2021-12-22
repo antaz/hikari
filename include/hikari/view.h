@@ -4,9 +4,9 @@
 #include <assert.h>
 
 #include <wayland-util.h>
-#include <wlr/types/wlr_box.h>
 #include <wlr/types/wlr_output_damage.h>
 #include <wlr/types/wlr_surface.h>
+#include <wlr/util/box.h>
 
 #include <hikari/border.h>
 #include <hikari/group.h>

@@ -1,7 +1,7 @@
 #if !defined(HIKARI_TILE_H)
 #define HIKARI_TILE_H
 
-#include <wlr/types/wlr_box.h>
+#include <wlr/util/box.h>
 
 struct hikari_layout;
 struct hikari_view;

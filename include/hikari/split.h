@@ -1,7 +1,7 @@
 #if !defined(HIKARI_SPLIT_H)
 #define HIKARI_SPLIT_H
 
-#include <wlr/types/wlr_box.h>
+#include <wlr/util/box.h>
 
 struct hikari_renderer;
 struct hikari_sheet;
