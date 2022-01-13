@@ -215,7 +215,8 @@ new_output_handler(struct wl_listener *listener, void *data)
   struct wlr_output *wlr_output = data;
   struct hikari_output *output = hikari_malloc(sizeof(struct hikari_output));
 
-  if (!wlr_output_init_render(wlr_output, server->allocator, server->renderer)) {
+  if (!wlr_output_init_render(
+          wlr_output, server->allocator, server->renderer)) {
     exit(EXIT_FAILURE);
   }
 
@@ -774,7 +775,8 @@ init_noop_output(struct hikari_server *server)
 {
   server->noop_backend = wlr_headless_backend_create(server->display);
 
-  struct wlr_output *wlr_output = wlr_headless_add_output(server->noop_backend, 800, 600);
+  struct wlr_output *wlr_output =
+      wlr_headless_add_output(server->noop_backend, 800, 600);
   struct hikari_output *noop_output =
       hikari_malloc(sizeof(struct hikari_output));
 
@@ -830,7 +832,8 @@ server_init(struct hikari_server *server, char *config_path)
 
   wlr_renderer_init_wl_display(server->renderer, server->display);
 
-  server->allocator = wlr_allocator_autocreate(server->backend, server->renderer);
+  server->allocator =
+      wlr_allocator_autocreate(server->backend, server->renderer);
   if (server->allocator == NULL) {
     wl_display_destroy(server->display);
     exit(EXIT_FAILURE);

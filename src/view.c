@@ -809,13 +809,15 @@ hikari_view_map(struct hikari_view *view, struct wlr_surface *surface)
   wl_signal_add(&surface->events.new_subsurface, &view->new_subsurface);
 
   struct wlr_subsurface *wlr_subsurface;
-  wl_list_for_each (wlr_subsurface, &surface->current.subsurfaces_below, current.link) {
+  wl_list_for_each (
+      wlr_subsurface, &surface->current.subsurfaces_below, current.link) {
     struct hikari_view_subsurface *subsurface =
         (struct hikari_view_subsurface *)malloc(
             sizeof(struct hikari_view_subsurface));
     hikari_view_subsurface_init(subsurface, view, wlr_subsurface);
   }
-  wl_list_for_each (wlr_subsurface, &surface->current.subsurfaces_above, current.link) {
+  wl_list_for_each (
+      wlr_subsurface, &surface->current.subsurfaces_above, current.link) {
     struct hikari_view_subsurface *subsurface =
         (struct hikari_view_subsurface *)malloc(
             sizeof(struct hikari_view_subsurface));
@@ -1695,10 +1697,12 @@ hikari_view_child_init(struct hikari_view_child *view_child,
   wl_list_insert(&parent->children, &view_child->link);
 
   struct wlr_subsurface *subsurface;
-  wl_list_for_each (subsurface, &surface->current.subsurfaces_below, current.link) {
+  wl_list_for_each (
+      subsurface, &surface->current.subsurfaces_below, current.link) {
     view_subsurface_create(subsurface, parent);
   }
-  wl_list_for_each (subsurface, &surface->current.subsurfaces_above, current.link) {
+  wl_list_for_each (
+      subsurface, &surface->current.subsurfaces_above, current.link) {
     view_subsurface_create(subsurface, parent);
   }
 }
