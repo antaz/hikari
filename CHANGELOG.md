@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.3.3
+
+* update to `wloots` 0.15.0
+
 ## 2.3.2
 
 * fix crash on startup
