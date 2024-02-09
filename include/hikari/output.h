@@ -6,8 +6,8 @@
 #include <wayland-server-core.h>
 #include <wayland-util.h>
 
-#include <wlr/types/wlr_output_damage.h>
-#include <wlr/types/wlr_surface.h>
+#include <wlr/types/wlr_output.h>
+#include <wlr/types/wlr_compositor.h>
 
 #include <hikari/output_config.h>
 
@@ -15,7 +15,7 @@ struct hikari_renderer;
 
 struct hikari_output {
   struct wlr_output *wlr_output;
-  struct wlr_output_damage *damage;
+  struct wlr_output_event_damage *damage;
   struct hikari_workspace *workspace;
 
   bool enabled;

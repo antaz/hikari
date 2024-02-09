@@ -1,7 +1,7 @@
 #if !defined(HIKARI_INDICATOR_BAR_H)
 #define HIKARI_INDICATOR_BAR_H
 
-#include <wlr/types/wlr_surface.h>
+#include <wlr/render/wlr_texture.h>
 
 struct hikari_indicator;
 struct hikari_renderer;
