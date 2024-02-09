@@ -1,0 +1,9 @@
+*.o
+hikari
+hikari-unlocker
+xdg-shell-protocol.h
+hikari.1
+version\.h
+hikari.*\.tar\.gz
+wlr-layer-shell-unstable-v1-protocol.h
+
