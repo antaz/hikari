@@ -103,7 +103,7 @@ hikari_output_damage_whole(struct hikari_output *output)
 {
   assert(output != NULL);
 
-  wlr_output_damage_add_whole(output->damage);
+  // wlr_output_damage_add_whole(output->damage);
 }
 
 void
@@ -222,7 +222,7 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
   bool noop = wlr_output->backend == hikari_server.noop_backend;
 
   output->wlr_output = wlr_output;
-  output->damage = wlr_output_damage_create(wlr_output);
+  // output->damage = wlr_output_damage_create(wlr_output);
   output->background = NULL;
   output->enabled = false;
   output->workspace = hikari_malloc(sizeof(struct hikari_workspace));
@@ -251,7 +251,7 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 
     wl_list_insert(&hikari_server.outputs, &output->server_outputs);
 
-    output->damage_destroy.notify = damage_destroy_handler;
+    // output->damage_destroy.notify = damage_destroy_handler;
     // wl_signal_add(&output->damage->events.destroy, &output->damage_destroy);
 
     if (!wl_list_empty(&wlr_output->modes)) {
@@ -349,8 +349,9 @@ hikari_output_fini(struct hikari_output *output)
 void
 hikari_output_move(struct hikari_output *output, double lx, double ly)
 {
-  wlr_output_layout_move(
-      hikari_server.output_layout, output->wlr_output, lx, ly);
+  // TODO: moving output
+  // wlr_output_layout_move(
+  //    hikari_server.output_layout, output->wlr_output, lx, ly);
 }
 
 #define CYCLE_OUTPUT(name)                                                     \

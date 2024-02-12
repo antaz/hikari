@@ -526,21 +526,21 @@ server_decoration_handler(struct wl_listener *listener, void *data)
   if (wlr_decoration->surface->role == NULL) {
     return;
   }
-  struct hikari_view *view =
-      wl_container_of(wlr_decoration->surface, view, surface);
-  struct wlr_xdg_surface *xdg_surface =
-      wlr_xdg_surface_from_wlr_surface(wlr_decoration->surface);
-  struct hikari_xdg_view *xdg_view = xdg_surface->data;
+  // struct hikari_view *view =
+  //    wl_container_of(wlr_decoration->surface, view, surface);
+  // struct wlr_xdg_surface *xdg_surface =
+  //    wlr_xdg_surface_from_wlr_surface(wlr_decoration->surface);
+  // struct hikari_xdg_view *xdg_view = xdg_surface->data;
 
-  if (xdg_view == NULL) {
-    return;
-  }
+  // if (xdg_view == NULL) {
+  //   return;
+  // }
 
-  wl_signal_add(&wlr_decoration->events.mode, &xdg_view->view.decoration.mode);
-  xdg_view->view.decoration.mode.notify = server_decoration_mode_handler;
+  // wl_signal_add(&wlr_decoration->events.mode, &xdg_view->view.decoration.mode);
+  // xdg_view->view.decoration.mode.notify = server_decoration_mode_handler;
 
-  xdg_view->view.decoration.wlr_decoration = wlr_decoration;
-  xdg_view->view.decoration.view = &xdg_view->view;
+  // xdg_view->view.decoration.wlr_decoration = wlr_decoration;
+  // xdg_view->view.decoration.view = &xdg_view->view;
 }
 
 static void
@@ -696,13 +696,13 @@ output_layout_change_handler(struct wl_listener *listener, void *data)
   struct hikari_output *output;
   wl_list_for_each (output, &server->outputs, server_outputs) {
     struct wlr_output *wlr_output = output->wlr_output;
-    struct wlr_box *output_box;
-    wlr_output_layout_get_box(hikari_server.output_layout, wlr_output, output_box);
+    struct wlr_box output_box;
+    wlr_output_layout_get_box(hikari_server.output_layout, wlr_output, &output_box);
 
-    output->geometry.x = output_box->x;
-    output->geometry.y = output_box->y;
-    output->geometry.width = output_box->width;
-    output->geometry.height = output_box->height;
+    output->geometry.x = output_box.x;
+    output->geometry.y = output_box.y;
+    output->geometry.width = output_box.width;
+    output->geometry.height = output_box.height;
 
     struct hikari_output_config *output_config =
         hikari_configuration_resolve_output_config(
@@ -755,7 +755,7 @@ hikari_server_prepare_privileged(void)
     goto done;
   }
 
-  server->backend = wlr_backend_autocreate(server->event_loop, NULL);
+  server->backend = wlr_backend_autocreate(server->display, NULL);
   if (server->backend == NULL) {
     fprintf(stderr, "error: could not create backend\n");
     goto done;
@@ -1386,10 +1386,10 @@ hikari_server_session_change_vt(void *arg)
   const intptr_t vt = (intptr_t)arg;
   assert(vt >= 1 && vt <= 12);
 
-  struct wlr_session *session = wlr_backend_get_session(hikari_server.backend);
-  if (session != NULL) {
-    wlr_session_change_vt(session, vt);
-  }
+  // struct wlr_session *session = wlr_backend_get_session(hikari_server.backend);
+  // if (session != NULL) {
+  //  wlr_session_change_vt(session, vt);
+  // }
 }
 
 static void

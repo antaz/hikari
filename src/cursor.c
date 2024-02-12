@@ -191,12 +191,13 @@ hikari_cursor_set_image(struct hikari_cursor *cursor, const char *path)
   wl_list_remove(&cursor->surface_destroy.link);
   wl_list_init(&cursor->surface_destroy.link);
 
-  if (path != NULL) {
-    wlr_xcursor_manager_set_cursor_image(
-        cursor->cursor_mgr, path, cursor->wlr_cursor);
-  } else {
-    wlr_cursor_set_image(cursor->wlr_cursor, NULL, 0, 0, 0, 0, 0, 0);
-  }
+  // TODO: figure out another way to set cursor image
+  // if (path != NULL) {
+  //  wlr_xcursor_manager_set_cursor_image(
+  //      cursor->cursor_mgr, path, cursor->wlr_cursor);
+  // } else {
+  //  wlr_cursor_set_image(cursor->wlr_cursor, NULL, 0, 0, 0, 0, 0, 0);
+  // }
 }
 
 void

@@ -281,6 +281,33 @@ clear_output(struct hikari_renderer *renderer)
 }
 
 static inline void
+renderer_end(struct hikari_output *output, struct hikari_renderer *renderer)
+{
+  struct wlr_renderer *wlr_renderer = renderer->wlr_renderer;
+  struct wlr_output *wlr_output = renderer->wlr_output;
+
+  wlr_renderer_scissor(wlr_renderer, NULL);
+  wlr_output_render_software_cursors(wlr_output, NULL);
+  wlr_renderer_end(wlr_renderer);
+
+  int width, height;
+  wlr_output_transformed_resolution(wlr_output, &width, &height);
+
+  pixman_region32_t frame_damage;
+  pixman_region32_init(&frame_damage);
+
+  enum wl_output_transform transform =
+      wlr_output_transform_invert(wlr_output->transform);
+  wlr_region_transform(
+      &frame_damage, &output->damage->damage, transform, width, height);
+
+  wlr_output_set_damage(wlr_output, &frame_damage);
+  pixman_region32_fini(&frame_damage);
+
+  wlr_output_commit(wlr_output);
+}
+
+static inline void
 render_texture(struct wlr_texture *texture,
     struct wlr_output *output,
     pixman_region32_t *damage,
@@ -525,6 +552,34 @@ frame_done(struct hikari_output *output)
     layer_for_each(&output->layers[i], send_frame_done, &now);
   }
 #endif
+}
+
+void
+hikari_renderer_damage_frame_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_output *output =
+      wl_container_of(listener, output, damage_frame);
+
+  pixman_region32_t buffer_damage;
+  pixman_region32_init(&buffer_damage);
+
+  bool needs_frame;
+  // if (!wlr_output_damage_attach_render(
+  //        output->damage, &needs_frame, &buffer_damage)) {
+  //  goto render_done;
+  // }
+
+  if (!needs_frame) {
+    wlr_output_rollback(output->wlr_output);
+    goto render_done;
+  }
+
+  render_output(output, &buffer_damage);
+
+render_done:
+  pixman_region32_fini(&buffer_damage);
+
+  frame_done(output);
 }
 
 static inline void

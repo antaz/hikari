@@ -137,7 +137,7 @@ void
 hikari_keyboard_init(
     struct hikari_keyboard *keyboard, struct wlr_input_device *device)
 {
-  struct wlr_keyboard *wlr_keyboard = wlr_keybord_from_input_device(device);
+  struct wlr_keyboard *wlr_keyboard = wlr_keyboard_from_input_device(device);
   keyboard->wlr_keyboard = wlr_keyboard;
   keyboard->keymap = NULL;
 
