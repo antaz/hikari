@@ -148,7 +148,7 @@ handle_keysym(
 
 static void
 assign_mark(
-    struct wlr_event_keyboard_key *event, struct hikari_keyboard *keyboard)
+    struct wlr_keyboard_key_event *event, struct hikari_keyboard *keyboard)
 {
   assert(hikari_server.workspace->focus_view != NULL);
 
@@ -159,7 +159,7 @@ assign_mark(
 
 static void
 key_handler(
-    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
+    struct hikari_keyboard *keyboard, struct wlr_keyboard_key_event *event)
 {
   if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
     assign_mark(event, keyboard);

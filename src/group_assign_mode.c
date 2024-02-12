@@ -251,7 +251,7 @@ done:
 
 static void
 key_handler(
-    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
+    struct hikari_keyboard *keyboard, struct wlr_keyboard_key_event *event)
 {
   if (event->state == WL_KEYBOARD_KEY_STATE_PRESSED) {
     uint32_t keycode = event->keycode + 8;

@@ -4,6 +4,8 @@
 #include <string.h>
 
 #include <wlr/types/wlr_cursor.h>
+#include <wlr/types/wlr_compositor.h>
+#include <wlr/types/wlr_subcompositor.h>
 
 #include <hikari/color.h>
 #include <hikari/configuration.h>

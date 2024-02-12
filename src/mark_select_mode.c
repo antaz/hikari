@@ -12,7 +12,7 @@
 
 static void
 mark_select(struct hikari_workspace *workspace,
-    struct wlr_event_keyboard_key *event,
+    struct wlr_keyboard_key_event *event,
     struct hikari_keyboard *keyboard)
 {
   uint32_t keycode = event->keycode + 8;
@@ -33,7 +33,7 @@ mark_select(struct hikari_workspace *workspace,
 
 static void
 key_handler(
-    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
+    struct hikari_keyboard *keyboard, struct wlr_keyboard_key_event *event)
 {
   struct hikari_workspace *workspace = hikari_server.workspace;
 

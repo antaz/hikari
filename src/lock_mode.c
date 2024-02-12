@@ -173,7 +173,7 @@ enable_outputs(void)
 
 static void
 key_handler(
-    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
+    struct hikari_keyboard *keyboard, struct wlr_keyboard_key_event *event)
 {
   struct hikari_lock_mode *mode = get_mode();
 
@@ -183,7 +183,7 @@ key_handler(
     uint32_t codepoint;
 
     int nsyms = xkb_state_key_get_syms(
-        keyboard->device->keyboard->xkb_state, keycode, &syms);
+        keyboard->wlr_keyboard->xkb_state, keycode, &syms);
 
     enable_outputs();
 

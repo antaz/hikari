@@ -656,7 +656,7 @@ new_xdg_surface_handler(struct wl_listener *listener, void *data)
 static void
 setup_xdg_shell(struct hikari_server *server)
 {
-  server->xdg_shell = wlr_xdg_shell_create(server->display);
+  server->xdg_shell = wlr_xdg_shell_create(server->display, 3);
 
   server->new_xdg_surface.notify = new_xdg_surface_handler;
   wl_signal_add(
@@ -696,8 +696,8 @@ output_layout_change_handler(struct wl_listener *listener, void *data)
   struct hikari_output *output;
   wl_list_for_each (output, &server->outputs, server_outputs) {
     struct wlr_output *wlr_output = output->wlr_output;
-    struct wlr_box *output_box =
-        wlr_output_layout_get_box(hikari_server.output_layout, wlr_output);
+    struct wlr_box *output_box;
+    wlr_output_layout_get_box(hikari_server.output_layout, wlr_output, output_box);
 
     output->geometry.x = output_box->x;
     output->geometry.y = output_box->y;
@@ -755,7 +755,7 @@ hikari_server_prepare_privileged(void)
     goto done;
   }
 
-  server->backend = wlr_backend_autocreate(server->display);
+  server->backend = wlr_backend_autocreate(server->event_loop, NULL);
   if (server->backend == NULL) {
     fprintf(stderr, "error: could not create backend\n");
     goto done;
@@ -850,7 +850,7 @@ server_init(struct hikari_server *server, char *config_path)
 
   setenv("WAYLAND_DISPLAY", server->socket, true);
 
-  server->compositor = wlr_compositor_create(server->display, server->renderer);
+  server->compositor = wlr_compositor_create(server->display, 5, server->renderer);
 
   server->data_device_manager = wlr_data_device_manager_create(server->display);
 

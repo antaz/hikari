@@ -140,7 +140,7 @@ hikari_output_enable(struct hikari_output *output)
 
   wl_list_remove(&output->damage_frame.link);
   output->damage_frame.notify = hikari_renderer_damage_frame_handler;
-  wl_signal_add(&output->damage->events.frame, &output->damage_frame);
+  // wl_signal_add(&output->damage->events.frame, &output->damage_frame);
 
   wlr_output_enable(wlr_output, true);
   wlr_output_commit(wlr_output);
@@ -152,17 +152,17 @@ hikari_output_enable(struct hikari_output *output)
 static void
 output_geometry(struct hikari_output *output)
 {
-  struct wlr_box *output_box = wlr_output_layout_get_box(
-      hikari_server.output_layout, output->wlr_output);
+  wlr_output_layout_get_box(
+      hikari_server.output_layout, NULL, output->wlr_output);
 
-  output->geometry.x = output_box->x;
-  output->geometry.y = output_box->y;
-  output->geometry.width = output_box->width;
-  output->geometry.height = output_box->height;
+  // output->geometry.x = output_box->x;
+  // output->geometry.y = output_box->y;
+  // output->geometry.width = output_box->width;
+  // output->geometry.height = output_box->height;
 
-  output->usable_area = (struct wlr_box){
-    .x = 0, .y = 0, .width = output_box->width, .height = output_box->height
-  };
+  // output->usable_area = (struct wlr_box){
+  //  .x = 0, .y = 0, .width = output_box->width, .height = output_box->height
+  // };
 }
 
 /* static void */
@@ -252,7 +252,7 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
     wl_list_insert(&hikari_server.outputs, &output->server_outputs);
 
     output->damage_destroy.notify = damage_destroy_handler;
-    wl_signal_add(&output->damage->events.destroy, &output->damage_destroy);
+    // wl_signal_add(&output->damage->events.destroy, &output->damage_destroy);
 
     if (!wl_list_empty(&wlr_output->modes)) {
       struct wlr_output_mode *mode =

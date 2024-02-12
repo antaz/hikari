@@ -218,10 +218,10 @@ motion_absolute_handler(struct wl_listener *listener, void *data)
 
   assert(!hikari_server_in_lock_mode());
 
-  struct wlr_event_pointer_motion_absolute *event = data;
+  struct wlr_pointer_motion_absolute_event *event = data;
 
   wlr_cursor_warp_absolute(
-      cursor->wlr_cursor, event->device, event->x, event->y);
+      cursor->wlr_cursor, &event->pointer->base, event->x, event->y);
 
   hikari_server.mode->cursor_move(event->time_msec);
 }
@@ -241,10 +241,10 @@ motion_handler(struct wl_listener *listener, void *data)
 
   assert(!hikari_server_in_lock_mode());
 
-  struct wlr_event_pointer_motion *event = data;
+  struct wlr_pointer_motion_event *event = data;
 
   wlr_cursor_move(
-      cursor->wlr_cursor, event->device, event->delta_x, event->delta_y);
+      cursor->wlr_cursor, &event->pointer->base, event->delta_x, event->delta_y);
 
   hikari_server.mode->cursor_move(event->time_msec);
 }
@@ -265,7 +265,7 @@ axis_handler(struct wl_listener *listener, void *data)
 {
   assert(!hikari_server_in_lock_mode());
 
-  struct wlr_event_pointer_axis *event = data;
+  struct wlr_pointer_axis_event *event = data;
 
   wlr_seat_pointer_notify_axis(hikari_server.seat,
       event->time_msec,
