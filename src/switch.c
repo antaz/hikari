@@ -61,7 +61,7 @@ hikari_switch_init(struct hikari_switch *swtch, struct wlr_input_device *device)
   swtch->destroy.notify = destroy_handler;
   // wl_signal_add(&wlr_switch->events.destroy, &swtch->destroy);
 
-  wl_list_init(&wlr_switch->events.toggle);
+  // wl_list_init(&wlr_switch->events.toggle);
 
   wl_list_insert(&hikari_server.switches, &swtch->server_switches);
 }

@@ -11,6 +11,7 @@
 #include <wlr/types/wlr_output_layout.h>
 #include <wlr/types/wlr_compositor.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_scene.h>
 #include <wlr/util/edges.h>
 
 #include <hikari/configuration.h>
@@ -36,7 +37,7 @@ set_title_handler(struct wl_listener *listener, void *data)
       wl_container_of(listener, xdg_view, set_title);
 
   hikari_view_set_title(
-      (struct hikari_view *)xdg_view, xdg_view->surface->toplevel->title);
+      (struct hikari_view *)xdg_view, xdg_view->xdg_toplevel->title);
 }
 
 static void
@@ -46,7 +47,7 @@ commit_handler(struct wl_listener *listener, void *data)
       wl_container_of(listener, xdg_view, commit);
 
   struct hikari_view *view = (struct hikari_view *)xdg_view;
-  struct wlr_xdg_surface *surface = xdg_view->surface;
+  struct wlr_xdg_surface *surface = xdg_view->xdg_toplevel->base;
   uint32_t serial = surface->current.configure_serial;
 
   assert(view->surface != NULL);
@@ -60,14 +61,14 @@ commit_handler(struct wl_listener *listener, void *data)
       case HIKARI_OPERATION_TYPE_FULL_MAXIMIZE:
       case HIKARI_OPERATION_TYPE_VERTICAL_MAXIMIZE:
       case HIKARI_OPERATION_TYPE_HORIZONTAL_MAXIMIZE:
-        wlr_xdg_toplevel_set_tiled(surface,
-            WLR_EDGE_LEFT | WLR_EDGE_RIGHT | WLR_EDGE_TOP | WLR_EDGE_BOTTOM);
+        // wlr_xdg_toplevel_set_tiled(surface,
+        //     WLR_EDGE_LEFT | WLR_EDGE_RIGHT | WLR_EDGE_TOP | WLR_EDGE_BOTTOM);
         break;
 
       case HIKARI_OPERATION_TYPE_RESET:
       case HIKARI_OPERATION_TYPE_UNMAXIMIZE:
-        wlr_xdg_toplevel_set_tiled(surface, WLR_EDGE_NONE);
-        break;
+        // wlr_xdg_toplevel_set_tiled(surface, WLR_EDGE_NONE);
+        // break;
 
       case HIKARI_OPERATION_TYPE_RESIZE:
         break;
@@ -111,7 +112,7 @@ commit_handler(struct wl_listener *listener, void *data)
 static inline const char *
 get_app_id(struct hikari_xdg_view *xdg_view)
 {
-  const char *app_id = xdg_view->surface->toplevel->app_id;
+  const char *app_id = xdg_view->xdg_toplevel->app_id;
 
   return app_id == NULL ? "" : app_id;
 }
@@ -119,7 +120,7 @@ get_app_id(struct hikari_xdg_view *xdg_view)
 static void
 first_map(struct hikari_xdg_view *xdg_view, bool *focus)
 {
-  struct wlr_xdg_surface *xdg_surface = xdg_view->surface;
+  struct wlr_xdg_surface *xdg_surface = xdg_view->xdg_toplevel->base;
   assert(xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
   struct hikari_view *view = (struct hikari_view *)xdg_view;
@@ -138,8 +139,8 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
 
   struct wlr_xdg_toplevel *xdg_toplevel = xdg_surface->toplevel;
 
-  hikari_view_set_title(view, xdg_toplevel->title);
-  hikari_view_configure(view, app_id, view_config);
+  // hikari_view_set_title(view, xdg_toplevel->title);
+  // hikari_view_configure(view, app_id, view_config);
 }
 
 static struct wlr_surface *
@@ -155,7 +156,7 @@ surface_at(
   double x = ox - geometry->x;
   double y = oy - geometry->y;
 
-  return wlr_xdg_surface_surface_at(xdg_view->surface, x, y, sx, sy);
+  return wlr_xdg_surface_surface_at(xdg_view->xdg_toplevel->base, x, y, sx, sy);
 }
 
 static void
@@ -166,11 +167,11 @@ map(struct hikari_view *view, bool focus)
 #endif
 
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
-  struct wlr_xdg_surface *xdg_surface = xdg_view->surface;
+  struct wlr_xdg_surface *xdg_surface = xdg_view->xdg_toplevel->base;
 
   xdg_view->set_title.notify = set_title_handler;
   wl_signal_add(
-      &xdg_view->surface->toplevel->events.set_title, &xdg_view->set_title);
+      &xdg_view->xdg_toplevel->events.set_title, &xdg_view->set_title);
 
   xdg_view->request_fullscreen.notify = request_fullscreen_handler;
   wl_signal_add(&xdg_surface->toplevel->events.request_fullscreen,
@@ -180,7 +181,7 @@ map(struct hikari_view *view, bool focus)
   wl_signal_add(&xdg_surface->events.new_popup, &xdg_view->new_popup);
 
   xdg_view->commit.notify = commit_handler;
-  wl_signal_add(&xdg_view->surface->surface->events.commit, &xdg_view->commit);
+  wl_signal_add(&xdg_view->xdg_toplevel->base->surface->events.commit, &xdg_view->commit);
 
   hikari_view_map(view, xdg_surface->surface);
 }
@@ -197,7 +198,8 @@ map_handler(struct wl_listener *listener, void *data)
     first_map(xdg_view, &focus);
   }
 
-  map(view, focus);
+
+  // map(view, focus);
 }
 
 static void
@@ -209,7 +211,7 @@ unmap(struct hikari_view *view)
 
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
 
-  assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
+  assert(xdg_view->xdg_toplevel->base->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
   hikari_view_unmap(view);
 
@@ -232,8 +234,8 @@ activate(struct hikari_view *view, bool active)
 {
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
 
-  if (xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-    wlr_xdg_toplevel_set_activated(xdg_view->surface, active);
+  if (xdg_view->xdg_toplevel->base->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
+    // wlr_xdg_toplevel_set_activated(xdg_view->surface, active);
 
     hikari_view_damage_whole(view);
   }
@@ -244,8 +246,8 @@ resize(struct hikari_view *view, int width, int height)
 {
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
 
-  if (xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
-    return wlr_xdg_toplevel_set_size(xdg_view->surface, width, height);
+  if (xdg_view->xdg_toplevel->base->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
+    // return wlr_xdg_toplevel_set_size(xdg_view->surface, width, height);
   }
 
   return 0;
@@ -256,7 +258,7 @@ quit(struct hikari_view *view)
 {
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
 
-  wlr_xdg_toplevel_send_close(xdg_view->surface);
+  // wlr_xdg_toplevel_send_close(xdg_view->surface);
 }
 
 static void
@@ -294,7 +296,7 @@ for_each_surface(struct hikari_node *node,
 {
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)node;
 
-  wlr_xdg_surface_for_each_surface(xdg_view->surface, func, data);
+  wlr_xdg_surface_for_each_surface(xdg_view->xdg_toplevel->base, func, data);
 }
 
 static void
@@ -429,8 +431,8 @@ request_fullscreen_handler(struct wl_listener *listener, void *data)
   struct hikari_xdg_view *xdg_view =
       wl_container_of(listener, xdg_view, request_fullscreen);
 
-  if (xdg_view->surface->initialized) {
-    wlr_xdg_surface_schedule_configure(xdg_view->surface);
+  if (xdg_view->xdg_toplevel->base->initialized) {
+    wlr_xdg_surface_schedule_configure(xdg_view->xdg_toplevel->base);
   }
 }
 
@@ -442,7 +444,7 @@ constraints(struct hikari_view *view,
     int *max_height)
 {
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
-  struct wlr_xdg_toplevel_state *state = &xdg_view->surface->toplevel->current;
+  struct wlr_xdg_toplevel_state *state = &xdg_view->xdg_toplevel->base->toplevel->current;
 
   *min_width = state->min_width > 0 ? state->min_width : 0;
   *min_height = state->min_height > 0 ? state->min_height : 0;
@@ -467,12 +469,11 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
   printf("NEW XDG %p\n", xdg_view);
 #endif
 
-  xdg_view->view.node.surface_at = surface_at;
 
-  wlr_xdg_surface_ping(xdg_surface);
-
-  xdg_view->surface = xdg_surface;
-  xdg_view->surface->data = xdg_view;
+  xdg_view->xdg_toplevel = xdg_surface->toplevel;
+  xdg_view->scene_tree = wlr_scene_xdg_surface_create(&hikari_server.scene->tree, xdg_view->xdg_toplevel->base);
+  xdg_view->scene_tree->node.data = xdg_view;
+  xdg_surface->data = xdg_view->scene_tree;
 
   xdg_view->map.notify = map_handler;
   wl_signal_add(&xdg_surface->surface->events.map, &xdg_view->map);
@@ -480,19 +481,39 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
   xdg_view->unmap.notify = unmap_handler;
   wl_signal_add(&xdg_surface->surface->events.unmap, &xdg_view->unmap);
 
+
   xdg_view->destroy.notify = destroy_handler;
   wl_signal_add(&xdg_surface->surface->events.destroy, &xdg_view->destroy);
 
-  assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
+  struct wlr_xdg_toplevel *xdg_toplevel = xdg_surface->toplevel;
 
-  xdg_view->view.node.focus = focus;
-  xdg_view->view.node.for_each_surface = for_each_surface;
-  xdg_view->view.activate = activate;
-  xdg_view->view.resize = resize;
-  xdg_view->view.quit = quit;
-  xdg_view->view.constraints = constraints;
-#ifdef HAVE_XWAYLAND
-  xdg_view->view.move = NULL;
-  xdg_view->view.move_resize = NULL;
-#endif
+
+//   xdg_view->view.node.surface_at = surface_at;
+
+//   wlr_xdg_surface_ping(xdg_surface);
+
+//   xdg_view->surface = xdg_surface;
+//   xdg_view->surface->data = xdg_view;
+
+//   xdg_view->map.notify = map_handler;
+//   wl_signal_add(&xdg_surface->surface->events.map, &xdg_view->map);
+
+//   xdg_view->unmap.notify = unmap_handler;
+//   wl_signal_add(&xdg_surface->surface->events.unmap, &xdg_view->unmap);
+
+//   xdg_view->destroy.notify = destroy_handler;
+//   wl_signal_add(&xdg_surface->surface->events.destroy, &xdg_view->destroy);
+
+//   assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
+
+//   xdg_view->view.node.focus = focus;
+//   xdg_view->view.node.for_each_surface = for_each_surface;
+//   xdg_view->view.activate = activate;
+//   xdg_view->view.resize = resize;
+//   xdg_view->view.quit = quit;
+//   xdg_view->view.constraints = constraints;
+// #ifdef HAVE_XWAYLAND
+//   xdg_view->view.move = NULL;
+//   xdg_view->view.move_resize = NULL;
+// #endif
 }

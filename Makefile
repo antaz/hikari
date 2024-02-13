@@ -89,7 +89,7 @@ CFLAGS += ${CFLAGS_EXTRA}
 LDFLAGS += ${LDFLAGS_EXTRA}
 
 .ifdef DEBUG
-CFLAGS += -g -O0 -fsanitize=address
+CFLAGS += -g -Werror -Wno-unused-function -Wno-unused-variable -O0 -fsanitize=address
 .else
 CFLAGS += -DNDEBUG
 .endif
@@ -126,10 +126,10 @@ CFLAGS += -DHAVE_VIRTUAL_INPUT=1
 
 CFLAGS += -Wall -I. -Iinclude -DHIKARI_ETC_PREFIX=${ETC_PREFIX}
 
-WLROOTS_CFLAGS != ${PKG_CONFIG} --cflags wlroots
-WLROOTS_LIBS != ${PKG_CONFIG} --libs wlroots
+WLROOTS_CFLAGS != ${PKG_CONFIG} --cflags "wlroots >= 0.17.0"
+WLROOTS_LIBS != ${PKG_CONFIG} --libs "wlroots >= 0.17.0"
 
-WLROOTS_CFLAGS += -DWLR_USE_UNSTABLE=1
+WLROOTS_CFLAGS += -DWLR_USE_UNSTABLE
 
 PANGO_CFLAGS != ${PKG_CONFIG} --cflags pangocairo
 PANGO_LIBS != ${PKG_CONFIG} --libs pangocairo

@@ -52,6 +52,8 @@ struct hikari_server {
   struct wlr_backend *backend;
   struct wlr_renderer *renderer;
   struct wlr_allocator *allocator;
+  struct wlr_scene *scene;
+  struct wlr_scene_output_layout *scene_layout;
   struct wlr_xdg_output_manager_v1 *output_manager;
   struct wlr_data_device_manager *data_device_manager;
 
@@ -109,6 +111,8 @@ struct hikari_server {
   struct wl_list groups;
   struct wl_list visible_groups;
   struct wl_list visible_views;
+
+  struct wl_list toplevels;
 
   struct hikari_mode *mode;
 

@@ -70,7 +70,7 @@ modifiers_handler(struct hikari_keyboard *keyboard)
 
 static void
 button_handler(
-    struct hikari_cursor *cursor, struct wlr_event_pointer_button *event)
+    struct hikari_cursor *cursor, struct wlr_pointer_button_event *event)
 {}
 
 static void

@@ -30,7 +30,7 @@ static void
 key_handler(struct wl_listener *listener, void *data)
 {
   struct hikari_keyboard *keyboard = wl_container_of(listener, keyboard, key);
-  struct wlr_event_keyboard_key *event = data;
+  struct wlr_keyboard_key_event *event = data;
 
   hikari_server.mode->key_handler(keyboard, event);
 }
@@ -150,7 +150,7 @@ hikari_keyboard_init(
   keyboard->destroy.notify = destroy_handler;
   wl_signal_add(&device->events.destroy, &keyboard->destroy);
 
-  wlr_seat_set_keyboard(hikari_server.seat, device);
+  wlr_seat_set_keyboard(hikari_server.seat, wlr_keyboard);
 
   wl_list_insert(&hikari_server.keyboards, &keyboard->server_keyboards);
 

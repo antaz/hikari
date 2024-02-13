@@ -12,7 +12,8 @@ struct hikari_renderer;
 struct hikari_xdg_view {
   struct hikari_view view;
 
-  struct wlr_xdg_surface *surface;
+  struct wlr_xdg_toplevel *xdg_toplevel;
+  struct wlr_scene_tree *scene_tree;
 
   struct wl_listener map;
   struct wl_listener unmap;
@@ -20,6 +21,9 @@ struct hikari_xdg_view {
   struct wl_listener commit;
   struct wl_listener new_popup;
   struct wl_listener set_title;
+  struct wl_listener request_move;
+  struct wl_listener request_resize;
+  struct wl_listener request_maximize;
   struct wl_listener request_fullscreen;
 };
 

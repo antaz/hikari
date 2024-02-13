@@ -3,6 +3,7 @@
 #include <drm_fourcc.h>
 
 #include <wlr/backend.h>
+#include <wlr/types/wlr_scene.h>
 
 #include <hikari/memory.h>
 #include <hikari/renderer.h>
@@ -117,12 +118,15 @@ hikari_output_disable(struct hikari_output *output)
 
   struct wlr_output *wlr_output = output->wlr_output;
 
-  wl_list_remove(&output->damage_frame.link);
-  wl_list_init(&output->damage_frame.link);
+  wl_list_remove(&output->frame.link);
+  wl_list_remove(&output->request_state.link);
+  // TODO: manage damage tracking using wlr_scene
+  // wl_list_remove(&output->damage_frame.link);
+  // wl_list_init(&output->damage_frame.link);
 
   wlr_output_rollback(wlr_output);
   wlr_output_enable(wlr_output, false);
-  wlr_output_commit(wlr_output);
+  // wlr_output_commit(wlr_output);
 
   output->enabled = false;
 }
@@ -138,13 +142,13 @@ hikari_output_enable(struct hikari_output *output)
 
   struct wlr_output *wlr_output = output->wlr_output;
 
-  wl_list_remove(&output->damage_frame.link);
-  output->damage_frame.notify = hikari_renderer_damage_frame_handler;
-  // wl_signal_add(&output->damage->events.frame, &output->damage_frame);
+  // wl_list_remove(&output->damage_frame.link);
+  // output->damage_frame.notify = hikari_renderer_damage_frame_handler;
+  // // wl_signal_add(&output->damage->events.frame, &output->damage_frame);
 
-  wlr_output_enable(wlr_output, true);
-  wlr_output_commit(wlr_output);
-  hikari_output_damage_whole(output);
+  // wlr_output_enable(wlr_output, true);
+  // wlr_output_commit(wlr_output);
+  // hikari_output_damage_whole(output);
 
   output->enabled = true;
 }
@@ -152,8 +156,8 @@ hikari_output_enable(struct hikari_output *output)
 static void
 output_geometry(struct hikari_output *output)
 {
-  wlr_output_layout_get_box(
-      hikari_server.output_layout, NULL, output->wlr_output);
+  // wlr_output_layout_get_box(
+  //     hikari_server.output_layout, NULL, output->wlr_output);
 
   // output->geometry.x = output_box->x;
   // output->geometry.y = output_box->y;
@@ -180,15 +184,6 @@ output_geometry(struct hikari_output *output)
 /*   output_geometry(output); */
 /* } */
 
-static void
-damage_destroy_handler(struct wl_listener *listener, void *data)
-{
-  struct hikari_output *output =
-      wl_container_of(listener, output, damage_destroy);
-
-  hikari_output_disable(output);
-}
-
 #ifdef HAVE_LAYERSHELL
 static void
 close_layers(struct wl_list *layers)
@@ -200,6 +195,31 @@ close_layers(struct wl_list *layers)
   }
 }
 #endif
+
+static void
+frame_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_output *output = wl_container_of(listener, output, frame);
+  struct wlr_scene *scene = output->server->scene;
+
+  struct wlr_scene_output *scene_output = wlr_scene_get_scene_output(
+    scene, output->wlr_output);
+
+  wlr_scene_output_commit(scene_output, NULL);
+
+  struct timespec now;
+  clock_gettime(CLOCK_MONOTONIC, &now);
+  wlr_scene_output_send_frame_done(scene_output, &now);
+}
+
+
+static void
+request_state_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_output *output = wl_container_of(listener, output, request_state);
+  const struct wlr_output_event_request_state *event = data;
+  wlr_output_commit_state(output->wlr_output, event->state);
+}
 
 static void
 destroy_handler(struct wl_listener *listener, void *data)
@@ -222,7 +242,6 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
   bool noop = wlr_output->backend == hikari_server.noop_backend;
 
   output->wlr_output = wlr_output;
-  // output->damage = wlr_output_damage_create(wlr_output);
   output->background = NULL;
   output->enabled = false;
   output->workspace = hikari_malloc(sizeof(struct hikari_workspace));
@@ -241,7 +260,11 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 
   hikari_workspace_init(output->workspace, output);
 
-  wlr_output->data = output;
+  output->frame.notify = frame_handler;
+  wl_signal_add(&wlr_output->events.frame, &output->frame);
+
+  output->request_state.notify = request_state_handler;
+  wl_signal_add(&wlr_output->events.request_state, &output->request_state);
 
   output->destroy.notify = destroy_handler;
   wl_signal_add(&wlr_output->events.destroy, &output->destroy);
@@ -251,16 +274,18 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 
     wl_list_insert(&hikari_server.outputs, &output->server_outputs);
 
-    // output->damage_destroy.notify = damage_destroy_handler;
-    // wl_signal_add(&output->damage->events.destroy, &output->damage_destroy);
+    struct wlr_output_state state;
+    wlr_output_state_init(&state);
+    wlr_output_state_set_enabled(&state, true);
 
     if (!wl_list_empty(&wlr_output->modes)) {
       struct wlr_output_mode *mode =
           wl_container_of(wlr_output->modes.next, mode, link);
-      wlr_output_set_mode(wlr_output, mode);
+      wlr_output_state_set_mode(&state, mode);
     }
 
-    wl_list_init(&output->damage_frame.link);
+    wlr_output_commit_state(wlr_output, &state);
+    wlr_output_state_finish(&state);
 
     if (!hikari_server_in_lock_mode()) {
       hikari_output_enable(output);
@@ -273,22 +298,25 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
         hikari_configuration_resolve_output_config(
             hikari_configuration, wlr_output->name);
 
+    struct wlr_output_layout_output *l_output;
     if (output_config != NULL && output_config->position.value.type ==
                                      HIKARI_POSITION_CONFIG_TYPE_ABSOLUTE) {
       int x = output_config->position.value.config.absolute.x;
       int y = output_config->position.value.config.absolute.y;
 
-      wlr_output_layout_add(hikari_server.output_layout, wlr_output, x, y);
+      l_output = wlr_output_layout_add(hikari_server.output_layout, wlr_output, x, y);
     } else {
-      wlr_output_layout_add_auto(hikari_server.output_layout, wlr_output);
+      l_output = wlr_output_layout_add_auto(hikari_server.output_layout, wlr_output);
     }
+    struct wlr_scene_output *scene_output = wlr_scene_output_create(hikari_server.scene, wlr_output);
+    wlr_scene_output_layout_add_output(hikari_server.scene_layout, l_output, scene_output);
 
-    output_geometry(output);
+    // output_geometry(output);
 
     if (first) {
-      hikari_workspace_merge(
-          hikari_server.noop_output->workspace, output->workspace);
-      hikari_workspace_focus_view(output->workspace, NULL);
+      // hikari_workspace_merge(
+      //     hikari_server.noop_output->workspace, output->workspace);
+      // hikari_workspace_focus_view(output->workspace, NULL);
     }
   }
 }
@@ -307,7 +335,7 @@ hikari_output_fini(struct hikari_output *output)
 
   hikari_output_disable(output);
 
-  wl_list_remove(&output->destroy.link);
+  // wl_list_remove(&output->destroy.link);
 
   struct hikari_workspace *workspace = output->workspace;
 
@@ -336,8 +364,8 @@ hikari_output_fini(struct hikari_output *output)
       hikari_server.workspace = merge_workspace;
     }
 
-    wl_list_remove(&output->server_outputs);
-    wl_list_remove(&output->damage_destroy.link);
+    // wl_list_remove(&output->server_outputs);
+    // wl_list_remove(&output->damage_destroy.link);
   } else {
     hikari_server.workspace = NULL;
   }

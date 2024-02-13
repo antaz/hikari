@@ -298,8 +298,8 @@ renderer_end(struct hikari_output *output, struct hikari_renderer *renderer)
 
   enum wl_output_transform transform =
       wlr_output_transform_invert(wlr_output->transform);
-  wlr_region_transform(
-      &frame_damage, &output->damage->damage, transform, width, height);
+  // wlr_region_transform(
+  //     &frame_damage, &output->damage->damage, transform, width, height);
 
   wlr_output_set_damage(wlr_output, &frame_damage);
   pixman_region32_fini(&frame_damage);
@@ -557,29 +557,29 @@ frame_done(struct hikari_output *output)
 void
 hikari_renderer_damage_frame_handler(struct wl_listener *listener, void *data)
 {
-  struct hikari_output *output =
-      wl_container_of(listener, output, damage_frame);
+//   struct hikari_output *output =
+//       wl_container_of(listener, output, damage_frame);
 
-  pixman_region32_t buffer_damage;
-  pixman_region32_init(&buffer_damage);
+//   pixman_region32_t buffer_damage;
+//   pixman_region32_init(&buffer_damage);
 
-  bool needs_frame;
-  // if (!wlr_output_damage_attach_render(
-  //        output->damage, &needs_frame, &buffer_damage)) {
-  //  goto render_done;
-  // }
+//   bool needs_frame;
+//   // if (!wlr_output_damage_attach_render(
+//   //        output->damage, &needs_frame, &buffer_damage)) {
+//   //  goto render_done;
+//   // }
 
-  if (!needs_frame) {
-    wlr_output_rollback(output->wlr_output);
-    goto render_done;
-  }
+//   if (!needs_frame) {
+//     wlr_output_rollback(output->wlr_output);
+//     goto render_done;
+//   }
 
-  render_output(output, &buffer_damage);
+//   render_output(output, &buffer_damage);
 
-render_done:
-  pixman_region32_fini(&buffer_damage);
+// render_done:
+//   pixman_region32_fini(&buffer_damage);
 
-  frame_done(output);
+//   frame_done(output);
 }
 
 static inline void

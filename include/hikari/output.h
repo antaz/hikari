@@ -9,20 +9,22 @@
 #include <wlr/types/wlr_output.h>
 #include <wlr/types/wlr_compositor.h>
 
+#include <hikari/server.h>
 #include <hikari/output_config.h>
 
 struct hikari_renderer;
 
 struct hikari_output {
+  struct hikari_server *server;
   struct wlr_output *wlr_output;
   struct wlr_output_event_damage *damage;
   struct hikari_workspace *workspace;
 
   bool enabled;
 
-  struct wl_listener damage_frame;
+  struct wl_listener frame;
+  struct wl_listener request_state;
   struct wl_listener destroy;
-  struct wl_listener damage_destroy;
   /* struct wl_listener mode; */
 
 #ifdef HAVE_LAYERSHELL

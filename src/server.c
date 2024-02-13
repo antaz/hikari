@@ -22,6 +22,10 @@
 #include <wlr/types/wlr_server_decoration.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_scene.h>
+#include <wlr/types/wlr_subcompositor.h>
+#include <wlr/types/wlr_data_device.h>
+#include <wlr/types/wlr_seat.h>
 
 #ifdef HAVE_LAYERSHELL
 #include <wlr/types/wlr_layer_shell_v1.h>
@@ -71,9 +75,9 @@ add_pointer(struct hikari_server *server, struct wlr_input_device *device)
       hikari_configuration_resolve_pointer_config(
           hikari_configuration, device->name);
 
-  if (pointer_config != NULL) {
-    hikari_pointer_configure(pointer, pointer_config);
-  }
+  // if (pointer_config != NULL) {
+  //   hikari_pointer_configure(pointer, pointer_config);
+  // }
 
   wlr_cursor_attach_input_device(server->cursor.wlr_cursor, device);
   wlr_cursor_map_input_to_output(server->cursor.wlr_cursor, device, NULL);
@@ -120,7 +124,7 @@ add_input(struct hikari_server *server, struct wlr_input_device *device)
 
   switch (device->type) {
     case WLR_INPUT_DEVICE_KEYBOARD:
-      add_keyboard(server, device);
+      // add_keyboard(server, device);
       break;
 
     case WLR_INPUT_DEVICE_POINTER:
@@ -128,7 +132,7 @@ add_input(struct hikari_server *server, struct wlr_input_device *device)
       break;
 
     case WLR_INPUT_DEVICE_SWITCH:
-      add_switch(server, device);
+      // add_switch(server, device);
       break;
 
     default:
@@ -141,9 +145,9 @@ add_input(struct hikari_server *server, struct wlr_input_device *device)
   }
   wlr_seat_set_capabilities(server->seat, caps);
 
-  if ((caps & WL_SEAT_CAPABILITY_POINTER) != 0) {
-    hikari_cursor_reset_image(&server->cursor);
-  }
+  // if ((caps & WL_SEAT_CAPABILITY_POINTER) != 0) {
+  //   hikari_cursor_reset_image(&server->cursor);
+  // }
 }
 
 static void
@@ -214,6 +218,8 @@ new_output_handler(struct wl_listener *listener, void *data)
 
   struct wlr_output *wlr_output = data;
   struct hikari_output *output = hikari_malloc(sizeof(struct hikari_output));
+  output->wlr_output = wlr_output;
+  output->server = server;
 
   if (!wlr_output_init_render(
           wlr_output, server->allocator, server->renderer)) {
@@ -221,7 +227,7 @@ new_output_handler(struct wl_listener *listener, void *data)
   }
 
   hikari_output_init(output, wlr_output);
-  hikari_cursor_reset_image(&server->cursor);
+  // hikari_cursor_reset_image(&server->cursor);
 }
 
 static bool
@@ -654,6 +660,13 @@ new_xdg_surface_handler(struct wl_listener *listener, void *data)
 }
 
 static void
+setup_scene_graph(struct hikari_server *server)
+{
+  server->scene = wlr_scene_create();
+  server->scene_layout = wlr_scene_attach_output_layout(server->scene, server->output_layout);
+}
+
+static void
 setup_xdg_shell(struct hikari_server *server)
 {
   server->xdg_shell = wlr_xdg_shell_create(server->display, 3);
@@ -852,6 +865,9 @@ server_init(struct hikari_server *server, char *config_path)
 
   server->compositor = wlr_compositor_create(server->display, 5, server->renderer);
 
+  // TODO: figure out what to do with this
+  wlr_subcompositor_create(server->display);
+
   server->data_device_manager = wlr_data_device_manager_create(server->display);
 
   server->new_input.notify = new_input_handler;
@@ -865,6 +881,7 @@ server_init(struct hikari_server *server, char *config_path)
   wl_signal_add(
       &server->output_layout->events.change, &server->output_layout_change);
 
+  wl_list_init(&server->outputs);
   server->new_output.notify = new_output_handler;
   wl_signal_add(&server->backend->events.new_output, &server->new_output);
 
@@ -876,20 +893,21 @@ server_init(struct hikari_server *server, char *config_path)
   wlr_screencopy_manager_v1_create(server->display);
 #endif
 
-#ifdef HAVE_XWAYLAND
-  setup_xwayland(server);
-#endif
+// #ifdef HAVE_XWAYLAND
+//   setup_xwayland(server);
+// #endif
+  setup_scene_graph(server);
   setup_cursor(server);
-#ifdef HAVE_VIRTUAL_INPUT
-  setup_virtual_keyboard(server);
-  setup_virtual_pointer(server);
-#endif
+// #ifdef HAVE_VIRTUAL_INPUT
+//   setup_virtual_keyboard(server);
+//   setup_virtual_pointer(server);
+// #endif
   setup_decorations(server);
   setup_selection(server);
   setup_xdg_shell(server);
-#ifdef HAVE_LAYERSHELL
-  setup_layer_shell(server);
-#endif
+// #ifdef HAVE_LAYERSHELL
+//   setup_layer_shell(server);
+// #endif
 
   wl_list_init(&server->pointers);
   wl_list_init(&server->keyboards);
@@ -899,21 +917,21 @@ server_init(struct hikari_server *server, char *config_path)
   wl_list_init(&server->visible_groups);
   wl_list_init(&server->visible_views);
 
-  hikari_dnd_mode_init(&server->dnd_mode);
-  hikari_group_assign_mode_init(&server->group_assign_mode);
-  hikari_input_grab_mode_init(&server->input_grab_mode);
-  hikari_layout_select_mode_init(&server->layout_select_mode);
-  hikari_lock_mode_init(&server->lock_mode);
-  hikari_mark_assign_mode_init(&server->mark_assign_mode);
-  hikari_mark_select_mode_init(&server->mark_select_mode);
-  hikari_move_mode_init(&server->move_mode);
-  hikari_normal_mode_init(&server->normal_mode);
-  hikari_resize_mode_init(&server->resize_mode);
-  hikari_sheet_assign_mode_init(&server->sheet_assign_mode);
+//   hikari_dnd_mode_init(&server->dnd_mode);
+//   hikari_group_assign_mode_init(&server->group_assign_mode);
+//   hikari_input_grab_mode_init(&server->input_grab_mode);
+//   hikari_layout_select_mode_init(&server->layout_select_mode);
+//   hikari_lock_mode_init(&server->lock_mode);
+//   hikari_mark_assign_mode_init(&server->mark_assign_mode);
+//   hikari_mark_select_mode_init(&server->mark_select_mode);
+//   hikari_move_mode_init(&server->move_mode);
+//   hikari_normal_mode_init(&server->normal_mode);
+//   hikari_resize_mode_init(&server->resize_mode);
+//   hikari_sheet_assign_mode_init(&server->sheet_assign_mode);
 
-  hikari_marks_init();
+//   hikari_marks_init();
 
-  init_noop_output(server);
+  // init_noop_output(server);
 }
 
 static void
