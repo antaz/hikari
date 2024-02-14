@@ -17,8 +17,6 @@ struct hikari_cursor {
   struct wl_listener frame;
   struct wl_listener axis;
   struct wl_listener button;
-  struct wl_listener surface_destroy;
-  struct wl_listener request_set_cursor;
 
   struct hikari_binding_group bindings[HIKARI_BINDING_GROUP_MASK];
 };

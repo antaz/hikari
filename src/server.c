@@ -341,82 +341,104 @@ node_at(double lx,
 {
   assert(hikari_server.workspace != NULL);
 
-  struct wlr_output *wlr_output =
-      wlr_output_layout_output_at(hikari_server.output_layout, lx, ly);
+struct wlr_scene_node *node = wlr_scene_node_at(
+    &hikari_server.scene->tree.node, lx, ly, sx, sy);
 
-  if (wlr_output == NULL) {
-    *workspace = hikari_server.workspace;
+if (node == NULL || node->type != WLR_SCENE_NODE_BUFFER) {
     return NULL;
   }
 
-  struct hikari_output *output = wlr_output->data;
-  struct hikari_workspace *output_workspace = output->workspace;
-
-  *workspace = output_workspace;
-
-  struct hikari_node *node;
-  double ox = lx - output->geometry.x;
-  double oy = ly - output->geometry.y;
-
-#ifdef HAVE_LAYERSHELL
-  if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
-          ox,
-          oy,
-          surface,
-          sx,
-          sy,
-          &node)) {
-    return node;
-  }
-#endif
-
-#ifdef HAVE_XWAYLAND
-  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = NULL;
-  wl_list_for_each (xwayland_unmanaged_view,
-      &output->unmanaged_xwayland_views,
-      unmanaged_output_views) {
-    node = (struct hikari_node *)xwayland_unmanaged_view;
-
-    if (surface_at(node, ox, oy, surface, sx, sy)) {
-      return node;
-    }
-  }
-#endif
-
-#ifdef HAVE_LAYERSHELL
-  if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
-          ox,
-          oy,
-          surface,
-          sx,
-          sy,
-          &node)) {
-    return node;
-  }
-#endif
-
-  struct hikari_view *view = NULL;
-  wl_list_for_each (view, &output_workspace->views, workspace_views) {
-    node = (struct hikari_node *)view;
-
-    if (surface_at(node, ox, oy, surface, sx, sy)) {
-      return node;
-    }
+struct wlr_scene_buffer *scene_buffer = wlr_scene_buffer_from_node(node);
+  struct wlr_scene_surface *scene_surface =
+    wlr_scene_surface_try_from_buffer(scene_buffer);
+  if (!scene_surface) {
+    return NULL;
   }
 
-#ifdef HAVE_LAYERSHELL
-  if (layer_at(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
-          ox,
-          oy,
-          surface,
-          sx,
-          sy,
-          &node)) {
-    return node;
+*surface = scene_surface->surface;
+  struct wlr_scene_tree *tree = node->parent;
+  while (tree != NULL && tree->node.data == NULL) {
+    tree = tree->node.parent;
   }
-#endif
 
-  return NULL;
+return tree->node.data;
+
+//   struct wlr_output *wlr_output =
+//       wlr_output_layout_output_at(hikari_server.output_layout, lx, ly);
+
+//   if (wlr_output == NULL) {
+//     *workspace = hikari_server.workspace;
+//     return NULL;
+//   }
+
+//   struct hikari_output *output = wlr_output->data;
+//   struct hikari_workspace *output_workspace = output->workspace;
+
+//   *workspace = output_workspace;
+
+//   struct hikari_node *node;
+//   double ox = lx - output->geometry.x;
+//   double oy = ly - output->geometry.y;
+
+// #ifdef HAVE_LAYERSHELL
+//   if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
+//           ox,
+//           oy,
+//           surface,
+//           sx,
+//           sy,
+//           &node)) {
+//     return node;
+//   }
+// #endif
+
+// #ifdef HAVE_XWAYLAND
+//   struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = NULL;
+//   wl_list_for_each (xwayland_unmanaged_view,
+//       &output->unmanaged_xwayland_views,
+//       unmanaged_output_views) {
+//     node = (struct hikari_node *)xwayland_unmanaged_view;
+
+//     if (surface_at(node, ox, oy, surface, sx, sy)) {
+//       return node;
+//     }
+//   }
+// #endif
+
+// #ifdef HAVE_LAYERSHELL
+//   if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+//           ox,
+//           oy,
+//           surface,
+//           sx,
+//           sy,
+//           &node)) {
+//     return node;
+//   }
+// #endif
+
+//   struct hikari_view *view = NULL;
+//   wl_list_for_each (view, &output_workspace->views, workspace_views) {
+//     node = (struct hikari_node *)view;
+
+//     if (surface_at(node, ox, oy, surface, sx, sy)) {
+//       return node;
+//     }
+//   }
+
+// #ifdef HAVE_LAYERSHELL
+//   if (layer_at(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
+//           ox,
+//           oy,
+//           surface,
+//           sx,
+//           sy,
+//           &node)) {
+//     return node;
+//   }
+// #endif
+
+//   return NULL;
 }
 
 struct hikari_node *
@@ -917,21 +939,21 @@ server_init(struct hikari_server *server, char *config_path)
   wl_list_init(&server->visible_groups);
   wl_list_init(&server->visible_views);
 
-//   hikari_dnd_mode_init(&server->dnd_mode);
-//   hikari_group_assign_mode_init(&server->group_assign_mode);
-//   hikari_input_grab_mode_init(&server->input_grab_mode);
-//   hikari_layout_select_mode_init(&server->layout_select_mode);
-//   hikari_lock_mode_init(&server->lock_mode);
-//   hikari_mark_assign_mode_init(&server->mark_assign_mode);
-//   hikari_mark_select_mode_init(&server->mark_select_mode);
-//   hikari_move_mode_init(&server->move_mode);
-//   hikari_normal_mode_init(&server->normal_mode);
-//   hikari_resize_mode_init(&server->resize_mode);
-//   hikari_sheet_assign_mode_init(&server->sheet_assign_mode);
+  hikari_dnd_mode_init(&server->dnd_mode);
+  hikari_group_assign_mode_init(&server->group_assign_mode);
+  hikari_input_grab_mode_init(&server->input_grab_mode);
+  hikari_layout_select_mode_init(&server->layout_select_mode);
+  hikari_lock_mode_init(&server->lock_mode);
+  hikari_mark_assign_mode_init(&server->mark_assign_mode);
+  hikari_mark_select_mode_init(&server->mark_select_mode);
+  hikari_move_mode_init(&server->move_mode);
+  hikari_normal_mode_init(&server->normal_mode);
+  hikari_resize_mode_init(&server->resize_mode);
+  hikari_sheet_assign_mode_init(&server->sheet_assign_mode);
 
-//   hikari_marks_init();
+  hikari_marks_init();
 
-  // init_noop_output(server);
+  init_noop_output(server);
 }
 
 static void

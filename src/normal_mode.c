@@ -207,7 +207,7 @@ cursor_move(uint32_t time)
 
   double sx, sy;
   struct wlr_seat *seat = hikari_server.seat;
-  struct wlr_surface *surface;
+  struct wlr_surface *surface = NULL;
   struct hikari_workspace *workspace;
 
   struct hikari_node *node =
@@ -218,26 +218,47 @@ cursor_move(uint32_t time)
           &sx,
           &sy);
 
-  if (node != NULL) {
-    struct hikari_node *focus_node =
-        (struct hikari_node *)hikari_server.workspace->focus_view;
+if (!node) {
+    /* If there's no toplevel under the cursor, set the cursor image to a
+     * default. This is what makes the cursor image appear when you move it
+     * around the screen, not over any toplevels. */
+    wlr_cursor_set_xcursor(hikari_server.cursor.wlr_cursor, hikari_server.cursor.cursor_mgr, "default");
+  }
 
-    if (node != focus_node) {
-      hikari_node_focus(node);
-    }
-
+  if (surface) {
     wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
     wlr_seat_pointer_notify_motion(seat, time, sx, sy);
   } else {
-    if (hikari_server.workspace != workspace) {
-      struct hikari_view *view = hikari_workspace_first_view(workspace);
-      hikari_workspace_focus_view(workspace, view);
-    }
-    if (seat->pointer_state.focused_surface != NULL) {
-      hikari_cursor_reset_image(&hikari_server.cursor);
-    }
     wlr_seat_pointer_clear_focus(seat);
   }
+  // struct hikari_node *node =
+  //     hikari_server_node_at(hikari_server.cursor.wlr_cursor->x,
+  //         hikari_server.cursor.wlr_cursor->y,
+  //         &surface,
+  //         &workspace,
+  //         &sx,
+  //         &sy);
+
+  // if (node != NULL) {
+  //   struct hikari_node *focus_node =
+  //       (struct hikari_node *)hikari_server.workspace->focus_view;
+
+  //   if (node != focus_node) {
+  //     hikari_node_focus(node);
+  //   }
+
+  //   wlr_seat_pointer_notify_enter(seat, surface, sx, sy);
+  //   wlr_seat_pointer_notify_motion(seat, time, sx, sy);
+  // } else {
+  //   if (hikari_server.workspace != workspace) {
+  //     struct hikari_view *view = hikari_workspace_first_view(workspace);
+  //     hikari_workspace_focus_view(workspace, view);
+  //   }
+  //   if (seat->pointer_state.focused_surface != NULL) {
+  //     hikari_cursor_reset_image(&hikari_server.cursor);
+  //   }
+  //   wlr_seat_pointer_clear_focus(seat);
+  // }
 }
 
 static inline void

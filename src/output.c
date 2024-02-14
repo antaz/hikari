@@ -313,11 +313,11 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 
     // output_geometry(output);
 
-    if (first) {
-      // hikari_workspace_merge(
-      //     hikari_server.noop_output->workspace, output->workspace);
-      // hikari_workspace_focus_view(output->workspace, NULL);
-    }
+    // if (first) {
+    //   hikari_workspace_merge(
+    //       hikari_server.noop_output->workspace, output->workspace);
+    //   hikari_workspace_focus_view(output->workspace, NULL);
+    // }
   }
 }
 
