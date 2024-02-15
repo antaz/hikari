@@ -82,32 +82,32 @@ void
 hikari_workspace_merge(
     struct hikari_workspace *workspace, struct hikari_workspace *into)
 {
-//   assert(workspace != NULL);
-//   assert(into != NULL);
+  assert(workspace != NULL);
+  assert(into != NULL);
 
-// #ifndef NDEBUG
-//   printf("WORKSPACE MERGE %p INTO %p\n", workspace, into);
-// #endif
+#ifndef NDEBUG
+  printf("WORKSPACE MERGE %p INTO %p\n", workspace, into);
+#endif
 
-//   for (int i = 0; i < HIKARI_NR_OF_SHEETS; i++) {
-//     struct hikari_sheet *from = &workspace->sheets[i];
-//     struct hikari_sheet *to = &into->sheets[i];
-//     struct hikari_view *view, *view_temp;
-//     wl_list_for_each_reverse_safe (view, view_temp, &from->views, sheet_views) {
-//       hikari_view_evacuate(view, to);
-//     }
-//   }
+  for (int i = 0; i < HIKARI_NR_OF_SHEETS; i++) {
+    struct hikari_sheet *from = &workspace->sheets[i];
+    struct hikari_sheet *to = &into->sheets[i];
+    struct hikari_view *view, *view_temp;
+    wl_list_for_each_reverse_safe (view, view_temp, &from->views, sheet_views) {
+      hikari_view_evacuate(view, to);
+    }
+  }
 
-// #ifdef HAVE_XWAYLAND
-//   struct hikari_xwayland_unmanaged_view *unmanaged_xwayland_view,
-//       *unmanaged_xwayland_view_temp;
-//   wl_list_for_each_reverse_safe (unmanaged_xwayland_view,
-//       unmanaged_xwayland_view_temp,
-//       &workspace->output->unmanaged_xwayland_views,
-//       unmanaged_output_views) {
-//     hikari_xwayland_unmanaged_evacuate(unmanaged_xwayland_view, into);
-//   }
-// #endif
+#ifdef HAVE_XWAYLAND
+  struct hikari_xwayland_unmanaged_view *unmanaged_xwayland_view,
+      *unmanaged_xwayland_view_temp;
+  wl_list_for_each_reverse_safe (unmanaged_xwayland_view,
+      unmanaged_xwayland_view_temp,
+      &workspace->output->unmanaged_xwayland_views,
+      unmanaged_output_views) {
+    hikari_xwayland_unmanaged_evacuate(unmanaged_xwayland_view, into);
+  }
+#endif
 }
 
 void

@@ -124,7 +124,7 @@ add_input(struct hikari_server *server, struct wlr_input_device *device)
 
   switch (device->type) {
     case WLR_INPUT_DEVICE_KEYBOARD:
-      // add_keyboard(server, device);
+      add_keyboard(server, device);
       break;
 
     case WLR_INPUT_DEVICE_POINTER:
@@ -132,7 +132,7 @@ add_input(struct hikari_server *server, struct wlr_input_device *device)
       break;
 
     case WLR_INPUT_DEVICE_SWITCH:
-      // add_switch(server, device);
+      add_switch(server, device);
       break;
 
     default:
@@ -145,9 +145,9 @@ add_input(struct hikari_server *server, struct wlr_input_device *device)
   }
   wlr_seat_set_capabilities(server->seat, caps);
 
-  // if ((caps & WL_SEAT_CAPABILITY_POINTER) != 0) {
-  //   hikari_cursor_reset_image(&server->cursor);
-  // }
+  if ((caps & WL_SEAT_CAPABILITY_POINTER) != 0) {
+    hikari_cursor_reset_image(&server->cursor);
+  }
 }
 
 static void
@@ -227,7 +227,7 @@ new_output_handler(struct wl_listener *listener, void *data)
   }
 
   hikari_output_init(output, wlr_output);
-  // hikari_cursor_reset_image(&server->cursor);
+  hikari_cursor_reset_image(&server->cursor);
 }
 
 static bool
@@ -341,44 +341,31 @@ node_at(double lx,
 {
   assert(hikari_server.workspace != NULL);
 
-struct wlr_scene_node *node = wlr_scene_node_at(
-    &hikari_server.scene->tree.node, lx, ly, sx, sy);
+  struct wlr_output *wlr_output =
+      wlr_output_layout_output_at(hikari_server.output_layout, lx, ly);
 
-if (node == NULL || node->type != WLR_SCENE_NODE_BUFFER) {
+  if (wlr_output == NULL) {
+    *workspace = hikari_server.workspace;
     return NULL;
   }
 
-struct wlr_scene_buffer *scene_buffer = wlr_scene_buffer_from_node(node);
-  struct wlr_scene_surface *scene_surface =
-    wlr_scene_surface_try_from_buffer(scene_buffer);
-  if (!scene_surface) {
-    return NULL;
+  struct hikari_output *output = wlr_output->data;
+  struct hikari_workspace *output_workspace = output->workspace;
+
+  *workspace = output_workspace;
+
+  struct hikari_node *node;
+  double ox = lx - output->geometry.x;
+  double oy = ly - output->geometry.y;
+
+  struct hikari_view *view = NULL;
+  wl_list_for_each (view, &output_workspace->views, workspace_views) {
+    node = (struct hikari_node *)view;
+
+    if (surface_at(node, ox, oy, surface, sx, sy)) {
+      return node;
+    }
   }
-
-*surface = scene_surface->surface;
-  struct wlr_scene_tree *tree = node->parent;
-  while (tree != NULL && tree->node.data == NULL) {
-    tree = tree->node.parent;
-  }
-
-return tree->node.data;
-
-//   struct wlr_output *wlr_output =
-//       wlr_output_layout_output_at(hikari_server.output_layout, lx, ly);
-
-//   if (wlr_output == NULL) {
-//     *workspace = hikari_server.workspace;
-//     return NULL;
-//   }
-
-//   struct hikari_output *output = wlr_output->data;
-//   struct hikari_workspace *output_workspace = output->workspace;
-
-//   *workspace = output_workspace;
-
-//   struct hikari_node *node;
-//   double ox = lx - output->geometry.x;
-//   double oy = ly - output->geometry.y;
 
 // #ifdef HAVE_LAYERSHELL
 //   if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
@@ -417,14 +404,14 @@ return tree->node.data;
 //   }
 // #endif
 
-//   struct hikari_view *view = NULL;
-//   wl_list_for_each (view, &output_workspace->views, workspace_views) {
-//     node = (struct hikari_node *)view;
+  // struct hikari_view *view = NULL;
+  // wl_list_for_each (view, &output_workspace->views, workspace_views) {
+  //   node = (struct hikari_node *)view;
 
-//     if (surface_at(node, ox, oy, surface, sx, sy)) {
-//       return node;
-//     }
-//   }
+  //   if (surface_at(node, ox, oy, surface, sx, sy)) {
+  //     return node;
+  //   }
+  // }
 
 // #ifdef HAVE_LAYERSHELL
 //   if (layer_at(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
@@ -438,7 +425,7 @@ return tree->node.data;
 //   }
 // #endif
 
-//   return NULL;
+  return NULL;
 }
 
 struct hikari_node *
@@ -887,7 +874,6 @@ server_init(struct hikari_server *server, char *config_path)
 
   server->compositor = wlr_compositor_create(server->display, 5, server->renderer);
 
-  // TODO: figure out what to do with this
   wlr_subcompositor_create(server->display);
 
   server->data_device_manager = wlr_data_device_manager_create(server->display);
@@ -907,13 +893,13 @@ server_init(struct hikari_server *server, char *config_path)
   server->new_output.notify = new_output_handler;
   wl_signal_add(&server->backend->events.new_output, &server->new_output);
 
-#ifdef HAVE_GAMMACONTROL
-  wlr_gamma_control_manager_v1_create(server->display);
-#endif
+// #ifdef HAVE_GAMMACONTROL
+//   wlr_gamma_control_manager_v1_create(server->display);
+// #endif
 
-#ifdef HAVE_SCREENCOPY
-  wlr_screencopy_manager_v1_create(server->display);
-#endif
+// #ifdef HAVE_SCREENCOPY
+//   wlr_screencopy_manager_v1_create(server->display);
+// #endif
 
 // #ifdef HAVE_XWAYLAND
 //   setup_xwayland(server);

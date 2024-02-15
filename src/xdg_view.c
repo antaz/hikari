@@ -139,8 +139,8 @@ first_map(struct hikari_xdg_view *xdg_view, bool *focus)
 
   struct wlr_xdg_toplevel *xdg_toplevel = xdg_surface->toplevel;
 
-  // hikari_view_set_title(view, xdg_toplevel->title);
-  // hikari_view_configure(view, app_id, view_config);
+  hikari_view_set_title(view, xdg_toplevel->title);
+  hikari_view_configure(view, app_id, view_config);
 }
 
 static struct wlr_surface *
@@ -156,7 +156,19 @@ surface_at(
   double x = ox - geometry->x;
   double y = oy - geometry->y;
 
-  return wlr_xdg_surface_surface_at(xdg_view->xdg_toplevel->base, x, y, sx, sy);
+  struct wlr_scene_node *scene_node = wlr_scene_node_at(
+    &hikari_server.scene->tree.node, x, y, sx, sy);
+  if (scene_node == NULL || scene_node->type != WLR_SCENE_NODE_BUFFER) {
+    return NULL;
+  }
+  struct wlr_scene_buffer *scene_buffer = wlr_scene_buffer_from_node(scene_node);
+  struct wlr_scene_surface *scene_surface =
+    wlr_scene_surface_try_from_buffer(scene_buffer);
+  if (!scene_surface) {
+    return NULL;
+  }
+
+  return scene_surface->surface;
 }
 
 static void
@@ -199,7 +211,7 @@ map_handler(struct wl_listener *listener, void *data)
   }
 
 
-  // map(view, focus);
+  map(view, focus);
 }
 
 static void
@@ -488,7 +500,7 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
   struct wlr_xdg_toplevel *xdg_toplevel = xdg_surface->toplevel;
 
 
-//   xdg_view->view.node.surface_at = surface_at;
+  xdg_view->view.node.surface_at = surface_at;
 
 //   wlr_xdg_surface_ping(xdg_surface);
 
@@ -504,14 +516,14 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
 //   xdg_view->destroy.notify = destroy_handler;
 //   wl_signal_add(&xdg_surface->surface->events.destroy, &xdg_view->destroy);
 
-//   assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
+  // assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
-//   xdg_view->view.node.focus = focus;
-//   xdg_view->view.node.for_each_surface = for_each_surface;
-//   xdg_view->view.activate = activate;
-//   xdg_view->view.resize = resize;
-//   xdg_view->view.quit = quit;
-//   xdg_view->view.constraints = constraints;
+  xdg_view->view.node.focus = focus;
+  xdg_view->view.node.for_each_surface = for_each_surface;
+  xdg_view->view.activate = activate;
+  xdg_view->view.resize = resize;
+  xdg_view->view.quit = quit;
+  xdg_view->view.constraints = constraints;
 // #ifdef HAVE_XWAYLAND
 //   xdg_view->view.move = NULL;
 //   xdg_view->view.move_resize = NULL;

@@ -156,17 +156,18 @@ hikari_output_enable(struct hikari_output *output)
 static void
 output_geometry(struct hikari_output *output)
 {
-  // wlr_output_layout_get_box(
-  //     hikari_server.output_layout, NULL, output->wlr_output);
+  struct wlr_box output_box;
+  wlr_output_layout_get_box(
+      hikari_server.output_layout, output->wlr_output, &output_box);
 
-  // output->geometry.x = output_box->x;
-  // output->geometry.y = output_box->y;
-  // output->geometry.width = output_box->width;
-  // output->geometry.height = output_box->height;
+  output->geometry.x = output_box.x;
+  output->geometry.y = output_box.y;
+  output->geometry.width = output_box.width;
+  output->geometry.height = output_box.height;
 
-  // output->usable_area = (struct wlr_box){
-  //  .x = 0, .y = 0, .width = output_box->width, .height = output_box->height
-  // };
+  output->usable_area = (struct wlr_box){
+   .x = 0, .y = 0, .width = output_box.width, .height = output_box.height
+  };
 }
 
 /* static void */
@@ -259,6 +260,7 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
 #endif
 
   hikari_workspace_init(output->workspace, output);
+  wlr_output->data = output;
 
   output->frame.notify = frame_handler;
   wl_signal_add(&wlr_output->events.frame, &output->frame);
@@ -311,13 +313,13 @@ hikari_output_init(struct hikari_output *output, struct wlr_output *wlr_output)
     struct wlr_scene_output *scene_output = wlr_scene_output_create(hikari_server.scene, wlr_output);
     wlr_scene_output_layout_add_output(hikari_server.scene_layout, l_output, scene_output);
 
-    // output_geometry(output);
+    output_geometry(output);
 
-    // if (first) {
-    //   hikari_workspace_merge(
-    //       hikari_server.noop_output->workspace, output->workspace);
-    //   hikari_workspace_focus_view(output->workspace, NULL);
-    // }
+    if (first) {
+      hikari_workspace_merge(
+          hikari_server.noop_output->workspace, output->workspace);
+      hikari_workspace_focus_view(output->workspace, NULL);
+    }
   }
 }
 

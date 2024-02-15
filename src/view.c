@@ -1800,15 +1800,15 @@ hikari_view_commit_pending_operation(
 void
 hikari_view_activate(struct hikari_view *view, bool active)
 {
-  assert(view != NULL);
+  // assert(view != NULL);
 
-  if (view->activate) {
-    if (view->border.state != HIKARI_BORDER_NONE) {
-      view->border.state =
-          active ? HIKARI_BORDER_ACTIVE : HIKARI_BORDER_INACTIVE;
-    }
-    view->activate(view, active);
-  }
+  // if (view->activate) {
+  //   if (view->border.state != HIKARI_BORDER_NONE) {
+  //     view->border.state =
+  //         active ? HIKARI_BORDER_ACTIVE : HIKARI_BORDER_INACTIVE;
+  //   }
+  //   view->activate(view, active);
+  // }
 }
 
 static void
