@@ -28,6 +28,9 @@ static void
 axis_handler(struct wl_listener *listener, void *data);
 
 static void
+request_set_cursor_handler(struct wl_listener *listener, void *data);
+
+static void
 surface_destroy_handler(struct wl_listener *listener, void *data);
 
 static unsigned long
@@ -120,6 +123,7 @@ hikari_cursor_init(
 
   cursor->wlr_cursor = wlr_cursor;
 
+  wl_list_init(&cursor->surface_destroy.link);
   hikari_binding_group_init(cursor->bindings);
 }
 
@@ -161,6 +165,10 @@ hikari_cursor_activate(struct hikari_cursor *cursor)
   cursor->axis.notify = axis_handler;
   wl_signal_add(&wlr_cursor->events.axis, &cursor->axis);
 
+  cursor->request_set_cursor.notify = request_set_cursor_handler;
+  wl_signal_add(&hikari_server.seat->events.request_set_cursor,
+      &cursor->request_set_cursor);
+
   hikari_cursor_reset_image(cursor);
 }
 
@@ -172,6 +180,7 @@ hikari_cursor_deactivate(struct hikari_cursor *cursor)
   wl_list_remove(&cursor->motion.link);
   wl_list_remove(&cursor->button.link);
   wl_list_remove(&cursor->axis.link);
+  wl_list_remove(&cursor->request_set_cursor.link);
 
   hikari_cursor_set_image(cursor, NULL);
 }
@@ -179,6 +188,8 @@ hikari_cursor_deactivate(struct hikari_cursor *cursor)
 void
 hikari_cursor_set_image(struct hikari_cursor *cursor, const char *path)
 {
+  wl_list_remove(&cursor->surface_destroy.link);
+  wl_list_init(&cursor->surface_destroy.link);
   if (path != NULL) {
    wlr_cursor_set_xcursor(cursor->wlr_cursor, cursor->cursor_mgr, path);
   } else {
@@ -262,3 +273,49 @@ axis_handler(struct wl_listener *listener, void *data)
       event->source);
 }
 
+static void
+request_set_cursor_handler(struct wl_listener *listener, void *data)
+{
+  if (!hikari_server_in_normal_mode()) {
+    return;
+  }
+
+  struct hikari_cursor *cursor =
+      wl_container_of(listener, cursor, request_set_cursor);
+
+  struct hikari_server *server = &hikari_server;
+  struct wlr_seat_pointer_request_set_cursor_event *event = data;
+  struct wlr_seat *seat = server->seat;
+
+  struct wl_client *focused_client = NULL;
+  struct wlr_surface *focused_surface = seat->pointer_state.focused_surface;
+  if (focused_surface != NULL) {
+    focused_client = wl_resource_get_client(focused_surface->resource);
+  }
+
+  if (focused_client == NULL || event->seat_client->client != focused_client) {
+    return;
+  }
+
+  struct wlr_surface *surface = event->surface;
+
+  wl_list_remove(&cursor->surface_destroy.link);
+  if (surface != NULL) {
+    cursor->surface_destroy.notify = surface_destroy_handler;
+    wl_signal_add(&surface->events.destroy, &cursor->surface_destroy);
+  } else {
+    wl_list_init(&cursor->surface_destroy.link);
+  }
+
+  wlr_cursor_set_surface(
+      cursor->wlr_cursor, surface, event->hotspot_x, event->hotspot_y);
+}
+
+static void
+surface_destroy_handler(struct wl_listener *listener, void *data)
+{
+  struct hikari_cursor *cursor =
+      wl_container_of(listener, cursor, surface_destroy);
+
+  hikari_cursor_reset_image(cursor);
+}

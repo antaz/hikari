@@ -370,9 +370,8 @@ hikari_output_fini(struct hikari_output *output)
 void
 hikari_output_move(struct hikari_output *output, double lx, double ly)
 {
-  // TODO: moving output
-  // wlr_output_layout_move(
-  //    hikari_server.output_layout, output->wlr_output, lx, ly);
+  wlr_output_layout_add(
+     hikari_server.output_layout, output->wlr_output, lx, ly);
 }
 
 #define CYCLE_OUTPUT(name)                                                     \

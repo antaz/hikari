@@ -489,8 +489,6 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
   xdg_view->destroy.notify = destroy_handler;
   wl_signal_add(&xdg_surface->surface->events.destroy, &xdg_view->destroy);
 
-  struct wlr_xdg_toplevel *xdg_toplevel = xdg_surface->toplevel;
-
   assert(xdg_view->xdg_toplevel->base->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
   xdg_view->view.node.focus = focus;

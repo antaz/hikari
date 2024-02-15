@@ -166,7 +166,7 @@ new_virtual_keyboard_handler(struct wl_listener *listener, void *data)
   struct hikari_server *server =
       wl_container_of(listener, server, new_virtual_keyboard);
   struct wlr_virtual_keyboard_v1 *keyboard = data;
-  struct wlr_input_device *device = &keyboard->input_device;
+  struct wlr_input_device *device = &keyboard->keyboard.base;
 
   add_input(server, device);
 }
@@ -188,7 +188,7 @@ new_virtual_pointer_handler(struct wl_listener *listener, void *data)
       wl_container_of(listener, server, new_virtual_pointer);
   struct wlr_virtual_pointer_v1_new_pointer_event *event = data;
   struct wlr_virtual_pointer_v1 *pointer = event->new_pointer;
-  struct wlr_input_device *device = &pointer->input_device;
+  struct wlr_input_device *device = &pointer->pointer.base;
 
   add_input(server, device);
 
@@ -532,21 +532,21 @@ server_decoration_handler(struct wl_listener *listener, void *data)
   if (wlr_decoration->surface->role == NULL) {
     return;
   }
-  // struct hikari_view *view =
-  //    wl_container_of(wlr_decoration->surface, view, surface);
-  // struct wlr_xdg_surface *xdg_surface =
-  //    wlr_xdg_surface_from_wlr_surface(wlr_decoration->surface);
-  // struct hikari_xdg_view *xdg_view = xdg_surface->data;
+  struct hikari_view *view =
+      wl_container_of(wlr_decoration->surface, view, surface);
+  struct wlr_xdg_surface *xdg_surface =
+      wlr_xdg_surface_try_from_wlr_surface(wlr_decoration->surface);
+  struct hikari_xdg_view *xdg_view = xdg_surface->data;
 
-  // if (xdg_view == NULL) {
-  //   return;
-  // }
+  if (xdg_view == NULL) {
+    return;
+  }
 
-  // wl_signal_add(&wlr_decoration->events.mode, &xdg_view->view.decoration.mode);
-  // xdg_view->view.decoration.mode.notify = server_decoration_mode_handler;
+  wl_signal_add(&wlr_decoration->events.mode, &xdg_view->view.decoration.mode);
+  xdg_view->view.decoration.mode.notify = server_decoration_mode_handler;
 
-  // xdg_view->view.decoration.wlr_decoration = wlr_decoration;
-  // xdg_view->view.decoration.view = &xdg_view->view;
+  xdg_view->view.decoration.wlr_decoration = wlr_decoration;
+  xdg_view->view.decoration.view = &xdg_view->view;
 }
 
 static void
@@ -880,7 +880,6 @@ server_init(struct hikari_server *server, char *config_path)
   wl_signal_add(
       &server->output_layout->events.change, &server->output_layout_change);
 
-  wl_list_init(&server->outputs);
   server->new_output.notify = new_output_handler;
   wl_signal_add(&server->backend->events.new_output, &server->new_output);
 
