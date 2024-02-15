@@ -220,41 +220,4 @@ main(int argc, char **argv)
 
     return EXIT_SUCCESS;
   }
-
-  // wlr_log_init(WLR_DEBUG, NULL);
-  // struct hikari_server server = {0};
-  // server.display = wl_display_create();
-  // server.backend = wlr_backend_autocreate(server.display, NULL);
-  // server.renderer = wlr_renderer_autocreate(server.backend);
-  // wlr_renderer_init_wl_display(server.renderer, server.display);
-  // server.allocator = wlr_allocator_autocreate(server.backend,
-  //   server.renderer);
-  // wlr_compositor_create(server.display, 5, server.renderer);
-  // wlr_subcompositor_create(server.display);
-  // wlr_data_device_manager_create(server.display);
-  // server.output_layout = wlr_output_layout_create();
-
-  // wl_list_init(&server.outputs);
-  // // server.new_output.notify = server_new_output_handler;
-  // // wl_signal_add(&server.backend->events.new_output, &server.new_output);
-
-  // server.seat = wlr_seat_create(server.display, "seat-0");
-
-  // const char *socket = wl_display_add_socket_auto(server.display);
-  // if (!socket) {
-  //   wlr_backend_destroy(server.backend);
-  //   return 1;
-  // }
-
-  // if (!wlr_backend_start(server.backend)) {
-  //   wlr_backend_destroy(server.backend);
-  //   wl_display_destroy(server.display);
-  //   return 1;
-  // }
-
-  // setenv("WAYLAND_DISPLAY", socket, true);
-
-  // wl_display_run(server.display);
-
-  return 0;
 }

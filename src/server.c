@@ -358,6 +358,43 @@ node_at(double lx,
   double ox = lx - output->geometry.x;
   double oy = ly - output->geometry.y;
 
+#ifdef HAVE_LAYERSHELL
+  if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
+          ox,
+          oy,
+          surface,
+          sx,
+          sy,
+          &node)) {
+    return node;
+  }
+#endif
+
+#ifdef HAVE_XWAYLAND
+  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = NULL;
+  wl_list_for_each (xwayland_unmanaged_view,
+      &output->unmanaged_xwayland_views,
+      unmanaged_output_views) {
+    node = (struct hikari_node *)xwayland_unmanaged_view;
+
+    if (surface_at(node, ox, oy, surface, sx, sy)) {
+      return node;
+    }
+  }
+#endif
+
+#ifdef HAVE_LAYERSHELL
+  if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
+          ox,
+          oy,
+          surface,
+          sx,
+          sy,
+          &node)) {
+    return node;
+  }
+#endif
+
   struct hikari_view *view = NULL;
   wl_list_for_each (view, &output_workspace->views, workspace_views) {
     node = (struct hikari_node *)view;
@@ -367,63 +404,17 @@ node_at(double lx,
     }
   }
 
-// #ifdef HAVE_LAYERSHELL
-//   if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
-//           ox,
-//           oy,
-//           surface,
-//           sx,
-//           sy,
-//           &node)) {
-//     return node;
-//   }
-// #endif
-
-// #ifdef HAVE_XWAYLAND
-//   struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = NULL;
-//   wl_list_for_each (xwayland_unmanaged_view,
-//       &output->unmanaged_xwayland_views,
-//       unmanaged_output_views) {
-//     node = (struct hikari_node *)xwayland_unmanaged_view;
-
-//     if (surface_at(node, ox, oy, surface, sx, sy)) {
-//       return node;
-//     }
-//   }
-// #endif
-
-// #ifdef HAVE_LAYERSHELL
-//   if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_TOP],
-//           ox,
-//           oy,
-//           surface,
-//           sx,
-//           sy,
-//           &node)) {
-//     return node;
-//   }
-// #endif
-
-  // struct hikari_view *view = NULL;
-  // wl_list_for_each (view, &output_workspace->views, workspace_views) {
-  //   node = (struct hikari_node *)view;
-
-  //   if (surface_at(node, ox, oy, surface, sx, sy)) {
-  //     return node;
-  //   }
-  // }
-
-// #ifdef HAVE_LAYERSHELL
-//   if (layer_at(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
-//           ox,
-//           oy,
-//           surface,
-//           sx,
-//           sy,
-//           &node)) {
-//     return node;
-//   }
-// #endif
+#ifdef HAVE_LAYERSHELL
+  if (layer_at(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM],
+          ox,
+          oy,
+          surface,
+          sx,
+          sy,
+          &node)) {
+    return node;
+  }
+#endif
 
   return NULL;
 }
@@ -777,7 +768,7 @@ hikari_server_prepare_privileged(void)
     goto done;
   }
 
-  server->backend = wlr_backend_autocreate(server->display, NULL);
+  server->backend = wlr_backend_autocreate(server->display, &server->session);
   if (server->backend == NULL) {
     fprintf(stderr, "error: could not create backend\n");
     goto done;
@@ -893,29 +884,29 @@ server_init(struct hikari_server *server, char *config_path)
   server->new_output.notify = new_output_handler;
   wl_signal_add(&server->backend->events.new_output, &server->new_output);
 
-// #ifdef HAVE_GAMMACONTROL
-//   wlr_gamma_control_manager_v1_create(server->display);
-// #endif
+#ifdef HAVE_GAMMACONTROL
+  wlr_gamma_control_manager_v1_create(server->display);
+#endif
 
-// #ifdef HAVE_SCREENCOPY
-//   wlr_screencopy_manager_v1_create(server->display);
-// #endif
+#ifdef HAVE_SCREENCOPY
+  wlr_screencopy_manager_v1_create(server->display);
+#endif
 
-// #ifdef HAVE_XWAYLAND
-//   setup_xwayland(server);
-// #endif
+#ifdef HAVE_XWAYLAND
+  setup_xwayland(server);
+#endif
   setup_scene_graph(server);
   setup_cursor(server);
-// #ifdef HAVE_VIRTUAL_INPUT
-//   setup_virtual_keyboard(server);
-//   setup_virtual_pointer(server);
-// #endif
+#ifdef HAVE_VIRTUAL_INPUT
+  setup_virtual_keyboard(server);
+  setup_virtual_pointer(server);
+#endif
   setup_decorations(server);
   setup_selection(server);
   setup_xdg_shell(server);
-// #ifdef HAVE_LAYERSHELL
-//   setup_layer_shell(server);
-// #endif
+#ifdef HAVE_LAYERSHELL
+  setup_layer_shell(server);
+#endif
 
   wl_list_init(&server->pointers);
   wl_list_init(&server->keyboards);
@@ -1412,10 +1403,9 @@ hikari_server_session_change_vt(void *arg)
   const intptr_t vt = (intptr_t)arg;
   assert(vt >= 1 && vt <= 12);
 
-  // struct wlr_session *session = wlr_backend_get_session(hikari_server.backend);
-  // if (session != NULL) {
-  //  wlr_session_change_vt(session, vt);
-  // }
+  if (hikari_server.session != NULL) {
+   wlr_session_change_vt(hikari_server.session, vt);
+  }
 }
 
 static void

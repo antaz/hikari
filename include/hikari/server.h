@@ -50,6 +50,7 @@ struct hikari_server {
   struct wl_display *display;
   struct wl_event_loop *event_loop;
   struct wlr_backend *backend;
+  struct wlr_session *session;
   struct wlr_renderer *renderer;
   struct wlr_allocator *allocator;
   struct wlr_scene *scene;
