@@ -120,7 +120,6 @@ hikari_cursor_init(
 
   cursor->wlr_cursor = wlr_cursor;
 
-  // wl_list_init(&cursor->surface_destroy.link);
   hikari_binding_group_init(cursor->bindings);
 }
 
@@ -173,7 +172,6 @@ hikari_cursor_deactivate(struct hikari_cursor *cursor)
   wl_list_remove(&cursor->motion.link);
   wl_list_remove(&cursor->button.link);
   wl_list_remove(&cursor->axis.link);
-  // wl_list_remove(&cursor->request_set_cursor.link);
 
   hikari_cursor_set_image(cursor, NULL);
 }

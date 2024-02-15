@@ -75,9 +75,9 @@ add_pointer(struct hikari_server *server, struct wlr_input_device *device)
       hikari_configuration_resolve_pointer_config(
           hikari_configuration, device->name);
 
-  // if (pointer_config != NULL) {
-  //   hikari_pointer_configure(pointer, pointer_config);
-  // }
+  if (pointer_config != NULL) {
+    hikari_pointer_configure(pointer, pointer_config);
+  }
 
   wlr_cursor_attach_input_device(server->cursor.wlr_cursor, device);
   wlr_cursor_map_input_to_output(server->cursor.wlr_cursor, device, NULL);

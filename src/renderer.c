@@ -298,8 +298,8 @@ renderer_end(struct hikari_output *output, struct hikari_renderer *renderer)
 
   enum wl_output_transform transform =
       wlr_output_transform_invert(wlr_output->transform);
-  // wlr_region_transform(
-  //     &frame_damage, &output->damage->damage, transform, width, height);
+  wlr_region_transform(
+      &frame_damage, output->damage->damage, transform, width, height);
 
   wlr_output_set_damage(wlr_output, &frame_damage);
   pixman_region32_fini(&frame_damage);
@@ -564,10 +564,10 @@ hikari_renderer_damage_frame_handler(struct wl_listener *listener, void *data)
 //   pixman_region32_init(&buffer_damage);
 
 //   bool needs_frame;
-//   // if (!wlr_output_damage_attach_render(
-//   //        output->damage, &needs_frame, &buffer_damage)) {
-//   //  goto render_done;
-//   // }
+//   if (!wlr_output_damage_attach_render(
+//          output->damage, &needs_frame, &buffer_damage)) {
+//    goto render_done;
+//   }
 
 //   if (!needs_frame) {
 //     wlr_output_rollback(output->wlr_output);

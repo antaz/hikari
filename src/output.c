@@ -142,14 +142,6 @@ hikari_output_enable(struct hikari_output *output)
 
   struct wlr_output *wlr_output = output->wlr_output;
 
-  // wl_list_remove(&output->damage_frame.link);
-  // output->damage_frame.notify = hikari_renderer_damage_frame_handler;
-  // // wl_signal_add(&output->damage->events.frame, &output->damage_frame);
-
-  // wlr_output_enable(wlr_output, true);
-  // wlr_output_commit(wlr_output);
-  // hikari_output_damage_whole(output);
-
   output->enabled = true;
 }
 
@@ -337,7 +329,7 @@ hikari_output_fini(struct hikari_output *output)
 
   hikari_output_disable(output);
 
-  // wl_list_remove(&output->destroy.link);
+  wl_list_remove(&output->destroy.link);
 
   struct hikari_workspace *workspace = output->workspace;
 
@@ -366,8 +358,7 @@ hikari_output_fini(struct hikari_output *output)
       hikari_server.workspace = merge_workspace;
     }
 
-    // wl_list_remove(&output->server_outputs);
-    // wl_list_remove(&output->damage_destroy.link);
+    wl_list_remove(&output->server_outputs);
   } else {
     hikari_server.workspace = NULL;
   }

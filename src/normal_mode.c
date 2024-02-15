@@ -207,7 +207,7 @@ cursor_move(uint32_t time)
 
   double sx, sy;
   struct wlr_seat *seat = hikari_server.seat;
-  struct wlr_surface *surface = NULL;
+  struct wlr_surface *surface;
   struct hikari_workspace *workspace;
 
   struct hikari_node *node =
@@ -218,7 +218,7 @@ cursor_move(uint32_t time)
           &sx,
           &sy);
 
-if (node) {
+if (node != NULL) {
     struct hikari_node *focus_node =
         (struct hikari_node *)hikari_server.workspace->focus_view;
 

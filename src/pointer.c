@@ -38,10 +38,10 @@ void
 hikari_pointer_configure(struct hikari_pointer *pointer,
     struct hikari_pointer_config *pointer_config)
 {
-  struct libinput_device *libinput_device =
-      wlr_libinput_get_device_handle(pointer->device);
+  if (wlr_input_device_is_libinput(pointer->device)) {
+    struct libinput_device *libinput_device =
+        wlr_libinput_get_device_handle(pointer->device);
 
-  if (libinput_device != NULL) {
     if (hikari_pointer_config_has_accel(pointer_config)) {
       libinput_device_config_accel_set_speed(
           libinput_device, hikari_pointer_config_get_accel(pointer_config));
