@@ -690,7 +690,7 @@ new_layer_shell_surface_handler(struct wl_listener *listener, void *data)
 static void
 setup_layer_shell(struct hikari_server *server)
 {
-  server->layer_shell = wlr_layer_shell_v1_create(server->display);
+  server->layer_shell = wlr_layer_shell_v1_create(server->display, 4);
 
   wl_signal_add(&server->layer_shell->events.new_surface,
       &server->new_layer_shell_surface);

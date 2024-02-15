@@ -47,7 +47,7 @@ commit_handler(struct wl_listener *listener, void *data)
       wl_container_of(listener, xdg_view, commit);
 
   struct hikari_view *view = (struct hikari_view *)xdg_view;
-  struct wlr_xdg_surface *surface = xdg_view->xdg_toplevel->base;
+  struct wlr_xdg_surface *surface = xdg_view->surface;
   uint32_t serial = surface->current.configure_serial;
 
   assert(view->surface != NULL);
@@ -156,19 +156,7 @@ surface_at(
   double x = ox - geometry->x;
   double y = oy - geometry->y;
 
-  struct wlr_scene_node *scene_node = wlr_scene_node_at(
-    &hikari_server.scene->tree.node, x, y, sx, sy);
-  if (scene_node == NULL || scene_node->type != WLR_SCENE_NODE_BUFFER) {
-    return NULL;
-  }
-  struct wlr_scene_buffer *scene_buffer = wlr_scene_buffer_from_node(scene_node);
-  struct wlr_scene_surface *scene_surface =
-    wlr_scene_surface_try_from_buffer(scene_buffer);
-  if (!scene_surface) {
-    return NULL;
-  }
-
-  return scene_surface->surface;
+  return wlr_xdg_surface_surface_at(xdg_view->surface, x, y, sx, sy);
 }
 
 static void
@@ -179,7 +167,7 @@ map(struct hikari_view *view, bool focus)
 #endif
 
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
-  struct wlr_xdg_surface *xdg_surface = xdg_view->xdg_toplevel->base;
+  struct wlr_xdg_surface *xdg_surface = xdg_view->surface;
 
   xdg_view->set_title.notify = set_title_handler;
   wl_signal_add(
@@ -193,7 +181,7 @@ map(struct hikari_view *view, bool focus)
   wl_signal_add(&xdg_surface->events.new_popup, &xdg_view->new_popup);
 
   xdg_view->commit.notify = commit_handler;
-  wl_signal_add(&xdg_view->xdg_toplevel->base->surface->events.commit, &xdg_view->commit);
+  wl_signal_add(&xdg_view->surface->surface->events.commit, &xdg_view->commit);
 
   hikari_view_map(view, xdg_surface->surface);
 }
@@ -246,7 +234,7 @@ activate(struct hikari_view *view, bool active)
 {
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
 
-  if (xdg_view->xdg_toplevel->base->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
+  if (xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
     wlr_xdg_toplevel_set_activated(xdg_view->xdg_toplevel, active);
 
     hikari_view_damage_whole(view);
@@ -258,7 +246,7 @@ resize(struct hikari_view *view, int width, int height)
 {
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
 
-  if (xdg_view->xdg_toplevel->base->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
+  if (xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL) {
     return wlr_xdg_toplevel_set_size(xdg_view->xdg_toplevel, width, height);
   }
 
@@ -308,7 +296,7 @@ for_each_surface(struct hikari_node *node,
 {
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)node;
 
-  wlr_xdg_surface_for_each_surface(xdg_view->xdg_toplevel->base, func, data);
+  wlr_xdg_surface_for_each_surface(xdg_view->surface, func, data);
 }
 
 static void
@@ -485,6 +473,8 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
 
   wlr_xdg_surface_ping(xdg_surface);
 
+  xdg_view->surface = xdg_surface;
+  xdg_view->surface->data = xdg_view;
   xdg_view->xdg_toplevel = xdg_surface->toplevel;
   xdg_view->scene_tree = wlr_scene_xdg_surface_create(&hikari_server.scene->tree, xdg_view->xdg_toplevel->base);
   xdg_view->scene_tree->node.data = xdg_view;

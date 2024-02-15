@@ -12,6 +12,7 @@ struct hikari_renderer;
 struct hikari_xdg_view {
   struct hikari_view view;
 
+  struct wlr_xdg_surface *surface;
   struct wlr_xdg_toplevel *xdg_toplevel;
   struct wlr_scene_tree *scene_tree;
 
