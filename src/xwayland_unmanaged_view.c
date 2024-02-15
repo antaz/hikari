@@ -186,13 +186,6 @@ hikari_xwayland_unmanaged_view_init(
       (struct hikari_node *)xwayland_unmanaged_view;
   xwayland_unmanaged_view->hidden = true;
 
-  xwayland_unmanaged_view->map.notify = map_handler;
-  wl_signal_add(&xwayland_surface->events.map, &xwayland_unmanaged_view->map);
-
-  xwayland_unmanaged_view->unmap.notify = unmap_handler;
-  wl_signal_add(
-      &xwayland_surface->events.unmap, &xwayland_unmanaged_view->unmap);
-
   xwayland_unmanaged_view->destroy.notify = destroy_handler;
   wl_signal_add(
       &xwayland_surface->events.destroy, &xwayland_unmanaged_view->destroy);
