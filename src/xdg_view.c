@@ -37,7 +37,7 @@ set_title_handler(struct wl_listener *listener, void *data)
       wl_container_of(listener, xdg_view, set_title);
 
   hikari_view_set_title(
-      (struct hikari_view *)xdg_view, xdg_view->xdg_toplevel->title);
+      (struct hikari_view *)xdg_view, xdg_view->surface->toplevel->title);
 }
 
 static void
@@ -112,7 +112,7 @@ commit_handler(struct wl_listener *listener, void *data)
 static inline const char *
 get_app_id(struct hikari_xdg_view *xdg_view)
 {
-  const char *app_id = xdg_view->xdg_toplevel->app_id;
+  const char *app_id = xdg_view->surface->toplevel->app_id;
 
   return app_id == NULL ? "" : app_id;
 }
@@ -120,7 +120,7 @@ get_app_id(struct hikari_xdg_view *xdg_view)
 static void
 first_map(struct hikari_xdg_view *xdg_view, bool *focus)
 {
-  struct wlr_xdg_surface *xdg_surface = xdg_view->xdg_toplevel->base;
+  struct wlr_xdg_surface *xdg_surface = xdg_view->surface;
   assert(xdg_surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
   struct hikari_view *view = (struct hikari_view *)xdg_view;
@@ -211,7 +211,7 @@ unmap(struct hikari_view *view)
 
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
 
-  assert(xdg_view->xdg_toplevel->base->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
+  assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
   hikari_view_unmap(view);
 
@@ -444,7 +444,7 @@ constraints(struct hikari_view *view,
     int *max_height)
 {
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)view;
-  struct wlr_xdg_toplevel_state *state = &xdg_view->xdg_toplevel->base->toplevel->current;
+  struct wlr_xdg_toplevel_state *state = &xdg_view->surface->toplevel->current;
 
   *min_width = state->min_width > 0 ? state->min_width : 0;
   *min_height = state->min_height > 0 ? state->min_height : 0;
@@ -489,7 +489,7 @@ hikari_xdg_view_init(struct hikari_xdg_view *xdg_view,
   xdg_view->destroy.notify = destroy_handler;
   wl_signal_add(&xdg_surface->surface->events.destroy, &xdg_view->destroy);
 
-  assert(xdg_view->xdg_toplevel->base->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
+  assert(xdg_view->surface->role == WLR_XDG_SURFACE_ROLE_TOPLEVEL);
 
   xdg_view->view.node.focus = focus;
   xdg_view->view.node.for_each_surface = for_each_surface;

@@ -120,13 +120,9 @@ hikari_output_disable(struct hikari_output *output)
 
   wl_list_remove(&output->frame.link);
   wl_list_remove(&output->request_state.link);
-  // TODO: manage damage tracking using wlr_scene
-  // wl_list_remove(&output->damage_frame.link);
-  // wl_list_init(&output->damage_frame.link);
 
   wlr_output_rollback(wlr_output);
   wlr_output_enable(wlr_output, false);
-  // wlr_output_commit(wlr_output);
 
   output->enabled = false;
 }
