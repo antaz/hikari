@@ -149,14 +149,7 @@ surface_at(
 {
   struct hikari_xdg_view *xdg_view = (struct hikari_xdg_view *)node;
 
-  struct hikari_view *view = (struct hikari_view *)node;
-
-  struct wlr_box *geometry = hikari_view_geometry(view);
-
-  double x = ox - geometry->x;
-  double y = oy - geometry->y;
-
-  return wlr_xdg_surface_surface_at(xdg_view->surface, x, y, sx, sy);
+  return wlr_xdg_surface_surface_at(xdg_view->surface, ox, oy, sx, sy);
 }
 
 static void

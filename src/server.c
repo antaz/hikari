@@ -355,8 +355,6 @@ node_at(double lx,
   *workspace = output_workspace;
 
   struct hikari_node *node;
-  double ox = lx - output->geometry.x;
-  double oy = ly - output->geometry.y;
 
 #ifdef HAVE_LAYERSHELL
   if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
@@ -370,8 +368,8 @@ node_at(double lx,
   }
 #endif
 
-#ifdef HAVE_XWAYLAND
-  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = NULL;
+#ifdef have_xwayland
+  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = null;
   wl_list_for_each (xwayland_unmanaged_view,
       &output->unmanaged_xwayland_views,
       unmanaged_output_views) {
@@ -399,7 +397,7 @@ node_at(double lx,
   wl_list_for_each (view, &output_workspace->views, workspace_views) {
     node = (struct hikari_node *)view;
 
-    if (surface_at(node, ox, oy, surface, sx, sy)) {
+    if (surface_at(node, lx, ly, surface, sx, sy)) {
       return node;
     }
   }
