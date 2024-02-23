@@ -3,7 +3,7 @@
 
 #include <assert.h>
 
-#include <wlr/types/wlr_surface.h>
+#include <wlr/types/wlr_compositor.h>
 
 struct hikari_node {
   struct wlr_surface *(*surface_at)(

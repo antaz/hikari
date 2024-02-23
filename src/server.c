@@ -22,6 +22,10 @@
 #include <wlr/types/wlr_server_decoration.h>
 #include <wlr/types/wlr_xdg_output_v1.h>
 #include <wlr/types/wlr_xdg_shell.h>
+#include <wlr/types/wlr_scene.h>
+#include <wlr/types/wlr_subcompositor.h>
+#include <wlr/types/wlr_data_device.h>
+#include <wlr/types/wlr_seat.h>
 
 #ifdef HAVE_LAYERSHELL
 #include <wlr/types/wlr_layer_shell_v1.h>
@@ -162,7 +166,7 @@ new_virtual_keyboard_handler(struct wl_listener *listener, void *data)
   struct hikari_server *server =
       wl_container_of(listener, server, new_virtual_keyboard);
   struct wlr_virtual_keyboard_v1 *keyboard = data;
-  struct wlr_input_device *device = &keyboard->input_device;
+  struct wlr_input_device *device = &keyboard->keyboard.base;
 
   add_input(server, device);
 }
@@ -184,7 +188,7 @@ new_virtual_pointer_handler(struct wl_listener *listener, void *data)
       wl_container_of(listener, server, new_virtual_pointer);
   struct wlr_virtual_pointer_v1_new_pointer_event *event = data;
   struct wlr_virtual_pointer_v1 *pointer = event->new_pointer;
-  struct wlr_input_device *device = &pointer->input_device;
+  struct wlr_input_device *device = &pointer->pointer.base;
 
   add_input(server, device);
 
@@ -214,6 +218,8 @@ new_output_handler(struct wl_listener *listener, void *data)
 
   struct wlr_output *wlr_output = data;
   struct hikari_output *output = hikari_malloc(sizeof(struct hikari_output));
+  output->wlr_output = wlr_output;
+  output->server = server;
 
   if (!wlr_output_init_render(
           wlr_output, server->allocator, server->renderer)) {
@@ -349,8 +355,6 @@ node_at(double lx,
   *workspace = output_workspace;
 
   struct hikari_node *node;
-  double ox = lx - output->geometry.x;
-  double oy = ly - output->geometry.y;
 
 #ifdef HAVE_LAYERSHELL
   if (topmost_of(&output->layers[ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY],
@@ -364,8 +368,8 @@ node_at(double lx,
   }
 #endif
 
-#ifdef HAVE_XWAYLAND
-  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = NULL;
+#ifdef have_xwayland
+  struct hikari_xwayland_unmanaged_view *xwayland_unmanaged_view = null;
   wl_list_for_each (xwayland_unmanaged_view,
       &output->unmanaged_xwayland_views,
       unmanaged_output_views) {
@@ -393,7 +397,7 @@ node_at(double lx,
   wl_list_for_each (view, &output_workspace->views, workspace_views) {
     node = (struct hikari_node *)view;
 
-    if (surface_at(node, ox, oy, surface, sx, sy)) {
+    if (surface_at(node, lx, ly, surface, sx, sy)) {
       return node;
     }
   }
@@ -529,7 +533,7 @@ server_decoration_handler(struct wl_listener *listener, void *data)
   struct hikari_view *view =
       wl_container_of(wlr_decoration->surface, view, surface);
   struct wlr_xdg_surface *xdg_surface =
-      wlr_xdg_surface_from_wlr_surface(wlr_decoration->surface);
+      wlr_xdg_surface_try_from_wlr_surface(wlr_decoration->surface);
   struct hikari_xdg_view *xdg_view = xdg_surface->data;
 
   if (xdg_view == NULL) {
@@ -654,9 +658,16 @@ new_xdg_surface_handler(struct wl_listener *listener, void *data)
 }
 
 static void
+setup_scene_graph(struct hikari_server *server)
+{
+  server->scene = wlr_scene_create();
+  server->scene_layout = wlr_scene_attach_output_layout(server->scene, server->output_layout);
+}
+
+static void
 setup_xdg_shell(struct hikari_server *server)
 {
-  server->xdg_shell = wlr_xdg_shell_create(server->display);
+  server->xdg_shell = wlr_xdg_shell_create(server->display, 3);
 
   server->new_xdg_surface.notify = new_xdg_surface_handler;
   wl_signal_add(
@@ -677,7 +688,7 @@ new_layer_shell_surface_handler(struct wl_listener *listener, void *data)
 static void
 setup_layer_shell(struct hikari_server *server)
 {
-  server->layer_shell = wlr_layer_shell_v1_create(server->display);
+  server->layer_shell = wlr_layer_shell_v1_create(server->display, 4);
 
   wl_signal_add(&server->layer_shell->events.new_surface,
       &server->new_layer_shell_surface);
@@ -696,13 +707,13 @@ output_layout_change_handler(struct wl_listener *listener, void *data)
   struct hikari_output *output;
   wl_list_for_each (output, &server->outputs, server_outputs) {
     struct wlr_output *wlr_output = output->wlr_output;
-    struct wlr_box *output_box =
-        wlr_output_layout_get_box(hikari_server.output_layout, wlr_output);
+    struct wlr_box output_box;
+    wlr_output_layout_get_box(hikari_server.output_layout, wlr_output, &output_box);
 
-    output->geometry.x = output_box->x;
-    output->geometry.y = output_box->y;
-    output->geometry.width = output_box->width;
-    output->geometry.height = output_box->height;
+    output->geometry.x = output_box.x;
+    output->geometry.y = output_box.y;
+    output->geometry.width = output_box.width;
+    output->geometry.height = output_box.height;
 
     struct hikari_output_config *output_config =
         hikari_configuration_resolve_output_config(
@@ -755,7 +766,7 @@ hikari_server_prepare_privileged(void)
     goto done;
   }
 
-  server->backend = wlr_backend_autocreate(server->display);
+  server->backend = wlr_backend_autocreate(server->display, &server->session);
   if (server->backend == NULL) {
     fprintf(stderr, "error: could not create backend\n");
     goto done;
@@ -850,7 +861,9 @@ server_init(struct hikari_server *server, char *config_path)
 
   setenv("WAYLAND_DISPLAY", server->socket, true);
 
-  server->compositor = wlr_compositor_create(server->display, server->renderer);
+  server->compositor = wlr_compositor_create(server->display, 5, server->renderer);
+
+  wlr_subcompositor_create(server->display);
 
   server->data_device_manager = wlr_data_device_manager_create(server->display);
 
@@ -879,6 +892,7 @@ server_init(struct hikari_server *server, char *config_path)
 #ifdef HAVE_XWAYLAND
   setup_xwayland(server);
 #endif
+  setup_scene_graph(server);
   setup_cursor(server);
 #ifdef HAVE_VIRTUAL_INPUT
   setup_virtual_keyboard(server);
@@ -1386,9 +1400,8 @@ hikari_server_session_change_vt(void *arg)
   const intptr_t vt = (intptr_t)arg;
   assert(vt >= 1 && vt <= 12);
 
-  struct wlr_session *session = wlr_backend_get_session(hikari_server.backend);
-  if (session != NULL) {
-    wlr_session_change_vt(session, vt);
+  if (hikari_server.session != NULL) {
+   wlr_session_change_vt(hikari_server.session, vt);
   }
 }
 

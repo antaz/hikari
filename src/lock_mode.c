@@ -11,6 +11,8 @@
 #include <unistd.h>
 
 #include <wlr/types/wlr_seat.h>
+#include <wayland-server-core.h>
+#include <wlr/backend.h>
 
 #include <hikari/cursor.h>
 #include <hikari/keyboard.h>
@@ -173,7 +175,7 @@ enable_outputs(void)
 
 static void
 key_handler(
-    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
+    struct hikari_keyboard *keyboard, struct wlr_keyboard_key_event *event)
 {
   struct hikari_lock_mode *mode = get_mode();
 
@@ -183,7 +185,7 @@ key_handler(
     uint32_t codepoint;
 
     int nsyms = xkb_state_key_get_syms(
-        keyboard->device->keyboard->xkb_state, keycode, &syms);
+        keyboard->wlr_keyboard->xkb_state, keycode, &syms);
 
     enable_outputs();
 
@@ -241,7 +243,7 @@ modifiers_handler(struct hikari_keyboard *keyboard)
 
 static void
 button_handler(
-    struct hikari_cursor *cursor, struct wlr_event_pointer_button *event)
+    struct hikari_cursor *cursor, struct wlr_pointer_button_event *event)
 {}
 
 static void

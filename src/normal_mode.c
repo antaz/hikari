@@ -151,7 +151,7 @@ dump_debug(struct hikari_server *server)
 static void
 modifiers_handler(struct hikari_keyboard *keyboard)
 {
-  wlr_seat_set_keyboard(hikari_server.seat, keyboard->device);
+  wlr_seat_set_keyboard(hikari_server.seat, keyboard->wlr_keyboard);
   struct hikari_view *focus_view = hikari_server.workspace->focus_view;
 
   if (hikari_server.keyboard_state.mod_released) {
@@ -176,7 +176,7 @@ modifiers_handler(struct hikari_keyboard *keyboard)
   }
 
   wlr_seat_keyboard_notify_modifiers(
-      hikari_server.seat, &keyboard->device->keyboard->modifiers);
+      hikari_server.seat, &keyboard->wlr_keyboard->modifiers);
 }
 
 static void
@@ -218,7 +218,7 @@ cursor_move(uint32_t time)
           &sx,
           &sy);
 
-  if (node != NULL) {
+if (node != NULL) {
     struct hikari_node *focus_node =
         (struct hikari_node *)hikari_server.workspace->focus_view;
 
@@ -241,7 +241,7 @@ cursor_move(uint32_t time)
 }
 
 static inline void
-start_cursor_down_handling(struct wlr_event_pointer_button *event)
+start_cursor_down_handling(struct wlr_pointer_button_event *event)
 {
   double lx = hikari_server.cursor.wlr_cursor->x;
   double ly = hikari_server.cursor.wlr_cursor->y;
@@ -267,7 +267,7 @@ start_cursor_down_handling(struct wlr_event_pointer_button *event)
 }
 
 static inline void
-stop_cursor_down_handling(struct wlr_event_pointer_button *event)
+stop_cursor_down_handling(struct wlr_pointer_button_event *event)
 {
   hikari_server.normal_mode.mode.cursor_move = cursor_move;
 
@@ -285,7 +285,7 @@ is_cursor_down(void)
 
 static void
 button_handler(
-    struct hikari_cursor *cursor, struct wlr_event_pointer_button *event)
+    struct hikari_cursor *cursor, struct wlr_pointer_button_event *event)
 {
   if (handle_pending_action()) {
     if (event->state == WLR_BUTTON_RELEASED && is_cursor_down()) {
@@ -313,7 +313,7 @@ button_handler(
 
 static void
 key_handler(
-    struct hikari_keyboard *keyboard, struct wlr_event_keyboard_key *event)
+    struct hikari_keyboard *keyboard, struct wlr_keyboard_key_event *event)
 {
   if (handle_pending_action()) {
     return;
@@ -328,7 +328,7 @@ key_handler(
     }
   }
 
-  wlr_seat_set_keyboard(hikari_server.seat, keyboard->device);
+  wlr_seat_set_keyboard(hikari_server.seat, keyboard->wlr_keyboard);
   wlr_seat_keyboard_notify_key(
       hikari_server.seat, event->time_msec, event->keycode, event->state);
 }

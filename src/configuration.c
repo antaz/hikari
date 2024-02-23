@@ -1741,7 +1741,7 @@ hikari_configuration_reload(char *config_path)
     wl_list_for_each (keyboard, &hikari_server.keyboards, server_keyboards) {
       struct hikari_keyboard_config *keyboard_config =
           hikari_configuration_resolve_keyboard_config(
-              hikari_configuration, keyboard->device->name);
+              hikari_configuration, keyboard->wlr_keyboard->base.name);
 
       assert(keyboard_config != NULL);
       hikari_keyboard_configure(keyboard, keyboard_config);
@@ -1784,7 +1784,7 @@ hikari_configuration_reload(char *config_path)
     wl_list_for_each (swtch, &hikari_server.switches, server_switches) {
       struct hikari_switch_config *switch_config =
           hikari_configuration_resolve_switch_config(
-              hikari_configuration, swtch->device->name);
+              hikari_configuration, swtch->wlr_switch->base.name);
 
       if (switch_config != NULL) {
         hikari_switch_configure(swtch, switch_config);

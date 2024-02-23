@@ -9,6 +9,12 @@
 
 #include <hikari/server.h>
 
+#include <wlr/backend.h>
+#include <wlr/render/allocator.h>
+#include <wlr/types/wlr_subcompositor.h>
+#include <wlr/types/wlr_data_device.h>
+#include <wlr/types/wlr_seat.h>
+
 #include "version.h"
 
 static char *
